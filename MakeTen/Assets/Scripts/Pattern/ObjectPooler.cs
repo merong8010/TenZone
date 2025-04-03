@@ -5,6 +5,8 @@ using TMPro; // UI 표시용
 
 public class ObjectPooler : MonoBehaviour
 {
+    private object _threadLocker;
+
     public static ObjectPooler Instance; // 싱글턴 패턴 적용
 
     [System.Serializable]
@@ -37,7 +39,7 @@ public class ObjectPooler : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
+        _threadLocker = new object();
         poolDictionary = new Dictionary<string, Queue<GameObject>>();
         poolSettings = new Dictionary<string, Pool>();
         activeObjects = new Dictionary<string, List<GameObject>>();
@@ -109,7 +111,7 @@ public class ObjectPooler : MonoBehaviour
     /// <summary>
     /// 태그 또는 경로 기반으로 오브젝트 가져오기 (부족하면 자동 확장)
     /// </summary>
-    public GameObject GetObject(string tagOrPath, Vector3 position, Quaternion rotation, float autoReturnTime = 0f)
+    public GameObject GetObject(string tagOrPath, Vector3 position = default(Vector3), Quaternion rotation = default(Quaternion), float autoReturnTime = 0f)
     {
         string tag = tagOrPath;
         if (!poolDictionary.ContainsKey(tag))
@@ -117,17 +119,16 @@ public class ObjectPooler : MonoBehaviour
             return CreateDynamicPool(tagOrPath, position, rotation, autoReturnTime);
         }
 
-        GameObject obj;
-        if (poolDictionary[tag].Count > 0)
+        
+        if(poolDictionary[tag].Count == 0)
         {
-            obj = poolDictionary[tag].Dequeue();
-        }
-        else
-        {
-            obj = ExpandPool(tag);
-            if (obj == null) return null;
+            if(!ExpandPool(tag))
+            {
+                return null;
+            }
         }
 
+        GameObject obj = poolDictionary[tag].Dequeue();
         obj.SetActive(true);
         obj.transform.position = position;
         obj.transform.rotation = rotation;
@@ -164,12 +165,12 @@ public class ObjectPooler : MonoBehaviour
     /// <summary>
     /// 부족할 경우 자동 확장
     /// </summary>
-    private GameObject ExpandPool(string tag)
+    private bool ExpandPool(string tag)
     {
         if (!poolSettings.ContainsKey(tag))
         {
             Debug.LogWarning($"[ObjectPooler] {tag} 태그의 오브젝트 설정을 찾을 수 없습니다.");
-            return null;
+            return false;
         }
 
         Pool pool = poolSettings[tag];
@@ -177,14 +178,15 @@ public class ObjectPooler : MonoBehaviour
         if (poolDictionary[tag].Count + activeObjects[tag].Count >= pool.maxPoolSize)
         {
             Debug.LogWarning($"[ObjectPooler] {tag} 풀의 최대 크기({pool.maxPoolSize})에 도달하여 확장할 수 없습니다.");
-            return null;
+            return false;
         }
 
+        
         GameObject obj = Instantiate(pool.prefab);
         obj.SetActive(false);
         obj.transform.SetParent(transform);
         poolDictionary[tag].Enqueue(obj);
-        return obj;
+        return true;
     }
 
     /// <summary>

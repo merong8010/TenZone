@@ -11,6 +11,8 @@ public class Block : MonoBehaviour
         {
             _num = value;
             numText.text = _num.ToString();
+            numObj.SetActive(_num > 0);
+            Focus(false);
         }
         get
         {
@@ -41,9 +43,6 @@ public class Block : MonoBehaviour
 
     public void Init(int num)
     {
-        numObj.SetActive(true);
-        Focus(false);
-
         this.num = num;
     }
 
