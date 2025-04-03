@@ -49,14 +49,12 @@ public class PuzzleManager : Singleton<PuzzleManager>
     protected override void Awake()
     {
         base.Awake();
-        //InitBlocks();
-        Initialize();
-        InitBlocks();
+        StartCoroutine(Initialize());
     }
 
     private Coroutine timeCoroutine;
 
-    private void Initialize()
+    private IEnumerator Initialize()
     {
         if (blocks == null) blocks = new Block[] { };
 
@@ -65,6 +63,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
         currentTime = new ReactiveProperty<float>();
         currentTime.Subscribe(x => { timeText.text = new StringBuilder().Append("time : ").Append(Mathf.RoundToInt(x)).ToString(); });
+
+        yield return new WaitForSeconds(1f);
+
+        InitBlocks();
     }
 
     [SerializeField]
