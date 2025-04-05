@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/firebase_database_url,@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id">
+  <string name="firebase_database_url" translatable="false">https://maketen-2631f-default-rtdb.asia-southeast1.firebasedatabase.app</string>
+  <string name="gcm_defaultSenderId" translatable="false">8377165168</string>
+  <string name="google_storage_bucket" translatable="false">maketen-2631f.firebasestorage.app</string>
+  <string name="project_id" translatable="false">maketen-2631f</string>
+  <string name="google_api_key" translatable="false">AIzaSyAVW9I6MNhBDAW72DY5QGewnRHPMhCNHh0</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAVW9I6MNhBDAW72DY5QGewnRHPMhCNHh0</string>
+  <string name="google_app_id" translatable="false">1:8377165168:android:d6def09f592d6da5a51bb5</string>
+</resources>

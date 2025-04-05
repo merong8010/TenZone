@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "8377165168",
+    "firebase_url": "https://maketen-2631f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "maketen-2631f",
+    "storage_bucket": "maketen-2631f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8377165168:android:d6def09f592d6da5a51bb5",
+        "android_client_info": {
+          "package_name": "studio.jjm.maketen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVW9I6MNhBDAW72DY5QGewnRHPMhCNHh0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
