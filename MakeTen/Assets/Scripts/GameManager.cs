@@ -16,6 +16,8 @@ public class GameManager : Singleton<GameManager>
         System.Globalization.CultureInfo cultureInfo = new System.Globalization.CultureInfo("en-US");
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
         System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
+        StartCoroutine(Initialize());
     }
 
     private void OnApplicationFocus(bool focus)
@@ -116,11 +118,16 @@ public class GameManager : Singleton<GameManager>
             {
                 _currentTime = _currentTime.Value.AddSeconds(flow);
                 lastCheckTime = Time.realtimeSinceStartupAsDouble;
-
-                Debug.Log(dateTime.ToString());
             }
-
-            
         }
+    }
+
+    private IEnumerator Initialize()
+    {
+        yield return new WaitUntil(() => _currentTime != null);
+        yield return new WaitUntil(() => FirebaseManager.Instance.IsReady);
+        yield return new WaitUntil(() => DataManager.Instance.userData != null);
+
+        HUD.Instance.UpdateHeart();
     }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEngine;
 
 public class UserData
@@ -9,6 +10,7 @@ public class UserData
     public string nickname;
     private int heart;
     private long lastHeartChargeTime;
+    public string countryCode;
 
     public int Heart
     {
@@ -18,5 +20,20 @@ public class UserData
 
             return heart;
         }
+    }
+
+    public UserData()
+    {
+
+    }
+
+    public UserData(string userId)
+    {
+        id = userId;
+
+        //string country = RegionInfo.CurrentRegion.EnglishName; // 국가 이름
+        countryCode = RegionInfo.CurrentRegion.TwoLetterISORegionName;
+        heart = MaxHeart;
+        lastHeartChargeTime = GameManager.Instance.dateTime.Value.Ticks;
     }
 }

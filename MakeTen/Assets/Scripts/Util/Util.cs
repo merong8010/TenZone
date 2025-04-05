@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public static class Util
@@ -25,5 +26,30 @@ public static class Util
 
         // 1~9 범위를 벗어나지 않도록 보정
         return UnityEngine.Mathf.Clamp(UnityEngine.Mathf.RoundToInt(randNormal), 1, 9);
+    }
+}
+
+public static class Yielders
+{
+
+    static Dictionary<float, WaitForSeconds> _timeInterval = new Dictionary<float, WaitForSeconds>(100);
+
+    static WaitForEndOfFrame _endOfFrame = new WaitForEndOfFrame();
+    public static WaitForEndOfFrame EndOfFrame
+    {
+        get { return _endOfFrame; }
+    }
+
+    static WaitForFixedUpdate _fixedUpdate = new WaitForFixedUpdate();
+    public static WaitForFixedUpdate FixedUpdate
+    {
+        get { return _fixedUpdate; }
+    }
+
+    public static WaitForSeconds Get(float seconds)
+    {
+        if (!_timeInterval.ContainsKey(seconds))
+            _timeInterval.Add(seconds, new WaitForSeconds(seconds));
+        return _timeInterval[seconds];
     }
 }

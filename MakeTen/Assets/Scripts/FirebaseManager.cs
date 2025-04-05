@@ -4,7 +4,10 @@ using Firebase.Database;
 using Firebase.Extensions;
 using System.Collections;
 using System.Collections.Generic;
-
+using Newtonsoft.Json;
+using System.Globalization;
+using System;
+using Firebase.Auth;
 public class FirebaseManager : Singleton<FirebaseManager>
 {
     /// <summary>
@@ -14,6 +17,9 @@ public class FirebaseManager : Singleton<FirebaseManager>
     //    user3: { name: "Carol", score: 250 }
     //}
 
+    public bool IsReady => reference != null;
+    private DatabaseReference reference;
+    private FirebaseAuth auth;
     /// </summary>
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -22,6 +28,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
             if (task.Result == DependencyStatus.Available)
             {
                 Debug.Log("Firebase Ready");
+
+                FirebaseApp app = FirebaseApp.DefaultInstance;
+                reference = FirebaseDatabase.DefaultInstance.RootReference;
+                auth = FirebaseAuth.DefaultInstance;
             }
             else
             {
@@ -32,7 +42,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void SubmitScore(string userId, string userName, int score)
     {
-        DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+        //DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
 
         LeaderboardEntry entry = new LeaderboardEntry(userName, score);
         string json = JsonUtility.ToJson(entry);
@@ -80,5 +90,46 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     }
                 }
             });
+    }
+
+    public void SaveUserData(UserData data)
+    {
+        string json = JsonConvert.SerializeObject(data);
+        reference.Child("users").Child(data.id).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
+            if (task.IsCompleted)
+            {
+                Debug.Log("User data saved successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to save user data: " + task.Exception);
+            }
+        });
+    }
+
+    public void GetUserData(string userId, Action<UserData> callback)
+    {
+        reference.Child("users").Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
+            if (task.IsCompleted)
+            {
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists)
+                {
+                    //string json = snapshot.GetRawJsonValue();
+                    //User user = JsonUtility.FromJson<User>(json);
+                    Debug.Log("User Info: " + snapshot.GetRawJsonValue());
+                    callback.Invoke(JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue()));
+                }
+                else
+                {
+                    callback.Invoke(new UserData(userId));
+                    Debug.Log("No user found.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to get user data: " + task.Exception);
+            }
+        });
     }
 }
