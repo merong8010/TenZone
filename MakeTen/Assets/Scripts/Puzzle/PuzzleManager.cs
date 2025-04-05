@@ -9,11 +9,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
 {
     [SerializeField]
     private Image dragTransform;
-
-    //public RectTransform canvasRect;  // 캔버스
-    //public Image rectImagePrefab;     // 생성할 이미지 프리팹
-
-    //private Image currentImage;
+    /// <summary>
+    /// 터치 입력 값
+    /// </summary>
     private Vector2 startPos;
     private bool isDrag;
 
@@ -39,7 +37,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
     [SerializeField]
     private int columnCount;
 
-    [SerializeField]
     private Vector2 blockStartPos;
     [SerializeField]
     private Vector2 blockSize;
@@ -125,6 +122,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
     [SerializeField]
     private ObjectPooler pooler;
 
+    [SerializeField]
+    private RectTransform blocksRT;
+
     public void InitBlocks()
     {
         if(blocks.Length > 0)
@@ -137,7 +137,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
         blocks = new Block[] { };
 
-        blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * columnCount * 0.5f, -(blockSize.y + blockGap.y) * rowCount * 0.5f);
+        blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * columnCount)) / columnCount, (blocksRT.rect.height - (blockGap.y * rowCount)) / rowCount);
+        //Debug.Log($"blockSize : {blockSize.x}:{blockSize.y} | {blocksRT.sizeDelta.x} : {blocksRT.sizeDelta.y} | {blockGap.x} : {blockGap.y} | {blocksRT.rect.width} : {blocksRT.rect.height}");
+        blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (columnCount-1) * 0.5f, -(blockSize.y + blockGap.y) * (rowCount-1) * 0.5f);
         for (int row = 0; row < rowCount; row++)
         {
             for (int column = 0; column < columnCount; column++)
@@ -205,7 +207,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
             currentTime.Value += UnityEngine.Time.deltaTime;
         }
 
-        InitBlocks();
+        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, currentTime.Value);
+        //InitBlocks();
     }
 
 
