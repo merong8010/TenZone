@@ -32,5 +32,20 @@ public static class ExtensionMethods
         }
         return array;
     }
+
+    public static string ToTimeText(this int time)
+    {
+        return TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
+    }
+
+    public static long ToTick(this DateTime dateTime)
+    {
+        return (dateTime.Ticks - 621355968000000000) / 10000000;
+    }
+
+    public static DateTime LongToDateTime(this long val)
+    {
+        return new DateTime(val * 10000000 + 621355968000000000);
+    }
 }
 

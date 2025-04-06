@@ -12,5 +12,7 @@ public class PopupResult : Popup
     {
         scoreText.text = point.ToString();
         timeText.text = time.ToString("n0");
+
+        FirebaseManager.Instance.SubmitScore(point);
     }
 }

@@ -7,7 +7,7 @@ public class UIManager : Singleton<UIManager>
 {
     private List<Popup> popups = new List<Popup>();
     //private Dictionary<T, Popup> popups = new Dictionary<string, GameObject>();
-    private Stack<Popup> popupStack = new Stack<Popup>(); // 열린 팝업 순서 관리
+    private List<Popup> popupStack = new List<Popup>(); // 열린 팝업 순서 관리
     [SerializeField]
     private Transform popupParent;
 
@@ -35,62 +35,81 @@ public class UIManager : Singleton<UIManager>
         if (popup == null) return null;
         popup.Open();
 
-        popupStack.Push(popup);
+        popupStack.Add(popup);
 
         return (T)popup;
+    }
+
+    public T Get<T>() where T: Popup
+    {
+        if(popupStack.Exists(x => x.GetType() == typeof(T)))
+        {
+            return (T)popupStack.FirstOrDefault(x => x.GetType() == typeof(T));
+        }
+        return null;
     }
 
     public void ClosePopup<T>() where T : Popup
     {
         if (popupStack.Count > 0)
         {
-            List<Popup> popupList = new List<Popup>();
-            while(popupStack.TryPop(out Popup popup))
+            if (popupStack.Exists(x => x.GetType() == typeof(T)))
             {
-                if(popup.GetType() != typeof(T))
+                foreach (Popup item in popupStack.Where(x => x.GetType() == typeof(T)))
                 {
-                    popupList.Add(popup);
+                    item.gameObject.SetActive(false);
                 }
-                else
-                {
-                    if (popupList.Count > 0)
-                    {
-                        for (int i = 0; i < popupList.Count; i++)
-                        {
-                            popupStack.Push(popupList[i]);
-                        }
-                    }
-                    popup.gameObject.SetActive(false);
-                    break;
-                }
+                popupStack.RemoveAll(x => x.GetType() == typeof(T));
             }
+            //List<Popup> popupList = new List<Popup>();
+            //while(popupStack.TryPop(out Popup popup))
+            //{
+            //    if(popup.GetType() != typeof(T))
+            //    {
+            //        popupList.Add(popup);
+            //    }
+            //    else
+            //    {
+            //        if (popupList.Count > 0)
+            //        {
+            //            for (int i = 0; i < popupList.Count; i++)
+            //            {
+            //                popupStack.Push(popupList[i]);
+            //            }
+            //        }
+            //        popup.gameObject.SetActive(false);
+            //        break;
+            //    }
+            //}
         }
     }
 
     public void ClosePopup(Popup close)
     {
-        if (popupStack.Count > 0)
+        if (popupStack.Count > 0 && popupStack.Contains(close))
         {
-            List<Popup> popupList = new List<Popup>();
-            while (popupStack.TryPop(out Popup popup))
-            {
-                if (popup.GetType() != close.GetType())
-                {
-                    popupList.Add(popup);
-                }
-                else
-                {
-                    if (popupList.Count > 0)
-                    {
-                        for (int i = 0; i < popupList.Count; i++)
-                        {
-                            popupStack.Push(popupList[i]);
-                        }
-                    }
-                    popup.gameObject.SetActive(false);
-                    break;
-                }
-            }
+            close.gameObject.SetActive(false);
+            popupStack.Remove(close);
+            //List<Popup> popupList = new List<Popup>();
+            //while (popupStack.TryPop(out Popup popup))
+            //{
+            //    if (popup.GetType() != close.GetType())
+            //    {
+            //        popupList.Add(popup);
+            //    }
+            //    else
+            //    {
+            //        if (popupList.Count > 0)
+            //        {
+            //            for (int i = 0; i < popupList.Count; i++)
+            //            {
+            //                popupStack.Push(popupList[i]);
+            //            }
+            //        }
+            //        popup.gameObject.SetActive(false);
+            //        break;
+            //    }
+            //}
         }
     }
 
@@ -124,19 +143,25 @@ public class UIManager : Singleton<UIManager>
     {
         if (popupStack.Count > 0)
         {
-            Popup popup = popupStack.Pop();
+            Popup popup = popupStack.Last();
             popup.gameObject.SetActive(false);
+            popupStack.Remove(popup);
         }
     }
 
     // 📌 모든 팝업 닫기
     public void CloseAllPopups()
     {
-        while (popupStack.Count > 0)
+        foreach (Popup popup in popupStack)
         {
-            Popup popup = popupStack.Pop();
             popup.gameObject.SetActive(false);
         }
+        popupStack.Clear();
+        //while (popupStack.Count > 0)
+        //{
+        //    Popup popup = popupStack.Pop();
+        //    popup.gameObject.SetActive(false);
+        //}
     }
     [SerializeField]
     private GameObject loadingObj;
@@ -152,5 +177,14 @@ public class UIManager : Singleton<UIManager>
     public void CloseLoading()
     {
         loadingObj.SetActive(false);
+    }
+
+    [SerializeField]
+    private GameObject main;
+
+    public void ShowMain(bool isShow)
+    {
+        main.SetActive(isShow);
+
     }
 }

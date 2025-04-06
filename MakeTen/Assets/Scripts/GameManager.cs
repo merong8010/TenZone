@@ -53,7 +53,7 @@ public class GameManager : Singleton<GameManager>
 
     private void Pause()
     {
-        _currentTime = null;
+        //_currentTime = null;
     }
 
     private DateTime? _currentTime = null; // 시간 저장 (정상적으로 가져오지 못하면 null)
@@ -125,7 +125,10 @@ public class GameManager : Singleton<GameManager>
     private IEnumerator Initialize()
     {
         yield return new WaitUntil(() => _currentTime != null);
+        Debug.Log("InitializeTime");
         yield return new WaitUntil(() => FirebaseManager.Instance.IsReady);
+        Debug.Log("InitializeTime");
+        DataManager.Instance.LoadUserData();
         yield return new WaitUntil(() => DataManager.Instance.userData != null);
 
         HUD.Instance.UpdateHeart();

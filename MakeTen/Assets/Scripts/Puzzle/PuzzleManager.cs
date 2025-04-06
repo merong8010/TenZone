@@ -23,14 +23,13 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private Block[] blocks;
 
     private const int TargetSumNum = 10;
+    private const int GameTime = 100;
 
     private ReactiveProperty<int> currentPoint;
     private ReactiveProperty<float> currentTime;
+    
 
-    [SerializeField]
-    private Text pointText;
-    [SerializeField]
-    private Text timeText;
+   
 
     [SerializeField]
     private int rowCount;
@@ -46,24 +45,26 @@ public class PuzzleManager : Singleton<PuzzleManager>
     protected override void Awake()
     {
         base.Awake();
-        StartCoroutine(Initialize());
+        //StartCoroutine(Initialize());
+        Initialize();
     }
 
     private Coroutine timeCoroutine;
 
-    private IEnumerator Initialize()
+    private bool isInit = false;
+    private void Initialize()
     {
+        if (isInit) return;
+        isInit = true;
         if (blocks == null) blocks = new Block[] { };
 
         currentPoint = new ReactiveProperty<int>();
-        currentPoint.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
-
         currentTime = new ReactiveProperty<float>();
-        currentTime.Subscribe(x => { timeText.text = new StringBuilder().Append("time : ").Append(Mathf.RoundToInt(x)).ToString(); });
 
-        yield return new WaitForSeconds(1f);
+        HUD.Instance.Initialize(currentPoint, currentTime);
+        //yield return new WaitForSeconds(1f);
 
-        InitBlocks();
+        //InitBlocks();
     }
 
     [SerializeField]
@@ -125,6 +126,15 @@ public class PuzzleManager : Singleton<PuzzleManager>
     [SerializeField]
     private RectTransform blocksRT;
 
+    public void GameStart()
+    {
+        if(DataManager.Instance.userData.UseHeart())
+        {
+            UIManager.Instance.ShowMain(false);
+            InitBlocks();
+        }
+    }
+
     public void InitBlocks()
     {
         if(blocks.Length > 0)
@@ -182,9 +192,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
             
         }
 
-        int num9 = blocks.Count(x => x.num == 9);
-        int num1 = blocks.Count(x => x.num == 1);
-        currentTime.Value = 0f;
+        currentTime.Value = GameTime;
         if (timeCoroutine != null) StopCoroutine(timeCoroutine);
         timeCoroutine = StartCoroutine(CheckTime());
     }
@@ -201,13 +209,15 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     private IEnumerator CheckTime()
     {
-        while (blocks.ToList().Exists(x => x.num > 0))
+        while (blocks.ToList().Exists(x => x.num > 0) && currentTime.Value > 0)
         {
             yield return new WaitForEndOfFrame();
-            currentTime.Value += UnityEngine.Time.deltaTime;
+            currentTime.Value -= UnityEngine.Time.deltaTime;
+            if(currentTime.Value < 0) currentTime.Value = 0;
         }
 
         UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, currentTime.Value);
+        UIManager.Instance.ShowMain(true);
         //InitBlocks();
     }
 

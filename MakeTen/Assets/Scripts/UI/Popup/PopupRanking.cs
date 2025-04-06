@@ -1,16 +1,40 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
-public class PopupRanking : MonoBehaviour
+public class PopupRanking : Popup
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField]
+    private RankingList rankingList;
+    public override void Open()
     {
+        base.Open();
+        FirebaseManager.Instance.GetTopScores(100, datas =>
+        {
+            rankingList.UpdateList(datas);
+
+            string[] countryCodes = datas.Select(x => x.countryCode).Distinct().ToArray();
+            foreach (string countryCode in countryCodes)
+            {
+                DataManager.Instance.GetFlags(countryCode, flag =>
+                {
+                    //List<RankingListItem> items = (List<RankingListItem>)rankingList.GetList().Where(x => x.GetData().countryCode == countryCode);
+                    //for (int i = 0; i < items.Count; i++)
+                    //{
+                    //    items[i].UpdateFlag(flag);
+                    //}
+                    rankingList.UpdateFlags(countryCode, flag);
+                });
+            }
+        });
         
     }
 
-    // Update is called once per frame
-    void Update()
+    public void UpdateFlags(string countryCode, Sprite sprite)
     {
-        
+        //foreach (RankingListItem item in rankingList.GetList().Where(x => x.GetData().countryCode == countryCode))
+        //{
+        //    item.UpdateFlag(sprite);
+        //}
     }
 }

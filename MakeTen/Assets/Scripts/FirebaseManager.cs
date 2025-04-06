@@ -40,30 +40,23 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    public void SubmitScore(string userId, string userName, int score)
+    public void SubmitScore(int score)
     {
         //DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
 
-        LeaderboardEntry entry = new LeaderboardEntry(userName, score);
-        string json = JsonUtility.ToJson(entry);
-
-        reference.Child("leaderboard").Child(userId).SetRawJsonValueAsync(json);
+        RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, score, DataManager.Instance.userData.countryCode);
+        
+        reference.Child("leaderboard").Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
     }
 
-    [System.Serializable]
-    public class LeaderboardEntry
+    public void TestSubmitScore(string userId, int score, string countryCode)
     {
-        public string name;
-        public int score;
+        RankingList.Data entry = new RankingList.Data(userId, score, countryCode);
 
-        public LeaderboardEntry(string name, int score)
-        {
-            this.name = name;
-            this.score = score;
-        }
+        reference.Child("leaderboard").Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
     }
 
-    public void GetTopScores(int limit = 10)
+    public void GetTopScores(int limit = 10, Action<List<RankingList.Data>> callback = null)
     {
         FirebaseDatabase.DefaultInstance.GetReference("leaderboard")
             .OrderByChild("score")
@@ -72,23 +65,30 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 if (task.IsCompleted)
                 {
                     DataSnapshot snapshot = task.Result;
-                    List<LeaderboardEntry> topEntries = new List<LeaderboardEntry>();
-
+                    List<RankingList.Data> topEntries = new List<RankingList.Data>();
                     foreach (DataSnapshot child in snapshot.Children)
                     {
                         string name = child.Child("name").Value.ToString();
                         int score = int.Parse(child.Child("score").Value.ToString());
-                        topEntries.Add(new LeaderboardEntry(name, score));
+                        string countryCode = child.Child("countryCode").Value.ToString();
+                        
+                        topEntries.Add(new RankingList.Data(name, score, countryCode));
                     }
 
                 // 낮은 점수부터 오므로 뒤집기
-                topEntries.Reverse();
-
-                    foreach (var entry in topEntries)
+                    topEntries.Reverse();
+                    for(int i = 0; i < topEntries.Count; i++)
                     {
-                        Debug.Log($"🏆 {entry.name} - {entry.score}");
+                        topEntries[i].rank = i + 1;
                     }
+                    //foreach (var entry in topEntries)
+                    //{
+                    //    Debug.Log($"🏆 {entry.name} - {entry.score}");
+                    //}
+                    if (callback != null) callback.Invoke(topEntries);
                 }
+                
+
             });
     }
 

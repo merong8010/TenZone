@@ -6,7 +6,7 @@ using System;
 
 public class FlagFetcher : MonoBehaviour
 {
-    private const string apiUrl = "https://www.countryflags.io/{0}/flat/64.png";  // 국가 코드로 이미지 요청
+    private const string apiUrl = "https://flagcdn.com/w320/{0}.png";  // 국가 코드로 이미지 요청
 
    // public string countryCode = "US";  // 국가 코드 (예: "US" = 미국)
 
@@ -15,17 +15,21 @@ public class FlagFetcher : MonoBehaviour
         //StartCoroutine(DownloadFlag(countryCode));
     }
 
+    public void GetFlag(string countryCode, Action<Sprite> callback)
+    {
+        StartCoroutine(DownloadFlag(countryCode, callback));
+    }
+
     IEnumerator DownloadFlag(string countryCode, Action<Sprite> callback)
     {
-        string url = string.Format(apiUrl, countryCode);
+        string url = string.Format(apiUrl, countryCode.ToLower());
         UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
         yield return request.SendWebRequest();
-
+        Debug.Log("DownloadFlag : " + request.result);
         if (request.result == UnityWebRequest.Result.Success)
         {
             Texture2D texture = ((DownloadHandlerTexture)request.downloadHandler).texture;
-            flagsDic.Add(countryCode, SpriteFromTexture(texture));
-            callback.Invoke(flagsDic[countryCode]);
+            callback.Invoke(SpriteFromTexture(texture));
             // 다운로드한 이미지를 UI에 적용
             //GetComponent<Renderer>().material.mainTexture = texture;
         }
@@ -33,19 +37,6 @@ public class FlagFetcher : MonoBehaviour
         {
             Debug.LogError("Flag download failed: " + request.error);
             callback.Invoke(null);
-        }
-    }
-
-    private Dictionary<string, Sprite> flagsDic = new Dictionary<string, Sprite>();
-    public void GetFlags(string countryCode, Action<Sprite> callback)
-    {
-        if(flagsDic.ContainsKey(countryCode))
-        {
-            callback.Invoke(flagsDic[countryCode]);
-        }
-        else
-        {
-            StartCoroutine(DownloadFlag(countryCode, callback));
         }
     }
 
