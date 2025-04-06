@@ -12,27 +12,8 @@ public class DataManager : Singleton<DataManager>
         FirebaseManager.Instance.GetUserData(SystemInfo.deviceUniqueIdentifier, (UserData userData) =>
         {
             this.userData = userData;
+            Debug.Log(userData.Heart);
         });
     }
-    [SerializeField]
-    private FlagFetcher flagFetcher;
-    private Dictionary<string, Sprite> flagsDic = new Dictionary<string, Sprite>();
     
-    public void GetFlags(string countryCode, Action<Sprite> callback)
-    {
-        if(flagsDic.ContainsKey(countryCode))
-        {
-            if (flagsDic[countryCode] != null)
-                callback.Invoke(flagsDic[countryCode]);
-        }
-        else
-        {
-            flagsDic.Add(countryCode, null);
-            flagFetcher.GetFlag(countryCode, flagSprite =>
-            {
-                UIManager.Instance.Get<PopupRanking>().UpdateFlags(countryCode, flagSprite);
-                callback.Invoke(flagSprite);
-            });
-        }
-    }
 }

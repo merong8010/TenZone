@@ -1,6 +1,7 @@
 using UnityEngine;
 using static FirebaseManager;
 using UnityEngine.UI;
+using UnityEngine.U2D;
 
 public class RankingListItem : ListItem<RankingList.Data>
 {
@@ -18,6 +19,7 @@ public class RankingListItem : ListItem<RankingList.Data>
         rankText.text = data.rank.ToString();
         idText.text = data.name;
         scoreText.text = data.score.ToString();
+        countryImage.sprite = Resources.Load<SpriteAtlas>("Graphics/Flags").GetSprite(data.countryCode.ToLower());
         //DataManager.Instance.GetFlags(data.countryCode, flagSprite => countryImage.sprite = flagSprite);
     }
 

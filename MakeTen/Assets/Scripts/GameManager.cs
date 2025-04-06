@@ -125,9 +125,7 @@ public class GameManager : Singleton<GameManager>
     private IEnumerator Initialize()
     {
         yield return new WaitUntil(() => _currentTime != null);
-        Debug.Log("InitializeTime");
         yield return new WaitUntil(() => FirebaseManager.Instance.IsReady);
-        Debug.Log("InitializeTime");
         DataManager.Instance.LoadUserData();
         yield return new WaitUntil(() => DataManager.Instance.userData != null);
 

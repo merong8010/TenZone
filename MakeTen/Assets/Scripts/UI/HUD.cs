@@ -53,20 +53,25 @@ public class HUD : Singleton<HUD>
         UIManager.Instance.Open<PopupRanking>();
     }
 
-    [SerializeField]
-    private string id;
-    [SerializeField]
-    private int scoreMin;
-    [SerializeField]
-    private int scoreMax;
-    [SerializeField]
-    private string[] countryCodes;
-    public void TestSubmit()
+    public void ClickCharge()
     {
-        for(int i = 0; i < 50; i++)
-        {
-            FirebaseManager.Instance.TestSubmitScore(id + "_" + i, Random.Range(scoreMin, scoreMax), countryCodes[Random.Range(0, countryCodes.Length)]);
-        }
-        
+        DataManager.Instance.userData.ChargeHeart();
     }
+
+    //[SerializeField]
+    //private string id;
+    //[SerializeField]
+    //private int scoreMin;
+    //[SerializeField]
+    //private int scoreMax;
+    //[SerializeField]
+    //private string[] countryCodes;
+    //public void TestSubmit()
+    //{
+    //    for(int i = 0; i < 50; i++)
+    //    {
+    //        FirebaseManager.Instance.TestSubmitScore(id + "_" + i, Random.Range(scoreMin, scoreMax), countryCodes[Random.Range(0, countryCodes.Length)]);
+    //    }
+        
+    //}
 }

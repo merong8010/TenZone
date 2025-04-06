@@ -21,23 +21,29 @@ public class UserData
                 if(GameManager.Instance.dateTime !=null)
                 {
                     long currentTime = GameManager.Instance.dateTime.Value.ToTick();
-                    //638795125480740600 | 638795126420000000
-                    Debug.Log(nextHeartChargeTime + " | " + currentTime);
                     if (nextHeartChargeTime < currentTime)
                     {
 
                         heart += 1;
                         heart += (int)((currentTime - nextHeartChargeTime) / HeartChargeTime);
-                        if(heart > MaxHeart)
+                        if(heart >= MaxHeart)
                         {
                             heart = MaxHeart;
+                            nextHeartChargeTime = currentTime;
                         }
-                        nextHeartChargeTime = currentTime;
+                        else
+                        {
+                            nextHeartChargeTime = currentTime + ((currentTime - nextHeartChargeTime) % HeartChargeTime);
+                        }
                     }
                 }
             }
             
             return heart;
+        }
+        set
+        {
+            heart = value;
         }
     }
 
@@ -64,7 +70,7 @@ public class UserData
         if(Heart > 0)
         {
             heart -= 1;
-            if (nextHeartChargeTime <= GameManager.Instance.dateTime.Value.ToTick())
+            if (heart < MaxHeart && nextHeartChargeTime <= GameManager.Instance.dateTime.Value.ToTick())
             {
                 nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick() + HeartChargeTime;
             }
@@ -74,6 +80,17 @@ public class UserData
             return true;
         }
         return false;
+    }
+
+    public void ChargeHeart()
+    {
+        heart += 1;
+        if(heart >= MaxHeart)
+        {
+            nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
+        }
+        HUD.Instance.UpdateHeart();
+        FirebaseManager.Instance.SaveUserData(this);
     }
 
 

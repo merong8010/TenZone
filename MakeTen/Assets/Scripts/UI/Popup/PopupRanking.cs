@@ -13,19 +13,19 @@ public class PopupRanking : Popup
         {
             rankingList.UpdateList(datas);
 
-            string[] countryCodes = datas.Select(x => x.countryCode).Distinct().ToArray();
-            foreach (string countryCode in countryCodes)
-            {
-                DataManager.Instance.GetFlags(countryCode, flag =>
-                {
-                    //List<RankingListItem> items = (List<RankingListItem>)rankingList.GetList().Where(x => x.GetData().countryCode == countryCode);
-                    //for (int i = 0; i < items.Count; i++)
-                    //{
-                    //    items[i].UpdateFlag(flag);
-                    //}
-                    rankingList.UpdateFlags(countryCode, flag);
-                });
-            }
+            //string[] countryCodes = datas.Select(x => x.countryCode).Distinct().ToArray();
+            //foreach (string countryCode in countryCodes)
+            //{
+            //    DataManager.Instance.GetFlags(countryCode, flag =>
+            //    {
+            //        //List<RankingListItem> items = (List<RankingListItem>)rankingList.GetList().Where(x => x.GetData().countryCode == countryCode);
+            //        //for (int i = 0; i < items.Count; i++)
+            //        //{
+            //        //    items[i].UpdateFlag(flag);
+            //        //}
+            //        rankingList.UpdateFlags(countryCode, flag);
+            //    });
+            //}
         });
         
     }
