@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UniRx;
 using System.Text;
 using System.Collections;
+using System;
 
 public class HUD : Singleton<HUD>
 {
@@ -42,10 +43,19 @@ public class HUD : Singleton<HUD>
     }
 
     private bool isInit = false;
-    public void Initialize(ReactiveProperty<int> pointProperty, ReactiveProperty<float> timePropoerty)
+    public void Initialize(ReactiveProperty<int> pointProperty)
     {
         pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
-        timePropoerty.Subscribe(x => { timeText.text = new StringBuilder().Append("time : ").Append(Mathf.RoundToInt(x)).ToString(); });
+        GameManager.Instance.reactiveTime.Subscribe(x =>
+        {
+            if(x.Ticks <= PuzzleManager.Instance.finishTime.Ticks)
+            {
+                TimeSpan timeSpan = (PuzzleManager.Instance.finishTime - x);
+                timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
+            }
+            
+        });
+        //timePropoerty.Subscribe(x => { timeText.text = new StringBuilder().Append("time : ").Append(Mathf.RoundToInt(x)).ToString(); });
     }
 
     public void ClickRanking()

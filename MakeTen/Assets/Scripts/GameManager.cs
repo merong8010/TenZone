@@ -46,9 +46,9 @@ public class GameManager : Singleton<GameManager>
 
     private void Resume()
     {
-        UIManager.Instance.Loading();
-        _currentTime = null;
-        FetchOnlineTime();
+        //UIManager.Instance.Loading();
+        //_currentTime = null;
+        //FetchOnlineTime();
     }
 
     private void Pause()
@@ -59,6 +59,8 @@ public class GameManager : Singleton<GameManager>
     private DateTime? _currentTime = null; // 시간 저장 (정상적으로 가져오지 못하면 null)
 
     public DateTime? dateTime => _currentTime != null ? _currentTime.Value : null;
+
+    public ReactiveProperty<DateTime> reactiveTime = new ReactiveProperty<DateTime>();
     
     // ✅ 구글 서버에서 UTC 시간 가져오기
     public void FetchOnlineTime()
@@ -83,28 +85,22 @@ public class GameManager : Singleton<GameManager>
                 if (!string.IsNullOrEmpty(dateHeader))
                 {
                     _currentTime = DateTime.Parse(dateHeader).ToUniversalTime();
-
                     lastCheckTime = Time.realtimeSinceStartupAsDouble;
 
                     UIManager.Instance.CloseLoading();
-                    //Debug.Log($"✅ Google 시간 동기화 성공: {_currentTime}");
                 }
                 else
                 {
-                    //Debug.LogWarning("❌ Google 서버 응답에 시간 정보 없음.");
                     _currentTime = null;
                     FetchOnlineTime();
                 }
             }
             else
             {
-                //Debug.LogError($"❌ Google 시간 요청 실패: {request.error}");
                 _currentTime = null;
                 FetchOnlineTime();
             }
         }
-
-        //UIManager.Instance.CloseLoading();
     }
 
     private double lastCheckTime;
@@ -113,22 +109,21 @@ public class GameManager : Singleton<GameManager>
     {
         if(_currentTime != null)
         {
-            double flow = Time.realtimeSinceStartupAsDouble - lastCheckTime;
-            if (flow >= 1)
-            {
-                _currentTime = _currentTime.Value.AddSeconds(flow);
-                lastCheckTime = Time.realtimeSinceStartupAsDouble;
-            }
+            _currentTime = _currentTime.Value.AddSeconds(Time.realtimeSinceStartupAsDouble - lastCheckTime);
+            lastCheckTime = Time.realtimeSinceStartupAsDouble;
+            reactiveTime.Value = _currentTime.Value;
         }
     }
 
     private IEnumerator Initialize()
     {
+        FetchOnlineTime();
         yield return new WaitUntil(() => _currentTime != null);
         yield return new WaitUntil(() => FirebaseManager.Instance.IsReady);
-        DataManager.Instance.LoadUserData();
-        yield return new WaitUntil(() => DataManager.Instance.userData != null);
+        DataManager.Instance.LoadGameDatas();
+        yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
 
+        UIManager.Instance.Main.Refresh();
         HUD.Instance.UpdateHeart();
     }
 }

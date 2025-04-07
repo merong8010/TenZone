@@ -2,8 +2,8 @@
     "m_SelectedDeviceId": "RF9N300TDKD",
     "m_SelectedProcess": {
         "deviceId": "RF9N300TDKD",
-        "name": "com.DefaultCompany.com.unity.template.mobile2D",
-        "processId": 23640,
+        "name": "studio.jjm.maketen",
+        "processId": 22247,
         "exited": false
     },
     "m_SelectedPriority": 0,
@@ -12,6 +12,24 @@
             "deviceId": "RF9N300TDKD",
             "name": "com.DefaultCompany.com.unity.template.mobile2D",
             "processId": 23640,
+            "exited": false
+        },
+        {
+            "deviceId": "RF9N300TDKD",
+            "name": "studio.jjm.maketen",
+            "processId": 20793,
+            "exited": false
+        },
+        {
+            "deviceId": "RF9N300TDKD",
+            "name": "studio.jjm.maketen",
+            "processId": 21754,
+            "exited": false
+        },
+        {
+            "deviceId": "RF9N300TDKD",
+            "name": "studio.jjm.maketen",
+            "processId": 22247,
             "exited": false
         }
     ],

@@ -179,12 +179,17 @@ public class UIManager : Singleton<UIManager>
         loadingObj.SetActive(false);
     }
 
-    [SerializeField]
-    private GameObject main;
+    public Main Main;
 
     public void ShowMain(bool isShow)
     {
-        main.SetActive(isShow);
+        Main.gameObject.SetActive(isShow);
+    }
+
+    public void RefreshMain()
+    {
 
     }
+
+    public Message Message;
 }

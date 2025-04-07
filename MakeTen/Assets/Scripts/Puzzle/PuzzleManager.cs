@@ -4,6 +4,7 @@ using System.Linq;
 using UniRx;
 using System.Text;
 using System.Collections;
+using System;
 
 public class PuzzleManager : Singleton<PuzzleManager>
 {
@@ -26,7 +27,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private const int GameTime = 100;
 
     private ReactiveProperty<int> currentPoint;
-    private ReactiveProperty<float> currentTime;
+    public DateTime finishTime;
     
 
    
@@ -49,7 +50,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         Initialize();
     }
 
-    private Coroutine timeCoroutine;
+    private Coroutine finishCoroutine;
 
     private bool isInit = false;
     private void Initialize()
@@ -59,9 +60,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
         if (blocks == null) blocks = new Block[] { };
 
         currentPoint = new ReactiveProperty<int>();
-        currentTime = new ReactiveProperty<float>();
-
-        HUD.Instance.Initialize(currentPoint, currentTime);
+        
+        HUD.Instance.Initialize(currentPoint);
         //yield return new WaitForSeconds(1f);
 
         //InitBlocks();
@@ -192,9 +192,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
             
         }
 
-        currentTime.Value = GameTime;
-        if (timeCoroutine != null) StopCoroutine(timeCoroutine);
-        timeCoroutine = StartCoroutine(CheckTime());
+        finishTime = GameManager.Instance.dateTime.Value.AddSeconds(DataManager.Instance.config.PuzzleTime);
+        if (finishCoroutine != null) StopCoroutine(finishCoroutine);
+        finishCoroutine = StartCoroutine(CheckFinish());
     }
 
     public void Shuffle()
@@ -207,17 +207,17 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
     }
 
-    private IEnumerator CheckTime()
+    private IEnumerator CheckFinish()
     {
-        while (blocks.ToList().Exists(x => x.num > 0) && currentTime.Value > 0)
+        while (blocks.ToList().Exists(x => x.num > 0) && GameManager.Instance.dateTime.Value.Ticks <= finishTime.Ticks)
         {
             yield return new WaitForEndOfFrame();
-            currentTime.Value -= UnityEngine.Time.deltaTime;
-            if(currentTime.Value < 0) currentTime.Value = 0;
         }
 
-        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, currentTime.Value);
+        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
         UIManager.Instance.ShowMain(true);
+
+        finishCoroutine = null;
         //InitBlocks();
     }
 

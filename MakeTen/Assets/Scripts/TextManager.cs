@@ -1,0 +1,38 @@
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+public static class TextManager
+{
+    public static Dictionary<string, string> dic = new Dictionary<string, string>();
+
+    public static void LoadDatas(string countryCode, GameData.Language data)
+    {
+        string[] keys = data.Vals.Select(x => x.key).ToArray();
+        string[] vals = new string[keys.Length];
+        switch (countryCode)
+        {
+            case "KR":
+                vals = data.Vals.Select(x => x.KR).ToArray();
+                break;
+            case "JP":
+                vals = data.Vals.Select(x => x.JP).ToArray();
+                break;
+            case "TW":
+                vals = data.Vals.Select(x => x.TW).ToArray();
+                break;
+        }
+
+        dic.Clear();
+        for (int i = 0; i < keys.Length; i++)
+        {
+            dic.Add(keys[i], vals[i]);
+        }
+    }
+
+    public static string Get(string key)
+    {
+        if (!dic.ContainsKey(key)) return key;
+        return dic[key];
+    }
+}

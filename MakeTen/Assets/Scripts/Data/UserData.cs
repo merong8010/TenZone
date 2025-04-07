@@ -3,9 +3,10 @@ using UnityEngine;
 
 public class UserData
 {
-    public const int MaxHeart = 5;
-    public const int HeartChargeTime = 600;
+    //public const int MaxHeart = 5;
+    //public const int HeartChargeTime = 600;
 
+    public FirebaseManager.AuthenticatedType authType;
     public string id;
     public string nickname;
     private int heart;
@@ -16,7 +17,7 @@ public class UserData
     {
         get
         {
-            if(heart < MaxHeart)
+            if(heart < DataManager.Instance.config.MaxHeart)
             {
                 if(GameManager.Instance.dateTime !=null)
                 {
@@ -25,15 +26,15 @@ public class UserData
                     {
 
                         heart += 1;
-                        heart += (int)((currentTime - nextHeartChargeTime) / HeartChargeTime);
-                        if(heart >= MaxHeart)
+                        heart += (int)((currentTime - nextHeartChargeTime) / DataManager.Instance.config.HeartChargeTime);
+                        if(heart >= DataManager.Instance.config.MaxHeart)
                         {
-                            heart = MaxHeart;
+                            heart = DataManager.Instance.config.MaxHeart;
                             nextHeartChargeTime = currentTime;
                         }
                         else
                         {
-                            nextHeartChargeTime = currentTime + ((currentTime - nextHeartChargeTime) % HeartChargeTime);
+                            nextHeartChargeTime = currentTime + ((currentTime - nextHeartChargeTime) % DataManager.Instance.config.HeartChargeTime);
                         }
                     }
                 }
@@ -56,9 +57,9 @@ public class UserData
     {
         id = userId;
 
-        //string country = RegionInfo.CurrentRegion.EnglishName; // 국가 이름
+        //string country = RegionInfo.CurrentRegion.EnglishName; // ???? ????
         countryCode = RegionInfo.CurrentRegion.TwoLetterISORegionName;
-        heart = MaxHeart;
+        heart = DataManager.Instance.config.MaxHeart;
         nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
     }
 
@@ -70,9 +71,9 @@ public class UserData
         if(Heart > 0)
         {
             heart -= 1;
-            if (heart < MaxHeart && nextHeartChargeTime <= GameManager.Instance.dateTime.Value.ToTick())
+            if (heart < DataManager.Instance.config.MaxHeart && nextHeartChargeTime <= GameManager.Instance.dateTime.Value.ToTick())
             {
-                nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick() + HeartChargeTime;
+                nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick() + DataManager.Instance.config.HeartChargeTime;
             }
             //
             FirebaseManager.Instance.SaveUserData(this);
@@ -85,7 +86,7 @@ public class UserData
     public void ChargeHeart()
     {
         heart += 1;
-        if(heart >= MaxHeart)
+        if(heart >= DataManager.Instance.config.MaxHeart)
         {
             nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
         }
@@ -93,5 +94,11 @@ public class UserData
         FirebaseManager.Instance.SaveUserData(this);
     }
 
+    public void UpdateData(string userId, FirebaseManager.AuthenticatedType authType)
+    {
+        id = userId;
+        this.authType = authType;
 
+        FirebaseManager.Instance.SaveUserData(this);
+    }
 }

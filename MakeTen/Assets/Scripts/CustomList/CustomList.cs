@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using static UnityEditor.Progress;
 
 public class CustomList<T> : MonoBehaviour where T : class
 {
