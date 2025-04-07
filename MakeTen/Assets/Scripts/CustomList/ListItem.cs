@@ -6,7 +6,10 @@ using System.Collections.Generic;
 public class ListItem<T> : MonoBehaviour where T : class
 {
 	protected T data;
-
+	public RectTransform rect
+	{
+		get => (RectTransform)transform;
+	}
 	public T GetData()
 	{
 		return data;

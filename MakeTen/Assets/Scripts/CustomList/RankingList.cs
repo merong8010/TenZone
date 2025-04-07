@@ -1,7 +1,7 @@
 using System.Linq;
 using UnityEngine;
 
-public class RankingList : CustomList<RankingList.Data>
+public class RankingList : InfiniteScroll<RankingList.Data>
 {
     public class Data
     {
@@ -25,12 +25,12 @@ public class RankingList : CustomList<RankingList.Data>
         }
     }
 
-    public void UpdateFlags(string countryCode, Sprite flag)
-    {
-        listItems.Where(x => x.GetData().countryCode == countryCode).ToList().ForEach(x => ((RankingListItem)x).UpdateFlag(flag));
-        //for (int i = 0; i < .Count; i++)
-        //{
+    //public void UpdateFlags(string countryCode, Sprite flag)
+    //{
+    //    listItems.Where(x => x.GetData().countryCode == countryCode).ToList().ForEach(x => ((RankingListItem)x).UpdateFlag(flag));
+    //    //for (int i = 0; i < .Count; i++)
+    //    //{
             
-        //}
-    }
+    //    //}
+    //}
 }
