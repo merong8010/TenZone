@@ -118,13 +118,21 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 DataSnapshot snapshot = task.Result;
                 if (snapshot.Exists)
                 {
-                    Debug.Log($"game Info {nodeName} : {snapshot.GetRawJsonValue()}");
-                    callback.Invoke(JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue()));
+                    try 
+                    {
+                        T gameData = JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue());
+                        //Debug.Log($"game Info {nodeName} : {snapshot.GetRawJsonValue()} | {gameData}");
+                        callback.Invoke(gameData);
+                    }
+                    catch(System.Exception exception)
+                    {
+                        Debug.LogError($"GameData parse error : {exception.Message}");
+                    }
                 }
                 else
                 {
                     //callback.Invoke(new UserData(userId));
-                    Debug.Log("No gameInfo found.");
+                    Debug.LogError("No gameInfo found.");
                 }
             }
             else
@@ -164,18 +172,29 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetUserData(string userId, Action<UserData> callback)
     {
+        Debug.Log($"GetUserData {userId}");
+
         db.Child(KEY.USER).Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
+            Debug.Log($"task.IsCompleted : {task.IsCompleted} | {task.Result} | {task.Result?.Exists}");
             if (task.IsCompleted)
             {
-                DataSnapshot snapshot = task.Result;
-                if (snapshot.Exists)
+                try
                 {
-                    //string json = snapshot.GetRawJsonValue();
-                    //User user = JsonUtility.FromJson<User>(json);
-                    Debug.Log("User Info: " + snapshot.GetRawJsonValue());
-                    callback.Invoke(JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue()));
+                    DataSnapshot snapshot = task.Result;
+                    if (snapshot.Exists)
+                    {
+                        //string json = snapshot.GetRawJsonValue();
+                        //User user = JsonUtility.FromJson<User>(json);
+                        Debug.Log("User Info: " + snapshot.GetRawJsonValue());
+                        callback.Invoke(JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue()));
+                    }
+                    else
+                    {
+                        callback.Invoke(new UserData(userId));
+                        Debug.Log("No user found.");
+                    }
                 }
-                else
+                catch (Exception e)
                 {
                     callback.Invoke(new UserData(userId));
                     Debug.Log("No user found.");
@@ -406,6 +425,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void CreateAvailableNickname(Action<string> callback)
     {
+        Debug.Log("CreateAvailableNickname");
         if (!string.IsNullOrEmpty(DataManager.Instance.userData.nickname))
             return;
 

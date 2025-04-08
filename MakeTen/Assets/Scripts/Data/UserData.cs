@@ -71,10 +71,13 @@ public class UserData
         goods.Add(GameData.GoodsType.Gold, DataManager.Instance.config.defaultGold);
         goods.Add(GameData.GoodsType.Gem, DataManager.Instance.config.defaultGem);
         goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.config.defaultShuffle);
-        FirebaseManager.Instance.CreateAvailableNickname(nick =>
-        {
-            nickname = nick;
-        });
+        //FirebaseManager.Instance.CreateAvailableNickname(nick =>
+        //{
+        //    nickname = nick;
+        //    FirebaseManager.Instance.SaveUserData(this);
+        //});
+        //SaveUserData()
+        FirebaseManager.Instance.SaveUserData(this);
     }
 
 

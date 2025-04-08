@@ -34,6 +34,7 @@ public class DataManager : Singleton<DataManager>
 
     private IEnumerator GetGameDatas()
     {
+        Debug.Log("GetGameDatas");
         yield return GetGameData<GameData.Config>(result =>
         {
             config = result;
