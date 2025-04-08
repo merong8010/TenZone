@@ -8,6 +8,14 @@ using System;
 
 public class PuzzleManager : Singleton<PuzzleManager>
 {
+    public enum Level
+    {
+        None,
+        Easy,
+        Normal,
+        Hard,
+        Expert,
+    }
     [SerializeField]
     private Image dragTransform;
     /// <summary>
@@ -24,18 +32,28 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private Block[] blocks;
 
     private const int TargetSumNum = 10;
-    private const int GameTime = 100;
+    //private const int GameTime = 100;
 
     private ReactiveProperty<int> currentPoint;
     public DateTime finishTime;
-    
 
+    private GameData.GameLevelInfo currentLevel;
    
 
-    [SerializeField]
-    private int rowCount;
-    [SerializeField]
-    private int columnCount;
+    //[SerializeField]
+    //private int rowCount;
+    //[SerializeField]
+    //private int columnCount;
+    //[SerializeField]
+    //private InputField meanInput;
+    //private float mean = 3f;
+    //private const float meanDefault = 3f;
+
+    //[SerializeField]
+    //private InputField stdDevInput;
+    //private float stdDev = 3.5f;
+    //private const float stdDevDefault = 3.5f;
+
 
     private Vector2 blockStartPos;
     [SerializeField]
@@ -62,63 +80,60 @@ public class PuzzleManager : Singleton<PuzzleManager>
         currentPoint = new ReactiveProperty<int>();
         
         HUD.Instance.Initialize(currentPoint);
-        //yield return new WaitForSeconds(1f);
-
-        //InitBlocks();
     }
 
-    [SerializeField]
-    private InputField meanInput;
-    private float mean = 3f;
-    private const float meanDefault = 3f;
+    //[SerializeField]
+    //private InputField meanInput;
+    //private float mean = 3f;
+    //private const float meanDefault = 3f;
 
-    [SerializeField]
-    private InputField stdDevInput;
-    private float stdDev = 3.5f;
-    private const float stdDevDefault = 3.5f;
+    //[SerializeField]
+    //private InputField stdDevInput;
+    //private float stdDev = 3.5f;
+    //private const float stdDevDefault = 3.5f;
 
-    public void OnValueChangeMean(string str)
-    {
-        if(!float.TryParse(str, out mean))
-        {
-            meanInput.text = meanDefault.ToString();
-            mean = meanDefault;
-        }
-    }
+    //public void OnValueChangeMean(string str)
+    //{
+    //    if(!float.TryParse(str, out mean))
+    //    {
+    //        meanInput.text = meanDefault.ToString();
+    //        mean = meanDefault;
+    //    }
+    //}
 
-    public void OnValueChangeStdDev(string str)
-    {
-        if (!float.TryParse(str, out stdDev))
-        {
-            stdDevInput.text = stdDevDefault.ToString();
-            stdDev = stdDevDefault;
-        }
-    }
+    //public void OnValueChangeStdDev(string str)
+    //{
+    //    if (!float.TryParse(str, out stdDev))
+    //    {
+    //        stdDevInput.text = stdDevDefault.ToString();
+    //        stdDev = stdDevDefault;
+    //    }
+    //}
 
-    [SerializeField]
-    private InputField columnInput;
-    private const int columnDefault = 17;
-    [SerializeField]
-    private InputField rowInput;
-    private const int rowDefault = 10;
+    //[SerializeField]
+    //private InputField columnInput;
+    //private const int columnDefault = 17;
+    //[SerializeField]
+    //private InputField rowInput;
+    //private const int rowDefault = 10;
 
-    public void OnValueChangeColumn(string str)
-    {
-        if (!int.TryParse(str, out columnCount))
-        {
-            columnInput.text = columnDefault.ToString();
-            columnCount = columnDefault;
-        }
-    }
+    //public void OnValueChangeColumn(string str)
+    //{
+    //    if (!int.TryParse(str, out columnCount))
+    //    {
+    //        columnInput.text = columnDefault.ToString();
+    //        columnCount = columnDefault;
+    //    }
+    //}
 
-    public void OnValueChangeRow(string str)
-    {
-        if (!int.TryParse(str, out rowCount))
-        {
-            rowInput.text = rowDefault.ToString();
-            rowCount = rowDefault;
-        }
-    }
+    //public void OnValueChangeRow(string str)
+    //{
+    //    if (!int.TryParse(str, out rowCount))
+    //    {
+    //        rowInput.text = rowDefault.ToString();
+    //        rowCount = rowDefault;
+    //    }
+    //}
 
     [SerializeField]
     private ObjectPooler pooler;
@@ -126,13 +141,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
     [SerializeField]
     private RectTransform blocksRT;
 
-    public void GameStart()
+    public void GameStart(GameData.GameLevelInfo level)
     {
-        if(DataManager.Instance.userData.UseHeart())
-        {
-            UIManager.Instance.ShowMain(false);
-            InitBlocks();
-        }
+        currentLevel = level;
+        UIManager.Instance.ShowMain(false);
+        InitBlocks();
     }
 
     public void InitBlocks()
@@ -147,12 +160,12 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
         blocks = new Block[] { };
 
-        blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * columnCount)) / columnCount, (blocksRT.rect.height - (blockGap.y * rowCount)) / rowCount);
+        blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * currentLevel.column)) / currentLevel.column, (blocksRT.rect.height - (blockGap.y * currentLevel.row)) / currentLevel.row);
         //Debug.Log($"blockSize : {blockSize.x}:{blockSize.y} | {blocksRT.sizeDelta.x} : {blocksRT.sizeDelta.y} | {blockGap.x} : {blockGap.y} | {blocksRT.rect.width} : {blocksRT.rect.height}");
-        blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (columnCount-1) * 0.5f, -(blockSize.y + blockGap.y) * (rowCount-1) * 0.5f);
-        for (int row = 0; row < rowCount; row++)
+        blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
+        for (int row = 0; row < currentLevel.row; row++)
         {
-            for (int column = 0; column < columnCount; column++)
+            for (int column = 0; column < currentLevel.column; column++)
             {
                 GameObject blockObj = pooler.GetObject("block");
                 blockObj.name = $"block_{row}_{column}";
@@ -170,7 +183,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         //System.Random rand = new System.Random();
         for (int i = 0; i < blocks.Length; i++)
         {
-            blocks[i].Init(Util.GenerateGaussianRandom(mean, stdDev));
+            blocks[i].Init(Util.GenerateGaussianRandom(currentLevel.mean, currentLevel.stdDev));
         }
 
         int remain = blocks.Sum(x => x.num) % TargetSumNum;
@@ -189,10 +202,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
                     if (remain == 0) break;
                 }
             }
-            
         }
 
-        finishTime = GameManager.Instance.dateTime.Value.AddSeconds(DataManager.Instance.config.PuzzleTime);
+        finishTime = GameManager.Instance.dateTime.Value.AddSeconds(currentLevel.time);
         if (finishCoroutine != null) StopCoroutine(finishCoroutine);
         finishCoroutine = StartCoroutine(CheckFinish());
     }

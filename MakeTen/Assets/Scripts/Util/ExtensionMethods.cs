@@ -38,6 +38,12 @@ public static class ExtensionMethods
         return TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
     }
 
+    public static string ToTimeText(this long time)
+    {
+        return time.LongToDateTime().ToString(@"yyyy-MM-dd H\:mm\:ss");
+        //return TimeSpan.FromSeconds(time).ToString(@"yyyy-MM-dd H\:mm\:ss");
+    }
+
     public static long ToTick(this DateTime dateTime)
     {
         return (dateTime.Ticks - 621355968000000000) / 10000000;

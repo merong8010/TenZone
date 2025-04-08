@@ -8,6 +8,12 @@ using Newtonsoft.Json;
 using System.Globalization;
 using System;
 using Firebase.Auth;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Linq;
+using System.Threading;
+
+
 public class FirebaseManager : Singleton<FirebaseManager>
 {
     /// <summary>
@@ -17,8 +23,16 @@ public class FirebaseManager : Singleton<FirebaseManager>
     //    user3: { name: "Carol", score: 250 }
     //}
 
-    public bool IsReady => reference != null;
-    private DatabaseReference reference;
+    public static class KEY
+    {
+        public static string USER = "Users";
+        public static string NICKNAME = "UserNicknames";
+        public static string RANKING = "Ranking_{0}";
+        public static string RANKING_DAILY = "Ranking_Daily_{0}";
+    }
+
+    public bool IsReady => db != null;
+    private DatabaseReference db;
     private FirebaseAuth auth;
     private FirebaseUser user;
     /// </summary>
@@ -30,7 +44,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             {
                 Debug.Log("Firebase Ready");
                 FirebaseApp app = FirebaseApp.DefaultInstance;
-                reference = FirebaseDatabase.DefaultInstance.RootReference;
+                db = FirebaseDatabase.DefaultInstance.RootReference;
                 auth = FirebaseAuth.DefaultInstance;
 
                 user = auth.CurrentUser;
@@ -42,26 +56,26 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    public void SubmitScore(int score)
+    public void SubmitScore(int score, int milliseconds)
     {
         //DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
 
-        RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, score, DataManager.Instance.userData.countryCode);
+        RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, DataManager.Instance.userData.nickname, score, milliseconds, DataManager.Instance.userData.countryCode);
         
-        reference.Child("leaderboard").Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
+        db.Child("leaderboard").Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
     }
 
-    public void TestSubmitScore(string userId, int score, string countryCode)
+    public void TestSubmitScore(string userId, string nickname, int score, int milliSeconds, string countryCode)
     {
-        RankingList.Data entry = new RankingList.Data(userId, score, countryCode);
+        RankingList.Data entry = new RankingList.Data(userId, nickname, score, milliSeconds, countryCode);
 
-        reference.Child("leaderboard").Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
+        db.Child("leaderboard").Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
     }
 
     public void GetTopScores(int limit = 10, Action<List<RankingList.Data>> callback = null)
     {
-        FirebaseDatabase.DefaultInstance.GetReference("leaderboard")
-            .OrderByChild("score")
+        db.Child("leaderboard")
+            .OrderByChild("point")
             .LimitToLast(limit) // score가 높은 순
             .GetValueAsync().ContinueWithOnMainThread(task => {
                 if (task.IsCompleted)
@@ -70,11 +84,13 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     List<RankingList.Data> topEntries = new List<RankingList.Data>();
                     foreach (DataSnapshot child in snapshot.Children)
                     {
+                        string id = child.Child("id").Value.ToString();
                         string name = child.Child("name").Value.ToString();
-                        int score = int.Parse(child.Child("score").Value.ToString());
+                        int point = int.Parse(child.Child("point").Value.ToString());
+                        int remain = int.Parse(child.Child("remainMilliSeconds").Value.ToString());
                         string countryCode = child.Child("countryCode").Value.ToString();
                         
-                        topEntries.Add(new RankingList.Data(name, score, countryCode));
+                        topEntries.Add(new RankingList.Data(id, name, point, remain, countryCode));
                     }
 
                 // 낮은 점수부터 오므로 뒤집기
@@ -96,7 +112,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetGameData<T>(string nodeName, Action<T> callback) where T : GameData.Data
     {
-        reference.Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
+        db.Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
@@ -121,7 +137,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     public void SaveUserData(UserData data)
     {
         string json = JsonConvert.SerializeObject(data);
-        reference.Child("users").Child(data.id).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
+        db.Child(KEY.USER).Child(data.id).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 Debug.Log("User data saved successfully.");
@@ -148,7 +164,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetUserData(string userId, Action<UserData> callback)
     {
-        reference.Child("users").Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
+        db.Child(KEY.USER).Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
@@ -174,7 +190,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void IsUserData(string userId, Action<bool> callback)
     {
-        reference.Child("users").Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
+        db.Child(KEY.USER).Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
@@ -196,7 +212,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void ChangeUserId(string oldKey, string newKey)
     {
-        reference.Child("users").Child(oldKey).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child(KEY.USER).Child(oldKey).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsCompleted && task.Result.Exists)
             {
@@ -204,12 +220,12 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 object data = snapshot.Value;
 
                 // 새 키에 데이터 저장
-                reference.Child("users").Child(newKey).SetValueAsync(data).ContinueWithOnMainThread(setTask =>
+                db.Child(KEY.USER).Child(newKey).SetValueAsync(data).ContinueWithOnMainThread(setTask =>
                 {
                     if (setTask.IsCompleted)
                     {
                         // 기존 키 삭제
-                        reference.Child("users").Child(oldKey).RemoveValueAsync().ContinueWithOnMainThread(removeTask =>
+                        db.Child(KEY.USER).Child(oldKey).RemoveValueAsync().ContinueWithOnMainThread(removeTask =>
                         {
                             if (removeTask.IsCompleted)
                             {
@@ -236,7 +252,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void RemoveUserId(string userKey)
     {
-        reference.Child("users").Child(userKey).RemoveValueAsync().ContinueWithOnMainThread(task =>
+        db.Child(KEY.USER).Child(userKey).RemoveValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsCompleted && task.IsCompleted)
             {
@@ -354,4 +370,180 @@ public class FirebaseManager : Singleton<FirebaseManager>
             return AuthenticatedType.None;
         }
     }
+
+    public void InsertData(string refName, string rawJson)
+    {
+        db.Child(refName).SetRawJsonValueAsync(rawJson).ContinueWithOnMainThread(task => {
+            if (task.IsCompleted)
+            {
+                Debug.Log($"InsertData {refName} | {rawJson}");
+            }
+            else
+            {
+                Debug.LogError($"Fiel InserData {task.Exception} ");
+            }
+        });
+    }
+
+    #region NicknameCheck
+    public string FreeNick
+    {
+        get
+        {
+            string[] strs = DataManager.Instance.userData.id.Split('-');
+            return new StringBuilder().Append("Player").Append(strs.First().Substring(0, 6)).ToString();
+        }
+    }
+
+    public bool IsFreeNick
+    {
+        get
+        {
+            if (FreeNick.Contains(DataManager.Instance.userData.nickname)) return true;
+            return false;
+        }
+    }
+
+    public void CreateAvailableNickname(Action<string> callback)
+    {
+        if (!string.IsNullOrEmpty(DataManager.Instance.userData.nickname))
+            return;
+
+        string freeNick = FreeNick;
+        HasServerNickname(freeNick, has =>
+        {
+            if(has)
+            {
+                NextFreeNick(freeNick, 0, callback);
+            }
+            else
+            {
+                callback.Invoke(freeNick);
+            }
+        });
+    }
+
+    private void NextFreeNick(string nick, int i, Action<string> callback)
+    {
+        string currentNick = string.Format("{0}{1:000}", nick, i);
+        HasServerNickname(currentNick, has =>
+        {
+            if (has)
+            {
+                NextFreeNick(nick, i + 1, callback);
+            }
+            else
+            {
+                callback.Invoke(currentNick);
+            }
+        });
+    }
+
+    public struct ResultCheckNickname
+    {
+        public bool success;
+        public string message;
+    }
+
+    public void CheckNickname(string nickname, Action<ResultCheckNickname> callback)
+    {
+        ResultCheckNickname result = default;
+
+        if (nickname == null)
+        {
+            result.success = false;
+            result.message = TextManager.Get("nicknameNull");
+            callback.Invoke(result);
+        }
+        if (nickname.Length < 2)
+        {
+            result.success = false;
+            result.message = TextManager.Get("nicknameNull");
+            callback.Invoke(result);
+        }
+        if (nickname.Length > 10)
+        {
+            result.success = false;
+            result.message = TextManager.Get("nicknameNull");
+            callback.Invoke(result);
+        }
+        string resultNick = Regex.Replace(nickname, @"[^a-zA-Z0-9가-힇ぁ-ゔァ-ヴー々〆〤一-龥]", "", RegexOptions.Singleline);
+        if (resultNick != nickname)
+        {
+            result.success = false;
+            result.message = TextManager.Get("nicknameNull");
+            callback.Invoke(result);
+        }
+        GameData.ForbiddenWord forbiddenWordTable = DataManager.Instance.forbiddenWord;
+        foreach (var info in forbiddenWordTable.Vals)
+        {
+            if (nickname.Contains(info.word))
+            {
+                result.success = false;
+                result.message = TextManager.Get("nicknameForbiddenWord");
+                callback.Invoke(result);
+            }
+        }
+
+        HasServerNickname(nickname, has =>
+        {
+            if(has)
+            {
+                result.success = false;
+                result.message = TextManager.Get("nicknameAlready_Exists");
+                callback.Invoke(result);
+            }
+            else
+            {
+                result.success = true;
+                result.message = TextManager.Get("nickname_ok");
+                callback.Invoke(result);
+            }
+        });
+    }
+
+    public void HasServerNickname(string nickName, Action<bool> result)
+    {
+        db.Child(KEY.NICKNAME).Child(nickName).GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if(task.IsFaulted)
+            {
+                result.Invoke(true);
+                return;
+            }
+            DataSnapshot snapshot = task.Result;
+            result.Invoke(snapshot.Exists);
+        });
+    }
+
+    public void UpdateNickName(string nickname, Action<ResultCheckNickname> callback)
+    {
+        var updates = new Dictionary<string, object>
+        {
+            [$"{KEY.NICKNAME}/{nickname}"] = DataManager.Instance.userData.id,
+            [$"{KEY.USER}/{DataManager.Instance.userData.id}/nickname"] = nickname
+        };
+        updates[$"{KEY.NICKNAME}/{DataManager.Instance.userData.nickname}"] = null;
+
+        db.UpdateChildrenAsync(updates).ContinueWith(updateTask =>
+        {
+            ResultCheckNickname result = default;
+            if (updateTask.IsFaulted)
+            {
+                Debug.LogError("닉네임 변경 실패: " + updateTask.Exception);
+                result.success = false;
+                result.message = updateTask.Exception.Message;
+                callback?.Invoke(result);
+            }
+            else
+            {
+                Debug.Log("닉네임 변경 성공!");
+                result.success = true;
+                result.message = TextManager.Get("nickname_ok");
+                DataManager.Instance.userData.nickname = nickname;
+                callback?.Invoke(result);
+            }
+        });
+    }
+    #endregion
 }

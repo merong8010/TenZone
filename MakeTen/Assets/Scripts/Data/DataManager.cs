@@ -16,45 +16,61 @@ public class DataManager : Singleton<DataManager>
 
     public GameData.Language language;
     public GameData.Config config;
+    public GameData.GameLevel gameLevel;
+    public GameData.UserLevel userLevel;
+    public GameData.ForbiddenWord forbiddenWord;
+
     public UserData userData;
 
     public void LoadGameDatas()
     {
         language = null;
         config = null;
+        gameLevel = null;
+        userLevel = null;
         userData = null;
         StartCoroutine(GetGameDatas());
     }
 
     private IEnumerator GetGameDatas()
     {
-        bool isLoad = false;
-        FirebaseManager.Instance.GetGameData<GameData.Config>("Config", configData =>
+        yield return GetGameData<GameData.Config>(result =>
         {
-            isLoad = true;
-            config = configData;
+            config = result;
         });
-
-        yield return new WaitUntil(() => isLoad);
-
-        isLoad = false;
-        FirebaseManager.Instance.GetGameData<GameData.Language>("Language", language =>
+        yield return GetGameData<GameData.Language>(result =>
         {
-            isLoad = true;
-            this.language = language;
+            language = result;
         });
-
-        yield return new WaitUntil(() => isLoad);
-
-        isLoad = false;
+        yield return GetGameData<GameData.GameLevel>(result =>
+        {
+            gameLevel = result;
+        });
+        
+        yield return GetGameData<GameData.UserLevel>(result =>
+        {
+            userLevel = result;
+        });
+        
         FirebaseManager.Instance.GetUserData((UserData userData) =>
         {
-            isLoad = true;
             this.userData = userData;
         });
 
-        yield return new WaitUntil(() => isLoad);
+        yield return new WaitUntil(() => userData != null);
         TextManager.LoadDatas(userData.countryCode, language);
+    }
+
+    private IEnumerator GetGameData<T>(Action<T> callback) where T : GameData.Data
+    {
+        GameData.Data wait = null;
+        FirebaseManager.Instance.GetGameData<T>(typeof(T).Name, result =>
+        {
+            wait = result;
+            callback.Invoke(result);
+        });
+
+        yield return new WaitUntil(() => wait != null);
     }
 
     public void RefreshUserData()

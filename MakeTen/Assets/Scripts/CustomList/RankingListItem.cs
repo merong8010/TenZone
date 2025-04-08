@@ -18,7 +18,7 @@ public class RankingListItem : ListItem<RankingList.Data>
         base.SetData(data);
         rankText.text = data.rank.ToString();
         idText.text = data.name;
-        scoreText.text = data.score.ToString();
+        scoreText.text = data.point.ToString();
         countryImage.sprite = Resources.Load<SpriteAtlas>("Graphics/Flags").GetSprite(data.countryCode.ToLower());
         //DataManager.Instance.GetFlags(data.countryCode, flagSprite => countryImage.sprite = flagSprite);
     }
