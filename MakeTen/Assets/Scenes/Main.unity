@@ -1683,14 +1683,8 @@ MonoBehaviour:
   dragTransform: {fileID: 356182936}
   blockParent: {fileID: 1198573365}
   blockObj: {fileID: 1523401749273105945, guid: baf3e5e7b3456411599be62f0248532f, type: 3}
-  rowCount: 10
-  columnCount: 17
   blockSize: {x: 50, y: 50}
   blockGap: {x: 10, y: 10}
-  meanInput: {fileID: 1653166472}
-  stdDevInput: {fileID: 1885911504}
-  columnInput: {fileID: 455980504}
-  rowInput: {fileID: 1744850954}
   pooler: {fileID: 1708360811}
   blocksRT: {fileID: 1198573365}
   cam: {fileID: 961739752}
