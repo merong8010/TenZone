@@ -42,6 +42,8 @@ public class DataManager : Singleton<DataManager>
         yield return GetGameData<GameData.Config>(result =>
         {
             config = result;
+            MaxHeart = config.SingleOrDefault(x => x.key == "maxHeart").val;
+            HeartChargeTime = config.SingleOrDefault(x => x.key == "heartChargeTime").val;
         });
         yield return GetGameData<GameData.Language>(result =>
         {

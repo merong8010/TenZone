@@ -128,7 +128,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetGameData<T>(string nodeName, Action<T[]> callback) where T : GameData.Data
     {
-        db.Child("sheetData").Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
+        db.Child("GameData").Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
@@ -174,6 +174,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     public void SaveUserData(UserData data)
     {
         string json = JsonConvert.SerializeObject(data);
+        Debug.Log("SaveUserData " + json);
         db.Child(KEY.USER).Child(data.id).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
@@ -214,8 +215,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 }
                 else
                 {
-                    callback.Invoke(new UserData(userId));
                     Debug.Log("No user found.");
+                    callback.Invoke(new UserData(userId));
                 }
             }
             else

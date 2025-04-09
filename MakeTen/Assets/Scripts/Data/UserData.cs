@@ -5,9 +5,6 @@ using System.Linq;
 using System;
 public class UserData
 {
-    //public const int MaxHeart = 5;
-    //public const int HeartChargeTime = 600;
-
     public FirebaseManager.AuthenticatedType authType;
     public string id;
     public string nickname;
@@ -39,8 +36,8 @@ public class UserData
             return (int)(other.timeStamp - timeStamp);
         }
     }
-    public Dictionary<PuzzleManager.Level, Record> recordAll;
-    public Dictionary<PuzzleManager.Level, Record> recordToday;
+    public Dictionary<PuzzleManager.Level, Record> recordAll = new Dictionary<PuzzleManager.Level, Record>();
+    public Dictionary<PuzzleManager.Level, Record> recordToday = new Dictionary<PuzzleManager.Level, Record>();
 
     public bool IsNewRecord(PuzzleManager.Level level, int point, int remain, bool today)
     {
@@ -140,6 +137,7 @@ public class UserData
         goods.Add(GameData.GoodsType.Gold, DataManager.Instance.config.SingleOrDefault(x => x.key == "defaultGold").val);
         goods.Add(GameData.GoodsType.Gem, DataManager.Instance.config.SingleOrDefault(x => x.key == "defaultGem").val);
         goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.config.SingleOrDefault(x => x.key == "defaultShuffle").val);
+        level = 1;
         //FirebaseManager.Instance.CreateAvailableNickname(nick =>
         //{
         //    nickname = nick;
