@@ -17,10 +17,9 @@ public class Main : MonoBehaviour
         googleLoginButton.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
         logoutButton.SetActive(DataManager.Instance.userData.authType != FirebaseManager.AuthenticatedType.None);
     }
+
     public void GameStart()
     {
-        Debug.Log("Main.GameStart");
-        //PuzzleManager.Instance.GameStart();
         UIManager.Instance.Open<PopupLevelSelect>();
     }
 

@@ -11,4 +11,9 @@ public class Popup : MonoBehaviour
     {
         UIManager.Instance.ClosePopup(this);
     }
+
+    public virtual void Refresh()
+    {
+
+    }
 }

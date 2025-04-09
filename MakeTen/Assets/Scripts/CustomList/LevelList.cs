@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class LevelList : CustomList<GameData.GameLevelInfo>
+public class LevelList : CustomList<GameData.GameLevel>
 {
     
 }

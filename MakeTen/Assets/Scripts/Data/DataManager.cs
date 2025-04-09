@@ -14,11 +14,15 @@ public class DataManager : Singleton<DataManager>
         }
     }
 
-    public GameData.Language language;
-    public GameData.Config config;
-    public GameData.GameLevel gameLevel;
-    public GameData.UserLevel userLevel;
-    public GameData.ForbiddenWord forbiddenWord;
+    
+    public GameData.Config[] config;
+    public GameData.GameLevel[] gameLevel;
+    public GameData.UserLevel[] userLevel;
+    public GameData.ForbiddenWord[] forbiddenWord;
+    public GameData.Language[] language;
+
+    public int MaxHeart;
+    public int HeartChargeTime;
 
     public UserData userData;
 
@@ -64,6 +68,18 @@ public class DataManager : Singleton<DataManager>
     private IEnumerator GetGameData<T>(Action<T> callback) where T : GameData.Data
     {
         GameData.Data wait = null;
+        FirebaseManager.Instance.GetGameData<T>(typeof(T).Name, result =>
+        {
+            wait = result;
+            callback.Invoke(result);
+        });
+
+        yield return new WaitUntil(() => wait != null);
+    }
+
+    private IEnumerator GetGameData<T>(Action<T[]> callback) where T : GameData.Data
+    {
+        GameData.Data[] wait = null;
         FirebaseManager.Instance.GetGameData<T>(typeof(T).Name, result =>
         {
             wait = result;

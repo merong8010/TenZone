@@ -37,7 +37,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private ReactiveProperty<int> currentPoint;
     public DateTime finishTime;
 
-    private GameData.GameLevelInfo currentLevel;
+    private GameData.GameLevel currentLevel;
    
 
     //[SerializeField]
@@ -141,7 +141,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
     [SerializeField]
     private RectTransform blocksRT;
 
-    public void GameStart(GameData.GameLevelInfo level)
+    public void GameStart(GameData.GameLevel level)
     {
         currentLevel = level;
         UIManager.Instance.ShowMain(false);
@@ -179,7 +179,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
 
         currentPoint.Value = 0;
-
+        remainMilliSeconds = 0;
         //System.Random rand = new System.Random();
         for (int i = 0; i < blocks.Length; i++)
         {
@@ -229,6 +229,14 @@ public class PuzzleManager : Singleton<PuzzleManager>
         UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
         UIManager.Instance.ShowMain(true);
 
+        if(DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, true))
+        {
+            FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value, remainMilliSeconds);
+        }
+        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, false))
+        {
+            FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value, remainMilliSeconds);
+        }
         finishCoroutine = null;
         //InitBlocks();
     }
@@ -249,6 +257,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         dragTransform.rectTransform.anchoredPosition = startPos;
         dragTransform.rectTransform.sizeDelta = Vector2.zero;
     }
+    private int remainMilliSeconds;
 
     public void OnRelease()
     {
@@ -261,6 +270,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                     focus[i].Break();
                 }
                 currentPoint.Value += focus.Length;
+                remainMilliSeconds = (int)(finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
             }
             focus = null;
         }

@@ -2,7 +2,7 @@ using GameData;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LevelListItem : ListItem<GameLevelInfo>
+public class LevelListItem : ListItem<GameLevel>
 {
     [SerializeField]
     private Text levelText;
@@ -15,7 +15,7 @@ public class LevelListItem : ListItem<GameLevelInfo>
     [SerializeField]
     private Text unlockCondition;
 
-    public override void SetData(GameLevelInfo data)
+    public override void SetData(GameLevel data)
     {
         base.SetData(data);
 

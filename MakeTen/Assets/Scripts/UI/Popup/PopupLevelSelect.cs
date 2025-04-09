@@ -11,11 +11,11 @@ public class PopupLevelSelect : Popup
     {
         base.Open();
         Initialize();
-        levelList.UpdateList(DataManager.Instance.gameLevel.Vals.ToList());
+        levelList.UpdateList(DataManager.Instance.gameLevel.ToList());
     }
 
     private bool isInit = false;
-    private GameData.GameLevelInfo currentLevel;
+    private GameData.GameLevel currentLevel;
     private void Initialize()
     {
         if (isInit) return;
@@ -24,7 +24,7 @@ public class PopupLevelSelect : Popup
         levelList.SetEvent(ClickItem);
     }
 
-    private void ClickItem(GameData.GameLevelInfo data)
+    private void ClickItem(GameData.GameLevel data)
     {
         currentLevel = data;
     }

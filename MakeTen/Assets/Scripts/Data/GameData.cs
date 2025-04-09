@@ -14,17 +14,24 @@ namespace GameData
     {
 
     }
+    //public class Config : Data
+    //{
+    //    public int HeartChargeTime;
+    //    public int MaxHeart;
+    //    public int PuzzleTime;
+    //    public int defaultGold;
+    //    public int defaultGem;
+    //    public int defaultShuffle;
+    //}
+
     public class Config : Data
     {
-        public int HeartChargeTime;
-        public int MaxHeart;
-        public int PuzzleTime;
-        public int defaultGold;
-        public int defaultGem;
-        public int defaultShuffle;
+        public int id;
+        public string key;
+        public int val;
     }
 
-    public class LanguageInfo
+    public class Language : Data
     {
         public string key;
         public string KR;
@@ -33,12 +40,12 @@ namespace GameData
         public string TW;
     }
 
-    public class Language : Data
-    {
-        public LanguageInfo[] Vals;
-    }
+    //public class Language : Data
+    //{
+    //    public LanguageInfo[] Vals;
+    //}
 
-    public class GameLevelInfo
+    public class GameLevel : Data
     {
         public PuzzleManager.Level level;
         public int row;
@@ -50,30 +57,30 @@ namespace GameData
         public int unlockLevel;
     }
 
-    public class GameLevel : Data
-    {
-        public GameLevelInfo[] Vals;
-    }
+    //public class GameLevel : Data
+    //{
+    //    public GameLevelInfo[] Vals;
+    //}
 
-    public class UserLevelInfo
+    public class UserLevel : Data
     {
         public int level;
         public int exp;
         public GoodsList.Data[] rewards;
     }
 
-    public class UserLevel : Data
-    {
-        public UserLevelInfo[] Vals;
-    }
+    //public class UserLevel : Data
+    //{
+    //    public UserLevelInfo[] Vals;
+    //}
 
-    public class ForbiddenWordInfo
+    public class ForbiddenWord : Data
     {
         public string word;
     }
 
-    public class ForbiddenWord : Data
-    {
-        public ForbiddenWordInfo[] Vals;
-    }
+    //public class ForbiddenWord : Data
+    //{
+    //    public ForbiddenWordInfo[] Vals;
+    //}
 }

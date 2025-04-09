@@ -6,20 +6,20 @@ public static class TextManager
 {
     public static Dictionary<string, string> dic = new Dictionary<string, string>();
 
-    public static void LoadDatas(string countryCode, GameData.Language data)
+    public static void LoadDatas(string countryCode, GameData.Language[] data)
     {
-        string[] keys = data.Vals.Select(x => x.key).ToArray();
+        string[] keys = data.Select(x => x.key).ToArray();
         string[] vals = new string[keys.Length];
         switch (countryCode)
         {
             case "KR":
-                vals = data.Vals.Select(x => x.KR).ToArray();
+                vals = data.Select(x => x.KR).ToArray();
                 break;
             case "JP":
-                vals = data.Vals.Select(x => x.JP).ToArray();
+                vals = data.Select(x => x.JP).ToArray();
                 break;
             case "TW":
-                vals = data.Vals.Select(x => x.TW).ToArray();
+                vals = data.Select(x => x.TW).ToArray();
                 break;
         }
 
