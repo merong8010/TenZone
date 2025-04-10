@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Text;
 
 public static class ExtensionMethods
 {
@@ -63,6 +64,11 @@ public static class ExtensionMethods
     public static string ToDateText(this DateTime dateTime)
     {
         return dateTime.ToString(@"yyyy-MM-dd");
+    }
+
+    public static string ToProgressText(this int current, int max)
+    {
+        return new StringBuilder().AppendFormat("{0} / {1}", current, max).ToString();
     }
 }
 

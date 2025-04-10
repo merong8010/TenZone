@@ -124,6 +124,5 @@ public class GameManager : Singleton<GameManager>
         yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
 
         UIManager.Instance.Main.Refresh();
-        HUD.Instance.UpdateHeart();
     }
 }

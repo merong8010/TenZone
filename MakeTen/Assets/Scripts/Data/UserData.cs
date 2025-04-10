@@ -134,14 +134,10 @@ public class UserData
         countryCode = RegionInfo.CurrentRegion.TwoLetterISORegionName;
         heart = DataManager.Instance.MaxHeart;
         nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
-        goods.Add(GameData.GoodsType.Gold, DataManager.Instance.config.SingleOrDefault(x => x.key == "defaultGold").val);
-        goods.Add(GameData.GoodsType.Gem, DataManager.Instance.config.SingleOrDefault(x => x.key == "defaultGem").val);
-        goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.config.SingleOrDefault(x => x.key == "defaultShuffle").val);
+        goods.Add(GameData.GoodsType.Gold, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultGold").val);
+        goods.Add(GameData.GoodsType.Gem, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultGem").val);
+        goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultShuffle").val);
         level = 1;
-        //FirebaseManager.Instance.CreateAvailableNickname(nick =>
-        //{
-        //    nickname = nick;
-        //});
     }
 
 
@@ -155,9 +151,7 @@ public class UserData
             {
                 nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick() + DataManager.Instance.HeartChargeTime;
             }
-            //
             FirebaseManager.Instance.SaveUserData(this);
-            HUD.Instance.UpdateHeart();
             return true;
         }
         return false;
@@ -170,7 +164,6 @@ public class UserData
         {
             nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
         }
-        HUD.Instance.UpdateHeart();
         FirebaseManager.Instance.SaveUserData(this);
     }
 
@@ -185,14 +178,14 @@ public class UserData
     public void ChargeExp(int exp)
     {
         this.exp += exp;
-        if(this.exp > DataManager.Instance.userLevel.SingleOrDefault(x => x.level == level).exp)
+        if(this.exp > DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).exp)
         {
             List<GoodsList.Data> rewards = new List<GoodsList.Data>();
-            while (this.exp > DataManager.Instance.userLevel.SingleOrDefault(x => x.level == level).exp)
+            while (this.exp > DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).exp)
             {
                 this.level += 1;
-                this.exp -= DataManager.Instance.userLevel.SingleOrDefault(x => x.level == level).exp;
-                rewards.AddRange(DataManager.Instance.userLevel.SingleOrDefault(x => x.level == level).rewards);
+                this.exp -= DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).exp;
+                rewards.AddRange(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).rewards);
             }
 
             for(int i = 0; i < rewards.Count; i++)
@@ -203,6 +196,7 @@ public class UserData
             UIManager.Instance.Open<PopupReward>().SetData(rewards);
         }
 
+        FirebaseManager.Instance.SaveUserData(this);
     }
 
     public void Charge(GoodsList.Data data)
@@ -211,6 +205,7 @@ public class UserData
         {
             goods[data.type] += data.amount;
         }
+        FirebaseManager.Instance.SaveUserData(this);
     }
 
     public void Charge(GameData.GoodsType type, int amount)
@@ -219,6 +214,7 @@ public class UserData
         {
             goods[type] += amount;
         }
+        FirebaseManager.Instance.SaveUserData(this);
     }
 
     public bool Use(GameData.GoodsType type, int amount)
@@ -226,6 +222,7 @@ public class UserData
         if (!goods.ContainsKey(type)) return false;
         if (goods[type] < amount) return false;
         goods[type] -= amount;
+        FirebaseManager.Instance.SaveUserData(this);
         return true;
     }
 }

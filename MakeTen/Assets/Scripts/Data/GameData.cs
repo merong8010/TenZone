@@ -14,16 +14,7 @@ namespace GameData
     {
 
     }
-    //public class Config : Data
-    //{
-    //    public int HeartChargeTime;
-    //    public int MaxHeart;
-    //    public int PuzzleTime;
-    //    public int defaultGold;
-    //    public int defaultGem;
-    //    public int defaultShuffle;
-    //}
-
+    
     public class Config : Data
     {
         public int id;
@@ -40,11 +31,6 @@ namespace GameData
         public string TW;
     }
 
-    //public class Language : Data
-    //{
-    //    public LanguageInfo[] Vals;
-    //}
-
     public class GameLevel : Data
     {
         public PuzzleManager.Level level;
@@ -56,11 +42,6 @@ namespace GameData
         public int exp;
         public int unlockLevel;
     }
-
-    //public class GameLevel : Data
-    //{
-    //    public GameLevelInfo[] Vals;
-    //}
 
     public class UserLevel : Data
     {
@@ -91,38 +72,10 @@ namespace GameData
                 return _rewards;
             }
         }
-        //private Dictionary<GoodsType, int> _rewards;
-        //public Dictionary<GoodsType, int> rewards
-        //{
-        //    get
-        //    {
-        //        if(_rewards == null)
-        //        {
-        //            _rewards = new Dictionary<GoodsType, int>();
-        //            string[] types = rewardTypes.Split(',');
-        //            string[] amounts = rewardAmounts.Split(',');
-        //            for(int i = 0; i < types.Length; i++)
-        //            {
-        //                _rewards.Add((GoodsType)System.Enum.Parse(typeof(GoodsType), types[i]), int.Parse(amounts[i]));
-        //            }
-        //        }
-        //        return _rewards;
-        //    }
-        //}
     }
-
-    //public class UserLevel : Data
-    //{
-    //    public UserLevelInfo[] Vals;
-    //}
 
     public class ForbiddenWord : Data
     {
         public string word;
     }
-
-    //public class ForbiddenWord : Data
-    //{
-    //    public ForbiddenWordInfo[] Vals;
-    //}
 }

@@ -1,8 +1,8 @@
-const { google } = require('googleapis');
+const {google} = require('googleapis');
 const admin = require('firebase-admin');
 
 // 🔑 서비스 계정 키 파일
-const serviceAccount = require('../google-service-account.json');
+const serviceAccount = require('./google-service-account.json');
 const GOOGLE_KEY_FILE = 'google-service-account.json';
 
 // Firebase 초기화

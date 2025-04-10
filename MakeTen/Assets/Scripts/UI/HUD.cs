@@ -4,9 +4,17 @@ using UniRx;
 using System.Text;
 using System.Collections;
 using System;
+using System.Linq;
 
 public class HUD : Singleton<HUD>
 {
+    [SerializeField]
+    private Text levelText;
+    [SerializeField]
+    private Text expText;
+    [SerializeField]
+    private Text nameText;
+
     [SerializeField]
     private Text heartCount;
     [SerializeField]
@@ -18,6 +26,31 @@ public class HUD : Singleton<HUD>
     private Text timeText;
 
     private Coroutine timeCoroutine;
+
+    public void UpdateUserData(UserData data)
+    {
+        levelText.text = $"Lv.{data.level}";
+        if(DataManager.Instance.Get<GameData.UserLevel>().ToList().Exists(x => x.level == data.level + 1))
+        {
+            expText.text = data.exp.ToProgressText(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp);
+        }
+        else
+        {
+            expText.text = "MAX";
+        }
+
+        nameText.text = data.nickname;
+
+        heartCount.text = $"Heart : {data.Heart}";
+
+        int remain = (int)(data.nextHeartChargeTime - GameManager.Instance.dateTime.Value.ToTick());
+        timeText.text = remain.ToTimeText();
+
+        if (timeCoroutine != null) StopCoroutine(timeCoroutine);
+        if (remain > 0) timeCoroutine = StartCoroutine(CheckRemain(remain));
+        else heartChargeRemainTime.text = "MAX";
+    }
+
     public void UpdateHeart()
     {
         heartCount.text = DataManager.Instance.userData.Heart.ToString();

@@ -3,20 +3,24 @@ using Firebase;
 using Firebase.Database;
 using Firebase.Extensions;
 using Firebase.Functions;
-using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using System.Globalization;
 using System;
 using Firebase.Auth;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
-using System.Threading;
 
 
 public class FirebaseManager : Singleton<FirebaseManager>
 {
+    public enum AuthenticatedType
+    {
+        None,
+        Google,
+        Apple,
+    }
+
     public static class KEY
     {
         public static string USER = "Users";
@@ -41,7 +45,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 FirebaseApp app = FirebaseApp.DefaultInstance;
                 db = FirebaseDatabase.DefaultInstance.RootReference;
                 auth = FirebaseAuth.DefaultInstance;
-                functions = FirebaseFunctions.DefaultInstance;
+                functions = FirebaseFunctions.GetInstance("asia-southeast1");
                 user = auth.CurrentUser;
             }
             else
@@ -63,119 +67,59 @@ public class FirebaseManager : Singleton<FirebaseManager>
         db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
     }
 
-    //public void GetTopScores(int limit = 10, Action<List<RankingList.Data>> callback = null)
+    public void LoadAllGameDatas(Action<DataSnapshot> callback)
+    {
+        db.Child("GameData").GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if(task.IsCompleted)
+            {
+                DataSnapshot snapshot = task.Result;
+                callback.Invoke(snapshot);
+            }
+            else
+            {
+                Debug.LogError("Fail Load GameData");
+            }
+        });
+        //db.Child("GameData").
+    }
+
+    //public void GetGameData<T>(string nodeName, Action<T[]> callback) where T : GameData.Data
     //{
-    //    db.Child("leaderboard")
-    //        .OrderByChild("point")
-    //        .LimitToLast(limit) // score가 높은 순
-    //        .GetValueAsync().ContinueWithOnMainThread(task => {
-    //            if (task.IsCompleted)
+    //    db.Child("GameData").Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
+    //        if (task.IsCompleted)
+    //        {
+    //            DataSnapshot snapshot = task.Result;
+    //            if (snapshot.Exists)
     //            {
-    //                DataSnapshot snapshot = task.Result;
-    //                List<RankingList.Data> topEntries = new List<RankingList.Data>();
-    //                foreach (DataSnapshot child in snapshot.Children)
-    //                {
-    //                    string id = child.Child("id").Value.ToString();
-    //                    string name = child.Child("name").Value.ToString();
-    //                    int point = int.Parse(child.Child("point").Value.ToString());
-    //                    int remain = int.Parse(child.Child("remainMilliSeconds").Value.ToString());
-    //                    string countryCode = child.Child("countryCode").Value.ToString();
-
-    //                    topEntries.Add(new RankingList.Data(id, name, point, remain, countryCode));
-    //                }
-
-    //            // 낮은 점수부터 오므로 뒤집기
-    //                topEntries.Reverse();
-    //                for(int i = 0; i < topEntries.Count; i++)
-    //                {
-    //                    topEntries[i].rank = i + 1;
-    //                }
-    //                //foreach (var entry in topEntries)
-    //                //{
-    //                //    Debug.Log($"🏆 {entry.name} - {entry.score}");
-    //                //}
-    //                if (callback != null) callback.Invoke(topEntries);
+    //                Debug.Log($"game Info {nodeName} : {snapshot.GetRawJsonValue()}");
+    //                callback.Invoke(JsonConvert.DeserializeObject<T[]>(snapshot.GetRawJsonValue()));
+    //                //callback.Invoke(JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue()));
     //            }
-
-
-    //        });
+    //            else
+    //            {
+    //                //callback.Invoke(new UserData(userId));
+    //                Debug.Log($"No gameInfo found. {typeof(T).Name}");
+    //            }
+    //        }
+    //        else
+    //        {
+    //            Debug.LogError($"Failed to get {nodeName} : {task.Exception}");
+    //        }
+    //    });
     //}
 
-    public void GetGameData<T>(string nodeName, Action<T> callback) where T : GameData.Data
-    {
-        db.Child("sheetData").Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
-            if (task.IsCompleted)
-            {
-                DataSnapshot snapshot = task.Result;
-                if (snapshot.Exists)
-                {
-                    Debug.Log($"game Info {nodeName} : {snapshot.GetRawJsonValue()}");
-                    callback.Invoke(JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue()));
-                    //callback.Invoke(JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue()));
-                }
-                else
-                {
-                    //callback.Invoke(new UserData(userId));
-                    Debug.Log($"No gameInfo found. {typeof(T).Name}");
-                }
-            }
-            else
-            {
-                Debug.LogError($"Failed to get {nodeName} : {task.Exception}");
-            }
-        });
-    }
-
-    public void GetGameData<T>(string nodeName, Action<T[]> callback) where T : GameData.Data
-    {
-        db.Child("GameData").Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
-            if (task.IsCompleted)
-            {
-                DataSnapshot snapshot = task.Result;
-                if (snapshot.Exists)
-                {
-                    Debug.Log($"game Info {nodeName} : {snapshot.GetRawJsonValue()}");
-                    callback.Invoke(JsonConvert.DeserializeObject<T[]>(snapshot.GetRawJsonValue()));
-                    //callback.Invoke(JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue()));
-                }
-                else
-                {
-                    //callback.Invoke(new UserData(userId));
-                    Debug.Log($"No gameInfo found. {typeof(T).Name}");
-                }
-            }
-            else
-            {
-                Debug.LogError($"Failed to get {nodeName} : {task.Exception}");
-            }
-        });
-        //db.Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
-        //    if (task.IsCompleted)
-        //    {
-        //        DataSnapshot snapshot = task.Result;
-        //        if (snapshot.Exists)
-        //        {
-        //            Debug.Log($"game Info {nodeName} : {snapshot.GetRawJsonValue()}");
-        //            callback.Invoke(JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue()));
-        //        }
-        //        else
-        //        {
-        //            //callback.Invoke(new UserData(userId));
-        //            Debug.Log("No gameInfo found.");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Debug.LogError($"Failed to get {nodeName} : {task.Exception}");
-        //    }
-        //});
-    }
-
+    private DatabaseReference myDB;
     public void SaveUserData(UserData data)
     {
+        if (myDB == null)
+        {
+            myDB = db.Child(KEY.USER).Child(data.id);
+            myDB.ValueChanged += HandleMyDBChanged;
+        }
         string json = JsonConvert.SerializeObject(data);
         Debug.Log("SaveUserData " + json);
-        db.Child(KEY.USER).Child(data.id).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
+        myDB.SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 Debug.Log("User data saved successfully.");
@@ -197,19 +141,38 @@ public class FirebaseManager : Singleton<FirebaseManager>
         {
             GetUserData(SystemInfo.deviceUniqueIdentifier, callback);
         }
-        
+    }
+
+    private void HandleMyDBChanged(object sender, ValueChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError("유저 데이터 변경 중 오류: " + args.DatabaseError.Message);
+            return;
+        }
+
+        if (args.Snapshot.Exists)
+        {
+            string json = args.Snapshot.GetRawJsonValue();
+            DataManager.Instance.UpdateUserData(JsonConvert.DeserializeObject<UserData>(json));
+        }
     }
 
     public void GetUserData(string userId, Action<UserData> callback)
     {
-        db.Child(KEY.USER).Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
+        if (myDB == null)
+        {
+            myDB = db.Child(KEY.USER).Child(userId);
+            myDB.ValueChanged += HandleMyDBChanged;
+        }
+            
+
+        myDB.GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
                 if (snapshot.Exists)
                 {
-                    //string json = snapshot.GetRawJsonValue();
-                    //User user = JsonUtility.FromJson<User>(json);
                     Debug.Log("User Info: " + snapshot.GetRawJsonValue());
                     callback.Invoke(JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue()));
                 }
@@ -248,45 +211,45 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    public void ChangeUserId(string oldKey, string newKey)
-    {
-        db.Child(KEY.USER).Child(oldKey).GetValueAsync().ContinueWithOnMainThread(task =>
-        {
-            if (task.IsCompleted && task.Result.Exists)
-            {
-                DataSnapshot snapshot = task.Result;
-                object data = snapshot.Value;
+    //public void ChangeUserId(string oldKey, string newKey)
+    //{
+    //    db.Child(KEY.USER).Child(oldKey).GetValueAsync().ContinueWithOnMainThread(task =>
+    //    {
+    //        if (task.IsCompleted && task.Result.Exists)
+    //        {
+    //            DataSnapshot snapshot = task.Result;
+    //            object data = snapshot.Value;
 
-                // 새 키에 데이터 저장
-                db.Child(KEY.USER).Child(newKey).SetValueAsync(data).ContinueWithOnMainThread(setTask =>
-                {
-                    if (setTask.IsCompleted)
-                    {
-                        // 기존 키 삭제
-                        db.Child(KEY.USER).Child(oldKey).RemoveValueAsync().ContinueWithOnMainThread(removeTask =>
-                        {
-                            if (removeTask.IsCompleted)
-                            {
-                                Debug.Log("키값 변경 완료");
-                            }
-                            else
-                            {
-                                Debug.LogError("기존 키 삭제 실패: " + removeTask.Exception);
-                            }
-                        });
-                    }
-                    else
-                    {
-                        Debug.LogError("새 키 저장 실패: " + setTask.Exception);
-                    }
-                });
-            }
-            else
-            {
-                Debug.LogWarning("기존 키에 데이터가 없습니다.");
-            }
-        });
-    }
+    //            // 새 키에 데이터 저장
+    //            db.Child(KEY.USER).Child(newKey).SetValueAsync(data).ContinueWithOnMainThread(setTask =>
+    //            {
+    //                if (setTask.IsCompleted)
+    //                {
+    //                    // 기존 키 삭제
+    //                    db.Child(KEY.USER).Child(oldKey).RemoveValueAsync().ContinueWithOnMainThread(removeTask =>
+    //                    {
+    //                        if (removeTask.IsCompleted)
+    //                        {
+    //                            Debug.Log("키값 변경 완료");
+    //                        }
+    //                        else
+    //                        {
+    //                            Debug.LogError("기존 키 삭제 실패: " + removeTask.Exception);
+    //                        }
+    //                    });
+    //                }
+    //                else
+    //                {
+    //                    Debug.LogError("새 키 저장 실패: " + setTask.Exception);
+    //                }
+    //            });
+    //        }
+    //        else
+    //        {
+    //            Debug.LogWarning("기존 키에 데이터가 없습니다.");
+    //        }
+    //    });
+    //}
 
     public void RemoveUserId(string userKey)
     {
@@ -320,7 +283,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
         {
             if (authTask.IsCompleted)
             {
-                //Debug.Log("Google Login Success: " + auth.CurrentUser.Email);
                 IsUserData(user.UserId, isUser =>
                 {
                     if(isUser)
@@ -330,8 +292,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
                             if(result)
                             {
                                 user = authTask.Result;
-                                DataManager.Instance.RefreshUserData();
-
                                 UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
                             }
                             else
@@ -344,12 +304,9 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     else
                     {
                         user = authTask.Result;
-                        //ChangeUserId(SystemInfo.deviceUniqueIdentifier, user.UserId);
                         UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-
                         DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
                         RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-
                         UIManager.Instance.Main.Refresh();
                     }
                 });
@@ -390,23 +347,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
     {
         auth.SignOut();
         Application.Quit();
-    }
-    public enum AuthenticatedType
-    {
-        None,
-        Google,
-        Apple,
-    }
-    public AuthenticatedType AuthType
-    {
-        get
-        {
-            //if (user!=null)
-            //{
-            //    user.Metadata.
-            //}
-            return AuthenticatedType.None;
-        }
     }
 
     public void InsertData(string refName, string rawJson)
@@ -512,7 +452,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             result.message = TextManager.Get("nicknameNull");
             callback.Invoke(result);
         }
-        GameData.ForbiddenWord[] forbiddenWordTable = DataManager.Instance.forbiddenWord;
+        GameData.ForbiddenWord[] forbiddenWordTable = DataManager.Instance.Get<GameData.ForbiddenWord>();
         foreach (var info in forbiddenWordTable)
         {
             if (nickname.Contains(info.word))
@@ -588,6 +528,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleManager.Level gameLevel = PuzzleManager.Level.Normal)
     {
+#if UNITY_EDITOR
+        callback?.Invoke(null);
+        return;
+#endif
         var data = new Dictionary<string, object>
         {
             { "gameLevel", gameLevel.ToString() },
@@ -596,10 +540,14 @@ public class FirebaseManager : Singleton<FirebaseManager>
             { "limit", limit }
         };
 
-        functions.GetHttpsCallable($"GetRanking").CallAsync(data).ContinueWith(task =>
+        functions.GetHttpsCallable("GetRanking").CallAsync(data).ContinueWith(task =>
         {
             if (task.IsFaulted)
             {
+                //foreach (var e in task.Exception.Flatten().InnerExceptions)
+                //{
+                //    Debug.LogError($"Function call error: {e.Message}");
+                //}
                 Debug.LogError("랭킹 가져오기 실패: " + task.Exception);
                 return;
             }
@@ -615,11 +563,9 @@ public class FirebaseManager : Singleton<FirebaseManager>
             for (int i = 0; i < topRankings.Count; i++)
             {
                 var entry = topRankings[i] as Dictionary<string, object>;
-                Debug.Log($"{i} | {entry.ToString()}");
-                RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(entry.ToString());
+                RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
                 data.rank = i + 1;
                 resultData.topRanks.Add(data);
-                //Debug.Log($"{i + 1}등 - {entry["nickname"]} / 점수: {entry["score"]} / 클리어 시간: {entry["clearTime"]}");
             }
 
             // 내 랭킹 파싱
@@ -627,10 +573,9 @@ public class FirebaseManager : Singleton<FirebaseManager>
             if (myRank > 0)
             {
                 var myEntry = result["myEntry"] as Dictionary<string, object>;
-                RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(myEntry.ToString());
+                RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(myEntry));
                 data.rank = myRank;
                 resultData.myRank = data;
-                Debug.Log($"=== 내 랭킹 ===\n내 순위: {myRank}등 / 닉네임: {myEntry["nickname"]} / 점수: {myEntry["score"]} / 클리어 시간: {myEntry["clearTime"]}");
             }
             else
             {

@@ -38,22 +38,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
     public DateTime finishTime;
 
     private GameData.GameLevel currentLevel;
-   
-
-    //[SerializeField]
-    //private int rowCount;
-    //[SerializeField]
-    //private int columnCount;
-    //[SerializeField]
-    //private InputField meanInput;
-    //private float mean = 3f;
-    //private const float meanDefault = 3f;
-
-    //[SerializeField]
-    //private InputField stdDevInput;
-    //private float stdDev = 3.5f;
-    //private const float stdDevDefault = 3.5f;
-
 
     private Vector2 blockStartPos;
     [SerializeField]
@@ -64,7 +48,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
     protected override void Awake()
     {
         base.Awake();
-        //StartCoroutine(Initialize());
         Initialize();
     }
 
@@ -81,59 +64,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
         
         HUD.Instance.Initialize(currentPoint);
     }
-
-    //[SerializeField]
-    //private InputField meanInput;
-    //private float mean = 3f;
-    //private const float meanDefault = 3f;
-
-    //[SerializeField]
-    //private InputField stdDevInput;
-    //private float stdDev = 3.5f;
-    //private const float stdDevDefault = 3.5f;
-
-    //public void OnValueChangeMean(string str)
-    //{
-    //    if(!float.TryParse(str, out mean))
-    //    {
-    //        meanInput.text = meanDefault.ToString();
-    //        mean = meanDefault;
-    //    }
-    //}
-
-    //public void OnValueChangeStdDev(string str)
-    //{
-    //    if (!float.TryParse(str, out stdDev))
-    //    {
-    //        stdDevInput.text = stdDevDefault.ToString();
-    //        stdDev = stdDevDefault;
-    //    }
-    //}
-
-    //[SerializeField]
-    //private InputField columnInput;
-    //private const int columnDefault = 17;
-    //[SerializeField]
-    //private InputField rowInput;
-    //private const int rowDefault = 10;
-
-    //public void OnValueChangeColumn(string str)
-    //{
-    //    if (!int.TryParse(str, out columnCount))
-    //    {
-    //        columnInput.text = columnDefault.ToString();
-    //        columnCount = columnDefault;
-    //    }
-    //}
-
-    //public void OnValueChangeRow(string str)
-    //{
-    //    if (!int.TryParse(str, out rowCount))
-    //    {
-    //        rowInput.text = rowDefault.ToString();
-    //        rowCount = rowDefault;
-    //    }
-    //}
 
     [SerializeField]
     private ObjectPooler pooler;
@@ -229,6 +159,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
         UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
         UIManager.Instance.ShowMain(true);
 
+        DataManager.Instance.userData.ChargeExp(Mathf.FloorToInt(currentLevel.exp * (currentPoint.Value / (currentLevel.row * currentLevel.column))));
+
         if(DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, true))
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value, remainMilliSeconds);
@@ -238,7 +170,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
             FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value, remainMilliSeconds);
         }
         finishCoroutine = null;
-        //InitBlocks();
     }
 
 

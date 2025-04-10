@@ -11,7 +11,7 @@ public class PopupLevelSelect : Popup
     {
         base.Open();
         Initialize();
-        levelList.UpdateList(DataManager.Instance.gameLevel.ToList());
+        levelList.UpdateList(DataManager.Instance.Get<GameData.GameLevel>().ToList());
     }
 
     private bool isInit = false;
