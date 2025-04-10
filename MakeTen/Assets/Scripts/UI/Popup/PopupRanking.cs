@@ -81,13 +81,13 @@ public class PopupRanking : Popup
         UIManager.Instance.Loading("Loading Rank");
         FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
         {
+            UIManager.Instance.CloseLoading();
+            if (result == null) return;
             if(result.topRanks != null)
             {
                 rankingList.UpdateList(result.topRanks);
                 myRankItem.SetData(result.myRank);
             }
-            
-            UIManager.Instance.CloseLoading();
         }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));
     }
 }

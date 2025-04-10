@@ -138,6 +138,7 @@ public class UserData
         goods.Add(GameData.GoodsType.Gem, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultGem").val);
         goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultShuffle").val);
         level = 1;
+        FirebaseManager.Instance.SaveUserData(this);
     }
 
 

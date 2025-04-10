@@ -159,8 +159,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
         UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
         UIManager.Instance.ShowMain(true);
 
-        DataManager.Instance.userData.ChargeExp(Mathf.FloorToInt(currentLevel.exp * (currentPoint.Value / (currentLevel.row * currentLevel.column))));
-
         if(DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, true))
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value, remainMilliSeconds);
@@ -169,6 +167,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value, remainMilliSeconds);
         }
+
+        DataManager.Instance.userData.ChargeExp(Mathf.FloorToInt(currentLevel.exp * (currentPoint.Value / (currentLevel.row * currentLevel.column))));
         finishCoroutine = null;
     }
 
