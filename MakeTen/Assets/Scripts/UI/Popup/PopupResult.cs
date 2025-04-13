@@ -14,4 +14,10 @@ public class PopupResult : Popup
         timeText.text = time.ToString("n0");
         //FirebaseManager.Instance.SubmitScore(point);
     }
+
+    public override void Close()
+    {
+        base.Close();
+        GameManager.Instance.GoScene(GameManager.Scene.Main);
+    }
 }

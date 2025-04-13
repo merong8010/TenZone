@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 using Newtonsoft.Json;
+using System.Globalization;
 
 public class DataManager : Singleton<DataManager>
 {
@@ -52,6 +53,8 @@ public class DataManager : Singleton<DataManager>
         });
 
         yield return new WaitUntil(() => gameDatas.Count == dataTotalCount);
+        string countryCode = PlayerPrefs.GetString("Locale", RegionInfo.CurrentRegion.TwoLetterISORegionName);
+        TextManager.LoadDatas(countryCode, Get<GameData.Language>());
 
         MaxHeart = Get<GameData.Config>().SingleOrDefault(x => x.key == "maxHeart").val;
         HeartChargeTime = Get<GameData.Config>().SingleOrDefault(x => x.key == "heartChargeTime").val;
@@ -63,7 +66,7 @@ public class DataManager : Singleton<DataManager>
         });
 
         yield return new WaitUntil(() => userData != null);
-        TextManager.LoadDatas(userData.countryCode, Get<GameData.Language>());
+
     }
 
     public void UpdateUserData(UserData data)

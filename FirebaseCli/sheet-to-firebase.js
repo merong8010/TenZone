@@ -52,7 +52,7 @@ async function importAllSheets() {
       return item;
     });
 
-    const ref = db.ref(`sheetData/${title}`);
+    const ref = db.ref(`GameData/${title}`);
     await ref.set(data);
 
     console.log(`✅ Sheet "${title}" data uploaded to Firebase.`);

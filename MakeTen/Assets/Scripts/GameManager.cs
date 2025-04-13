@@ -22,7 +22,7 @@ public class GameManager : Singleton<GameManager>
 
     private void OnApplicationFocus(bool focus)
     {
-        if(focus)
+        if (focus)
         {
             Pause();
         }
@@ -34,7 +34,7 @@ public class GameManager : Singleton<GameManager>
 
     private void OnApplicationPause(bool pause)
     {
-        if(pause)
+        if (pause)
         {
             Pause();
         }
@@ -61,7 +61,7 @@ public class GameManager : Singleton<GameManager>
     public DateTime? dateTime => _currentTime != null ? _currentTime.Value : null;
 
     public ReactiveProperty<DateTime> reactiveTime = new ReactiveProperty<DateTime>();
-    
+
     // ✅ 구글 서버에서 UTC 시간 가져오기
     public void FetchOnlineTime()
     {
@@ -86,8 +86,6 @@ public class GameManager : Singleton<GameManager>
                 {
                     _currentTime = DateTime.Parse(dateHeader).ToUniversalTime();
                     lastCheckTime = Time.realtimeSinceStartupAsDouble;
-
-                    UIManager.Instance.CloseLoading();
                 }
                 else
                 {
@@ -107,7 +105,7 @@ public class GameManager : Singleton<GameManager>
 
     private void Update()
     {
-        if(_currentTime != null)
+        if (_currentTime != null)
         {
             _currentTime = _currentTime.Value.AddSeconds(Time.realtimeSinceStartupAsDouble - lastCheckTime);
             lastCheckTime = Time.realtimeSinceStartupAsDouble;
@@ -117,12 +115,63 @@ public class GameManager : Singleton<GameManager>
 
     private IEnumerator Initialize()
     {
+        
+        GoScene(Scene.Title);
         FetchOnlineTime();
+        UIManager.Instance.Title.SetStatus("Check Time");
         yield return new WaitUntil(() => _currentTime != null);
+        UIManager.Instance.Title.SetStatus("Check Server State");
         yield return new WaitUntil(() => FirebaseManager.Instance.IsReady);
+        UIManager.Instance.Title.SetStatus("Check Game Datas");
         DataManager.Instance.LoadGameDatas();
         yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
+        UIManager.Instance.Title.SetStatus("", showTap: true);
+        //UIManager.Instance.Main.Refresh();
+    }
+    public enum Scene
+    {
+        Title,
+        Main,
+        Puzzle,
+    }
+    public void GoScene(Scene scene, GameData.GameLevel level = null)
+    {
+        UIManager.Instance.Loading(callback: () =>
+        {
+            HUD.Instance.ShowMain(false);
+            HUD.Instance.ShowPuzzle(false);
+            switch (scene)
+            {
+                case Scene.Title:
+                    PuzzleManager.Instance.gameObject.SetActive(false);
+                    UIManager.Instance.Main.gameObject.SetActive(false);
+                    break;
+                case Scene.Main:
+                    UIManager.Instance.Title.gameObject.SetActive(false);
+                    PuzzleManager.Instance.gameObject.SetActive(false);
+                    UIManager.Instance.Main.gameObject.SetActive(true);
+                    break;
+                case Scene.Puzzle:
+                    PuzzleManager.Instance.gameObject.SetActive(true);
+                    UIManager.Instance.Main.gameObject.SetActive(false);
+                    break;
+            }
+        }, completeCallback: () =>
+        {
+            switch (scene)
+            {
+                case Scene.Title:
+                    //HUD.Instance.UpdateScene(Scene.Title);
+                    break;
+                case Scene.Main:
+                    HUD.Instance.ShowMain(true);
+                    break;
+                case Scene.Puzzle:
+                    HUD.Instance.ShowPuzzle(true);
+                    PuzzleManager.Instance.GameStart(level);
+                    break;
+            }
 
-        UIManager.Instance.Main.Refresh();
+        });
     }
 }

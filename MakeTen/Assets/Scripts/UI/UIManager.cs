@@ -1,7 +1,10 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System;
+using DG.Tweening;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -11,10 +14,38 @@ public class UIManager : Singleton<UIManager>
     [SerializeField]
     private Transform popupParent;
 
+    [SerializeField]
+    private Transform blockParent;
+    [SerializeField]
+    private Vector2Int blockCounts;
+    [SerializeField]
+    private Vector2 blockSize;
+    [SerializeField]
+    private Vector2 blockGap;
+
     protected override void Awake()
     {
         base.Awake();
+
+        StartCoroutine(InitBG());
     }
+
+    private IEnumerator InitBG()
+    {
+        yield return new WaitUntil(() => ObjectPooler.Instance.isReady);
+        Vector2 blockStartPos = blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (blockCounts.x - 1) * 0.5f, -(blockSize.y + blockGap.y) * (blockCounts.y - 1) * 0.5f);
+        Debug.Log("blockStartPos " + blockStartPos);
+        for (int x = 0; x < blockCounts.x; x++)
+        {
+            for (int y = 0; y < blockCounts.y; y++)
+            {
+                Block blockObj = ObjectPooler.Instance.GetObject<Block>("block_title", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * x, (blockSize.y + blockGap.y) * y), Vector3.one);
+                blockObj.SetSize(blockSize);
+                blockObj.InitRandom();
+            }
+        }
+    }
+
     private const string PopupPath = "Prefabs/UI/Popups/";
 
     public T Open<T>() where T : Popup
@@ -166,11 +197,33 @@ public class UIManager : Singleton<UIManager>
     [SerializeField]
     private GameObject loadingObj;
     [SerializeField]
+    private UnityEngine.UI.Image loadingBG;
+    [SerializeField]
     private UnityEngine.UI.Text loadingText;
+    [SerializeField]
+    private GameObject bg;
 
-    public void Loading(string message = "Loading")
+    public void ShowBG(bool show)
+    {
+        bg.SetActive(show);
+
+    }
+
+    public void Loading(string message = "Loading", float bgAlpha = 1f, float fadeDuration = 0.5f, float fadeDelay = 1f, Action callback = null, Action completeCallback = null)
     {
         loadingObj.SetActive(true);
+        //loadingBG.color = new Color(loadingBG.color.r, loadingBG.color.g, loadingBG.color.b, 0f);
+        DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, bgAlpha, fadeDuration).OnComplete(() =>
+        {
+            callback?.Invoke();
+            DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
+            {
+                completeCallback?.Invoke();
+                loadingObj.SetActive(false);
+            });
+            
+        });
+        
         loadingText.text = message;
     }
 
@@ -181,10 +234,10 @@ public class UIManager : Singleton<UIManager>
 
     public Main Main;
 
-    public void ShowMain(bool isShow)
-    {
-        Main.gameObject.SetActive(isShow);
-    }
+    //public void ShowMain(bool isShow)
+    //{
+    //    Main.gameObject.SetActive(isShow);
+    //}
 
     public void RefreshMain()
     {
@@ -192,4 +245,5 @@ public class UIManager : Singleton<UIManager>
     }
 
     public Message Message;
+    public Title Title;
 }

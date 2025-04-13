@@ -39,7 +39,7 @@ public class PopupLevelSelect : Popup
 
         if(DataManager.Instance.userData.UseHeart())
         {
-            PuzzleManager.Instance.GameStart(currentLevel);
+            GameManager.Instance.GoScene(GameManager.Scene.Puzzle, currentLevel);
             Close();
         }
         

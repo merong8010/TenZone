@@ -27,6 +27,17 @@ public static class Util
         // 1~9 범위를 벗어나지 않도록 보정
         return UnityEngine.Mathf.Clamp(UnityEngine.Mathf.RoundToInt(randNormal), 1, 9);
     }
+    public static Vector2Int GetScreenSize()
+    {
+        if (UnityEngine.Device.SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            return new Vector2Int(Screen.currentResolution.width, Screen.currentResolution.height);
+        }
+        else
+        {
+            return new Vector2Int(Screen.width, Screen.height);
+        }
+    }
 }
 
 public static class Yielders

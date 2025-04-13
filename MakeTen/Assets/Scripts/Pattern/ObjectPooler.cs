@@ -3,12 +3,8 @@ using UnityEngine;
 using System.Collections;
 using TMPro; // UI 표시용
 
-public class ObjectPooler : MonoBehaviour
+public class ObjectPooler : Singleton<ObjectPooler>
 {
-    private object _threadLocker;
-
-    public static ObjectPooler Instance; // 싱글턴 패턴 적용
-
     [System.Serializable]
     public class Pool
     {
@@ -27,19 +23,11 @@ public class ObjectPooler : MonoBehaviour
     private Dictionary<string, List<GameObject>> activeObjects;
 
     public TMP_Text poolStatusText; // 현재 풀 상태를 표시할 UI 텍스트
-
-    void Awake()
+    public bool isReady = false;
+    protected override void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-        _threadLocker = new object();
+        base.Awake();
+        
         poolDictionary = new Dictionary<string, Queue<GameObject>>();
         poolSettings = new Dictionary<string, Pool>();
         activeObjects = new Dictionary<string, List<GameObject>>();
@@ -75,12 +63,13 @@ public class ObjectPooler : MonoBehaviour
             StartCoroutine(CleanupPool(pool.tag, pool.cleanupDelay));
             StartCoroutine(OptimizeMemory(pool.tag, pool.optimizeInterval));
         }
+        isReady = true;
     }
 
     /// <summary>
     /// Resources 폴더에서 프리팹을 동적으로 로딩하여 풀 생성
     /// </summary>
-    private GameObject CreateDynamicPool(string path, Vector3 position, Quaternion rotation, float autoReturnTime)
+    private T CreateDynamicPool<T>(string path, Transform parent, Vector3 position, Vector3 scale, Quaternion rotation, float autoReturnTime) where T : MonoBehaviour
     {
         GameObject prefab = Resources.Load<GameObject>(path);
         if (prefab == null)
@@ -99,24 +88,24 @@ public class ObjectPooler : MonoBehaviour
         {
             GameObject obj = Instantiate(prefab);
             obj.SetActive(false);
-            obj.transform.SetParent(transform);
+            obj.transform.SetParent(parent);
             poolDictionary[path].Enqueue(obj);
         }
 
         StartCoroutine(CleanupPool(path, newPool.cleanupDelay));
 
-        return GetObject(path, position, rotation, autoReturnTime);
+        return GetObject<T>(path, parent, position, scale, rotation, autoReturnTime);
     }
 
     /// <summary>
     /// 태그 또는 경로 기반으로 오브젝트 가져오기 (부족하면 자동 확장)
     /// </summary>
-    public GameObject GetObject(string tagOrPath, Vector3 position = default(Vector3), Quaternion rotation = default(Quaternion), float autoReturnTime = 0f)
+    public T GetObject<T>(string tagOrPath, Transform parent = null, Vector3 position = default(Vector3), Vector3 scale = default(Vector3), Quaternion rotation = default(Quaternion), float autoReturnTime = 0f) where T : MonoBehaviour
     {
         string tag = tagOrPath;
         if (!poolDictionary.ContainsKey(tag))
         {
-            return CreateDynamicPool(tagOrPath, position, rotation, autoReturnTime);
+            return CreateDynamicPool<T>(tagOrPath, parent, position, scale,  rotation, autoReturnTime);
         }
 
         
@@ -130,7 +119,9 @@ public class ObjectPooler : MonoBehaviour
 
         GameObject obj = poolDictionary[tag].Dequeue();
         obj.SetActive(true);
-        obj.transform.position = position;
+        obj.transform.SetParent(parent);
+        obj.transform.localPosition = position;
+        obj.transform.localScale = scale == default(Vector3) ? Vector3.one : scale;
         obj.transform.rotation = rotation;
 
         activeObjects[tag].Add(obj);
@@ -141,7 +132,13 @@ public class ObjectPooler : MonoBehaviour
             StartCoroutine(AutoReturnObject(tag, obj, autoReturnTime));
         }
 
-        return obj;
+        T component = obj.GetComponent<T>();
+        if (component == null)
+        {
+            Debug.LogWarning($"The pooled object with tag {tag} does not have component of type {typeof(T)}.");
+        }
+
+        return component;
     }
 
     /// <summary>

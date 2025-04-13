@@ -74,7 +74,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
     public void GameStart(GameData.GameLevel level)
     {
         currentLevel = level;
-        UIManager.Instance.ShowMain(false);
         InitBlocks();
     }
 
@@ -97,14 +96,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             for (int column = 0; column < currentLevel.column; column++)
             {
-                GameObject blockObj = pooler.GetObject("block");
+                Block blockObj = pooler.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
                 blockObj.name = $"block_{row}_{column}";
-                blockObj.transform.SetParent(blockParent);
-                blockObj.transform.localScale = Vector3.one;
-                blockObj.transform.localPosition = blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row);
-                Block block = blockObj.GetComponent<Block>();
-                block.SetSize(blockSize);
-                blocks = blocks.Append(block).ToArray();
+                blockObj.SetSize(blockSize);
+                blocks = blocks.Append(blockObj).ToArray();
             }
         }
 
@@ -157,8 +152,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
 
         UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
-        UIManager.Instance.ShowMain(true);
-
+        
         if(DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, true))
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value, remainMilliSeconds);
@@ -179,6 +173,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private RectTransform canvasRect;
     public void OnClick()
     {
+        Debug.Log("OnClick");
         isDrag = true;
 
         //startPos = Input.mousePosition;

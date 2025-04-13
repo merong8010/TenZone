@@ -9,21 +9,21 @@ using System.Linq;
 public class HUD : Singleton<HUD>
 {
     [SerializeField]
-    private Text levelText;
+    private TMPro.TextMeshProUGUI levelText;
     [SerializeField]
-    private Text expText;
+    private TMPro.TextMeshProUGUI expText;
     [SerializeField]
     private Text nameText;
 
     [SerializeField]
-    private Text heartCount;
+    private TMPro.TextMeshProUGUI heartCount;
     [SerializeField]
-    private Text heartChargeRemainTime;
+    private TMPro.TextMeshProUGUI heartChargeRemainTime;
 
     [SerializeField]
-    private Text pointText;
+    private TMPro.TextMeshProUGUI pointText;
     [SerializeField]
-    private Text timeText;
+    private TMPro.TextMeshProUGUI timeText;
 
     private Coroutine timeCoroutine;
 
@@ -41,7 +41,8 @@ public class HUD : Singleton<HUD>
 
         nameText.text = data.nickname;
 
-        heartCount.text = $"Heart : {data.Heart}";
+        //heartCount.text = $"{data.Heart}";
+        heartCount.text = data.Heart.ToString();
 
         int remain = (int)(data.nextHeartChargeTime - GameManager.Instance.dateTime.Value.ToTick());
         timeText.text = remain.ToTimeText();
@@ -91,6 +92,21 @@ public class HUD : Singleton<HUD>
         //timePropoerty.Subscribe(x => { timeText.text = new StringBuilder().Append("time : ").Append(Mathf.RoundToInt(x)).ToString(); });
     }
 
+    public void ClickGameStart()
+    {
+        UIManager.Instance.Open<PopupLevelSelect>();
+    }
+
+    public void ClickSetting()
+    {
+
+    }
+
+    public void ClickNickname()
+    {
+
+    }
+
     public void ClickRanking()
     {
         UIManager.Instance.Open<PopupRanking>();
@@ -100,6 +116,28 @@ public class HUD : Singleton<HUD>
     {
         DataManager.Instance.userData.ChargeHeart();
     }
+
+    public void UpdateScene(GameManager.Scene scene)
+    {
+        UIManager.Instance.ShowBG(scene != GameManager.Scene.Puzzle);
+        mainRect.Show(scene == GameManager.Scene.Main);
+        puzzleRect.Show(scene == GameManager.Scene.Puzzle);
+    }
+
+    public void ShowMain(bool show)
+    {
+        mainRect.Show(show);
+    }
+
+    public void ShowPuzzle(bool show)
+    {
+        puzzleRect.Show(show);
+    }
+
+    [SerializeField]
+    private AnimationRect mainRect;
+    [SerializeField]
+    private AnimationRect puzzleRect;
 
     [SerializeField]
     private string id;
