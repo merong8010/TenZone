@@ -41,6 +41,10 @@ namespace GameData
         public int time;
         public int exp;
         public int unlockLevel;
+        public int bonusTimeMin;
+        public int bonusTimeMax;
+        public float bonusRate;
+        public float shuffleRate;
     }
 
     public class UserLevel : Data

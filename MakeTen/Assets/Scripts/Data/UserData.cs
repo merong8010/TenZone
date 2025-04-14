@@ -3,15 +3,18 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using UniRx;
+using Newtonsoft.Json;
+
 public class UserData
 {
     public FirebaseManager.AuthenticatedType authType;
     public string id;
     public string nickname;
     private int heart;
-    public long nextHeartChargeTime;
+    public long lastHeartTime;
     public string countryCode;
-    public Dictionary<GameData.GoodsType, int> goods = new Dictionary<GameData.GoodsType, int>();
+    public ReactiveDictionary<GameData.GoodsType, int> goods = new ReactiveDictionary<GameData.GoodsType, int>();
 
     public int exp;
     public int level;
@@ -86,6 +89,17 @@ public class UserData
 
     public MailList.Data[] mailDatas;
 
+    //private void UpdateHeartByTime()
+    //{
+    //    TimeSpan timePassed = DateTime.Now - lastHeartTime;
+    //    int recoverCount = Mathf.FloorToInt((float)timePassed.TotalMinutes / heartRecoveryTimeMinutes);
+    //    if (recoverCount > 0)
+    //    {
+    //        currentHeart = Mathf.Min(currentHeart + recoverCount, maxHeart);
+    //        lastHeartTime = lastHeartTime.AddMinutes(recoverCount * heartRecoveryTimeMinutes);
+    //        SaveHeartData();
+    //    }
+    //}
     public int Heart
     {
         get
@@ -94,22 +108,29 @@ public class UserData
             {
                 if(GameManager.Instance.dateTime !=null)
                 {
-                    long currentTime = GameManager.Instance.dateTime.Value.ToTick();
-                    if (nextHeartChargeTime < currentTime)
+                    int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - lastHeartTime);
+                    int recoverCount = Mathf.FloorToInt((float)passedSec / DataManager.Instance.HeartChargeTime);
+                    if(recoverCount > 0)
                     {
-
-                        heart += 1;
-                        heart += (int)((currentTime - nextHeartChargeTime) / DataManager.Instance.HeartChargeTime);
-                        if(heart >= DataManager.Instance.MaxHeart)
-                        {
-                            heart = DataManager.Instance.MaxHeart;
-                            nextHeartChargeTime = currentTime;
-                        }
-                        else
-                        {
-                            nextHeartChargeTime = currentTime + ((currentTime - nextHeartChargeTime) % DataManager.Instance.HeartChargeTime);
-                        }
+                        heart = Mathf.Min(heart + recoverCount, DataManager.Instance.MaxHeart);
+                        lastHeartTime = lastHeartTime + (recoverCount * DataManager.Instance.HeartChargeTime);
                     }
+                    //long currentTime = GameManager.Instance.dateTime.Value.ToTick();
+                    //if (lastHeartTime + DataManager.Instance.HeartChargeTime < currentTime)
+                    //{
+                    //    //heart += 1;
+                    //    heart += (int)((currentTime - lastHeartTime) / DataManager.Instance.HeartChargeTime);
+                    //    if(heart >= DataManager.Instance.MaxHeart)
+                    //    {
+                    //        heart = DataManager.Instance.MaxHeart;
+                    //        lastHeartTime = currentTime;
+                    //    }
+                    //    else
+                    //    {
+                    //        lastHeartTime = currentTime - ((currentTime - lastHeartTime) % DataManager.Instance.HeartChargeTime);
+                    //        //lastHeartChargeTime = currentTime + ((currentTime - lastHeartChargeTime) % DataManager.Instance.HeartChargeTime);
+                    //    }
+                    //}
                 }
             }
             
@@ -133,7 +154,7 @@ public class UserData
         //string country = RegionInfo.CurrentRegion.EnglishName; // ???? ????
         countryCode = RegionInfo.CurrentRegion.TwoLetterISORegionName;
         heart = DataManager.Instance.MaxHeart;
-        nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
+        lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
         goods.Add(GameData.GoodsType.Gold, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultGold").val);
         goods.Add(GameData.GoodsType.Gem, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultGem").val);
         goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultShuffle").val);
@@ -148,9 +169,9 @@ public class UserData
         if(Heart > 0)
         {
             heart -= 1;
-            if (heart < DataManager.Instance.MaxHeart && nextHeartChargeTime <= GameManager.Instance.dateTime.Value.ToTick())
+            if(heart == DataManager.Instance.MaxHeart-1)
             {
-                nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick() + DataManager.Instance.HeartChargeTime;
+                lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
             }
             FirebaseManager.Instance.SaveUserData(this);
             return true;
@@ -161,10 +182,11 @@ public class UserData
     public void ChargeHeart()
     {
         heart += 1;
-        if(heart >= DataManager.Instance.MaxHeart)
-        {
-            nextHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
-        }
+        //lastHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
+        //if(heart >= DataManager.Instance.MaxHeart)
+        //{
+        //    lastHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
+        //}
         FirebaseManager.Instance.SaveUserData(this);
     }
 

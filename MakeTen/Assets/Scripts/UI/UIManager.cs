@@ -212,15 +212,17 @@ public class UIManager : Singleton<UIManager>
     public void Loading(string message = "Loading", float bgAlpha = 1f, float fadeDuration = 0.5f, float fadeDelay = 1f, Action callback = null, Action completeCallback = null)
     {
         loadingObj.SetActive(true);
-        //loadingBG.color = new Color(loadingBG.color.r, loadingBG.color.g, loadingBG.color.b, 0f);
         DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, bgAlpha, fadeDuration).OnComplete(() =>
         {
             callback?.Invoke();
-            DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
+            if(fadeDelay > 0f)
             {
-                completeCallback?.Invoke();
-                loadingObj.SetActive(false);
-            });
+                DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
+                {
+                    completeCallback?.Invoke();
+                    loadingObj.SetActive(false);
+                });
+            }
             
         });
         

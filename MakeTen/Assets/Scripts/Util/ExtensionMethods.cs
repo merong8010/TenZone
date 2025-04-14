@@ -34,6 +34,18 @@ public static class ExtensionMethods
         return array;
     }
 
+    public static Block.Data[] Shuffle(this Block.Data[] array)
+    {
+        System.Random rand = new System.Random(); // 난수 생성기
+
+        for (int i = array.Length - 1; i > 0; i--)
+        {
+            int j = rand.Next(0, i + 1); // 0부터 i까지 랜덤 인덱스 선택
+            (array[i], array[j]) = (array[j], array[i]); // Swap
+        }
+        return array;
+    }
+
     public static string ToTimeText(this int time)
     {
         return TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
@@ -69,6 +81,14 @@ public static class ExtensionMethods
     public static string ToProgressText(this int current, int max)
     {
         return new StringBuilder().AppendFormat("{0} / {1}", current, max).ToString();
+    }
+
+    const int rateRange = 1000000;
+    public static bool IsSuccess(this float rate)
+    {
+        int thisRate = Mathf.FloorToInt(rate * rateRange);
+        int ran = UnityEngine.Random.Range(0, rateRange);
+        return thisRate > ran;
     }
 }
 

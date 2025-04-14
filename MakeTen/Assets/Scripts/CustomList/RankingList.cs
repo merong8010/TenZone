@@ -12,17 +12,20 @@ public class RankingList : InfiniteScroll<RankingList.Data>
         public int remainMilliSeconds;
         public string countryCode;
         public long timeStamp;
-        
-        public Data(string id, string name, int score, int remainMilliSeconds, string countryCode)
+        public Data()
+        {
+
+        }
+        public Data(string id, string name, int score, int remainMilliSeconds, string countryCode, long timeStamp = 0)
         {
             this.id = id;
             this.name = name;
             this.point = score;
             this.countryCode = countryCode;
             this.remainMilliSeconds = remainMilliSeconds;
-            this.timeStamp = GameManager.Instance.dateTime.Value.ToTick();
+            this.timeStamp = timeStamp == 0 ? GameManager.Instance.dateTime.Value.ToTick() : timeStamp;
         }
-        public Data(string id, int rank, string name, int score, int remainMilliSeconds, string countryCode)
+        public Data(string id, int rank, string name, int score, int remainMilliSeconds, string countryCode, long timeStamp = 0)
         {
             this.id = id;
             this.rank = rank;
@@ -30,7 +33,7 @@ public class RankingList : InfiniteScroll<RankingList.Data>
             this.point = score;
             this.countryCode = countryCode;
             this.remainMilliSeconds = remainMilliSeconds;
-            this.timeStamp = GameManager.Instance.dateTime.Value.ToTick();
+            this.timeStamp = timeStamp == 0 ? GameManager.Instance.dateTime.Value.ToTick() : timeStamp;
         }
     }
 }

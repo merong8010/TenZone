@@ -46,9 +46,7 @@ public class GameManager : Singleton<GameManager>
 
     private void Resume()
     {
-        //UIManager.Instance.Loading();
-        //_currentTime = null;
-        //FetchOnlineTime();
+        FetchOnlineTime();
     }
 
     private void Pause()
@@ -65,6 +63,8 @@ public class GameManager : Singleton<GameManager>
     // ✅ 구글 서버에서 UTC 시간 가져오기
     public void FetchOnlineTime()
     {
+        _currentTime = null;
+        UIManager.Instance.Loading(fadeDelay: 0f);
         StartCoroutine(GetOnlineTime());
     }
 
@@ -86,6 +86,7 @@ public class GameManager : Singleton<GameManager>
                 {
                     _currentTime = DateTime.Parse(dateHeader).ToUniversalTime();
                     lastCheckTime = Time.realtimeSinceStartupAsDouble;
+                    UIManager.Instance.CloseLoading();
                 }
                 else
                 {

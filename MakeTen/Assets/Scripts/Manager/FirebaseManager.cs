@@ -84,31 +84,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
         //db.Child("GameData").
     }
 
-    //public void GetGameData<T>(string nodeName, Action<T[]> callback) where T : GameData.Data
-    //{
-    //    db.Child("GameData").Child(nodeName).GetValueAsync().ContinueWithOnMainThread(task => {
-    //        if (task.IsCompleted)
-    //        {
-    //            DataSnapshot snapshot = task.Result;
-    //            if (snapshot.Exists)
-    //            {
-    //                Debug.Log($"game Info {nodeName} : {snapshot.GetRawJsonValue()}");
-    //                callback.Invoke(JsonConvert.DeserializeObject<T[]>(snapshot.GetRawJsonValue()));
-    //                //callback.Invoke(JsonConvert.DeserializeObject<T>(snapshot.GetRawJsonValue()));
-    //            }
-    //            else
-    //            {
-    //                //callback.Invoke(new UserData(userId));
-    //                Debug.Log($"No gameInfo found. {typeof(T).Name}");
-    //            }
-    //        }
-    //        else
-    //        {
-    //            Debug.LogError($"Failed to get {nodeName} : {task.Exception}");
-    //        }
-    //    });
-    //}
-
     private DatabaseReference myDB;
     public void SaveUserData(UserData data)
     {
@@ -529,7 +504,31 @@ public class FirebaseManager : Singleton<FirebaseManager>
     public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleManager.Level gameLevel = PuzzleManager.Level.Normal)
     {
 #if UNITY_EDITOR
-        callback?.Invoke(null);
+        db.Child("Leaderboard").Child(gameLevel.ToString()).Child(date).GetValueAsync().ContinueWith(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                DataSnapshot dataSnapshot = task.Result;
+                if (dataSnapshot.Exists)
+                {
+                    foreach (var user in dataSnapshot.Children)
+                    {
+                        string id = user.Key;
+                        var json = user.Value as Dictionary<string, object>;
+                        //RankingList.Data entry = new RankingList.Data(id, json.ContainsKey("name") ? json["name"].ToString() : "Unknown", json.ContainsKey("point") ? Convert.ToInt32(json["point"]) : 0, json.ContainsKey("countryCode") ? json["countryCode"].ToString() : "??",)
+                        
+                        //rankingList.Add(entry);
+                    }
+
+                    // 랭킹 포인트 순으로 정렬
+                    //rankingList.Sort((a, b) => b.point.CompareTo(a.point));
+                }
+                PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
+                //resultData.topRanks = new
+                callback?.Invoke(resultData);
+            }
+        });
+        
         return;
 #endif
         var data = new Dictionary<string, object>

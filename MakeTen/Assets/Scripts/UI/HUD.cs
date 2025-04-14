@@ -8,10 +8,17 @@ using System.Linq;
 
 public class HUD : Singleton<HUD>
 {
+    [Header("Main")]
+    [SerializeField]
+    private AnimationRect mainRect;
+
     [SerializeField]
     private TMPro.TextMeshProUGUI levelText;
     [SerializeField]
     private TMPro.TextMeshProUGUI expText;
+    [SerializeField]
+    private Image expBar;
+
     [SerializeField]
     private Text nameText;
 
@@ -20,63 +27,64 @@ public class HUD : Singleton<HUD>
     [SerializeField]
     private TMPro.TextMeshProUGUI heartChargeRemainTime;
 
+    [Header("Puzzle")]
+    [SerializeField]
+    private AnimationRect puzzleRect;
     [SerializeField]
     private TMPro.TextMeshProUGUI pointText;
     [SerializeField]
     private TMPro.TextMeshProUGUI timeText;
+    [SerializeField]
+    private Image timeBar;
+    [SerializeField]
+    private TMPro.TextMeshProUGUI shuffleCountText;
 
-    private Coroutine timeCoroutine;
+    private IDisposable disposable;
+
 
     public void UpdateUserData(UserData data)
     {
         levelText.text = $"Lv.{data.level}";
         if(DataManager.Instance.Get<GameData.UserLevel>().ToList().Exists(x => x.level == data.level + 1))
         {
+            int max = DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp;
             expText.text = data.exp.ToProgressText(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp);
+            expBar.fillAmount = (float)data.exp / max;
         }
         else
         {
             expText.text = "MAX";
+            expBar.fillAmount = 1f;
         }
 
         nameText.text = data.nickname;
-
-        //heartCount.text = $"{data.Heart}";
         heartCount.text = data.Heart.ToString();
 
-        int remain = (int)(data.nextHeartChargeTime - GameManager.Instance.dateTime.Value.ToTick());
-        timeText.text = remain.ToTimeText();
-
-        if (timeCoroutine != null) StopCoroutine(timeCoroutine);
-        if (remain > 0) timeCoroutine = StartCoroutine(CheckRemain(remain));
-        else heartChargeRemainTime.text = "MAX";
+        if(disposable == null)
+        {
+            disposable = GameManager.Instance.reactiveTime.Subscribe(x =>
+            {
+                if(data.Heart >= DataManager.Instance.MaxHeart)
+                {
+                    timeText.text = "MAX";
+                }
+                else
+                {
+                    int passedSec = (int)(x.ToTick() - DataManager.Instance.userData.lastHeartTime);
+                    timeText.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+                }
+            });
+        }
     }
 
     public void UpdateHeart()
     {
         heartCount.text = DataManager.Instance.userData.Heart.ToString();
 
-        int remain = (int)(DataManager.Instance.userData.nextHeartChargeTime - GameManager.Instance.dateTime.Value.ToTick());
-        timeText.text = remain.ToTimeText();
-
-        if (timeCoroutine != null) StopCoroutine(timeCoroutine);
-        if (remain > 0) timeCoroutine = StartCoroutine(CheckRemain(remain));
-        else heartChargeRemainTime.text = "MAX";
+        int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
+        timeText.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
     }
 
-    private IEnumerator CheckRemain(int remain)
-    {
-        while(remain > 0)
-        {
-            yield return Yielders.Get(1f);
-            remain -= 1;
-            heartChargeRemainTime.text = remain.ToTimeText();
-        }
-
-        UpdateHeart();
-    }
-
-    private bool isInit = false;
     public void Initialize(ReactiveProperty<int> pointProperty)
     {
         pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
@@ -86,10 +94,11 @@ public class HUD : Singleton<HUD>
             {
                 TimeSpan timeSpan = (PuzzleManager.Instance.finishTime - x);
                 timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
+                timeBar.fillAmount = (float)timeSpan.TotalSeconds / PuzzleManager.Instance.CurrentGameTime;
             }
-            
         });
-        //timePropoerty.Subscribe(x => { timeText.text = new StringBuilder().Append("time : ").Append(Mathf.RoundToInt(x)).ToString(); });
+
+        DataManager.Instance.userData.goods.ObserveReplace().Where(x => x.Key == GameData.GoodsType.Shuffle).Subscribe(x => shuffleCountText.text = x.ToString());
     }
 
     public void ClickGameStart()
@@ -117,6 +126,11 @@ public class HUD : Singleton<HUD>
         DataManager.Instance.userData.ChargeHeart();
     }
 
+    public void ClickShuffle()
+    {
+        PuzzleManager.Instance.Shuffle();
+    }
+
     public void UpdateScene(GameManager.Scene scene)
     {
         UIManager.Instance.ShowBG(scene != GameManager.Scene.Puzzle);
@@ -133,11 +147,6 @@ public class HUD : Singleton<HUD>
     {
         puzzleRect.Show(show);
     }
-
-    [SerializeField]
-    private AnimationRect mainRect;
-    [SerializeField]
-    private AnimationRect puzzleRect;
 
     [SerializeField]
     private string id;

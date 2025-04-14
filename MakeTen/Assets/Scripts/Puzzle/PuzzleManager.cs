@@ -38,6 +38,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
     public DateTime finishTime;
 
     private GameData.GameLevel currentLevel;
+    public int CurrentGameTime => currentLevel != null ? currentLevel.time : 0;
 
     private Vector2 blockStartPos;
     [SerializeField]
@@ -90,14 +91,14 @@ public class PuzzleManager : Singleton<PuzzleManager>
         blocks = new Block[] { };
 
         blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * currentLevel.column)) / currentLevel.column, (blocksRT.rect.height - (blockGap.y * currentLevel.row)) / currentLevel.row);
-        //Debug.Log($"blockSize : {blockSize.x}:{blockSize.y} | {blocksRT.sizeDelta.x} : {blocksRT.sizeDelta.y} | {blockGap.x} : {blockGap.y} | {blocksRT.rect.width} : {blocksRT.rect.height}");
         blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
+
         for (int row = 0; row < currentLevel.row; row++)
         {
             for (int column = 0; column < currentLevel.column; column++)
             {
                 Block blockObj = pooler.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
-                blockObj.name = $"block_{row}_{column}";
+                blockObj.name = $"block_{column}_{row}";
                 blockObj.SetSize(blockSize);
                 blocks = blocks.Append(blockObj).ToArray();
             }
@@ -108,7 +109,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         //System.Random rand = new System.Random();
         for (int i = 0; i < blocks.Length; i++)
         {
-            blocks[i].Init(Util.GenerateGaussianRandom(currentLevel.mean, currentLevel.stdDev));
+            blocks[i].SetData(new Block.Data(currentLevel));
         }
 
         int remain = blocks.Sum(x => x.num) % TargetSumNum;
@@ -120,7 +121,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 {
                     if (blocks[i].num > 1)
                     {
-                        blocks[i].Init(blocks[i].num - 1);
+                        //blocks[i].Init(blocks[i].num - 1);
+                        blocks[i].SetNum(blocks[i].num - 1);
                         remain -= 1;
                     }
 
@@ -136,11 +138,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     public void Shuffle()
     {
-        int[] nums = blocks.Select(x => x.num).ToArray().Shuffle();
+        Block.Data[] datas  = blocks.Select(x => x.GetData()).ToArray().Shuffle();
         
         for(int i = 0; i < blocks.Length; i++)
         {
-            blocks[i].Init(nums[i]);
+            blocks[i].SetData(datas[i]);
         }
     }
 
@@ -162,7 +164,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
             FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value, remainMilliSeconds);
         }
 
-        DataManager.Instance.userData.ChargeExp(Mathf.FloorToInt(currentLevel.exp * (currentPoint.Value / (currentLevel.row * currentLevel.column))));
+        DataManager.Instance.userData.ChargeExp(Mathf.FloorToInt(currentLevel.exp * ((float)currentPoint.Value / (currentLevel.row * currentLevel.column))));
         finishCoroutine = null;
     }
 
@@ -173,16 +175,14 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private RectTransform canvasRect;
     public void OnClick()
     {
-        Debug.Log("OnClick");
         isDrag = true;
-
-        //startPos = Input.mousePosition;
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Input.mousePosition, cam, out startPos);
         dragTransform.gameObject.SetActive(true);
         dragTransform.rectTransform.anchoredPosition = startPos;
         dragTransform.rectTransform.sizeDelta = Vector2.zero;
     }
+
     private int remainMilliSeconds;
 
     public void OnRelease()
