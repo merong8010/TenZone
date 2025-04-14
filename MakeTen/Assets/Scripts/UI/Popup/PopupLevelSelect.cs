@@ -9,9 +9,12 @@ public class PopupLevelSelect : Popup
 
     public override void Open()
     {
+        int lastLevelIdx = PlayerPrefs.GetInt("LastLevel", 0);
         base.Open();
         Initialize();
         levelList.UpdateList(DataManager.Instance.Get<GameData.GameLevel>().ToList());
+        currentLevel = levelList.GetDatas()[lastLevelIdx];
+        levelList.Focus(lastLevelIdx);
     }
 
     private bool isInit = false;

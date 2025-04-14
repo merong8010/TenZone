@@ -24,10 +24,10 @@ public class SafeArea : MonoBehaviour
     private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
     private void Update()
     {
-        if(lastOrientation != Input.deviceOrientation)
+        if(lastOrientation != Util.GetDeviceOrientation())
         {
             Refresh();
-            lastOrientation = Input.deviceOrientation;
+            lastOrientation = Util.GetDeviceOrientation();
         }
     }
 

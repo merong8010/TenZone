@@ -126,6 +126,7 @@ public class GameManager : Singleton<GameManager>
         UIManager.Instance.Title.SetStatus("Check Game Datas");
         DataManager.Instance.LoadGameDatas();
         yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
+        PuzzleManager.Instance.Initialize();
         UIManager.Instance.Title.SetStatus("", showTap: true);
         //UIManager.Instance.Main.Refresh();
     }

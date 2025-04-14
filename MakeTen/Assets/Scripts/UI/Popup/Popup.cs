@@ -33,7 +33,7 @@ public class Popup : MonoBehaviour
 
     public virtual void Refresh()
     {
-        portraitObj?.SetActive(Input.deviceOrientation == DeviceOrientation.Portrait);
-        landscapeObj?.SetActive(Input.deviceOrientation == DeviceOrientation.LandscapeLeft || Input.deviceOrientation == DeviceOrientation.LandscapeRight);
+        portraitObj?.SetActive(Util.GetDeviceOrientation() == DeviceOrientation.Portrait);
+        landscapeObj?.SetActive(Util.GetDeviceOrientation() == DeviceOrientation.Landscape);
     }
 }

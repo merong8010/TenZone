@@ -249,6 +249,9 @@ MonoBehaviour:
   bonusText: {fileID: 587376997876718179}
   bonusFocusObj: {fileID: 6890211920667835260}
   bonusFocusText: {fileID: 8965583637834368670}
+  effectTag: block_break
+  effectDuration: 3
+  effectScale: {x: 100, y: 100, z: 100}
   randomChangeMin: 5
   randomChangeMax: 15
 --- !u!1 &5789331201531682364
@@ -610,7 +613,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1732281245404576537
 RectTransform:
   m_ObjectHideFlags: 0

@@ -66,12 +66,12 @@ public class HUD : Singleton<HUD>
             {
                 if(data.Heart >= DataManager.Instance.MaxHeart)
                 {
-                    timeText.text = "MAX";
+                    heartChargeRemainTime.text = "MAX";
                 }
                 else
                 {
                     int passedSec = (int)(x.ToTick() - DataManager.Instance.userData.lastHeartTime);
-                    timeText.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+                    heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
                 }
             });
         }
@@ -82,7 +82,7 @@ public class HUD : Singleton<HUD>
         heartCount.text = DataManager.Instance.userData.Heart.ToString();
 
         int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
-        timeText.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+        heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
     }
 
     public void Initialize(ReactiveProperty<int> pointProperty)

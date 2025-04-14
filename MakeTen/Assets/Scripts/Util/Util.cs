@@ -38,6 +38,36 @@ public static class Util
             return new Vector2Int(Screen.width, Screen.height);
         }
     }
+
+    public static DeviceOrientation GetDeviceOrientation()
+    {
+#if UNITY_EDITOR
+        // 에디터에서는 가로/세로 비율로 판단
+        return Screen.width > Screen.height ? DeviceOrientation.Landscape : DeviceOrientation.Portrait;
+#else
+        // 실제 디바이스에서는 Screen.orientation 사용
+        switch (Screen.orientation)
+        {
+            case ScreenOrientation.Portrait:
+            case ScreenOrientation.PortraitUpsideDown:
+                return DeviceOrientation.Portrait;
+
+            case ScreenOrientation.LandscapeLeft:
+            case ScreenOrientation.LandscapeRight:
+                return DeviceOrientation.Landscape;
+
+            default:
+                // 미정 방향은 화면 비율로 판단
+                return Screen.width > Screen.height ? DeviceOrientation.Landscape : DeviceOrientation.Portrait;
+        }
+#endif
+    }
+}
+public enum DeviceOrientation
+{
+    Unknown,
+    Portrait,
+    Landscape
 }
 
 public static class Yielders

@@ -49,13 +49,16 @@ public class PuzzleManager : Singleton<PuzzleManager>
     protected override void Awake()
     {
         base.Awake();
-        Initialize();
+        //Initialize();
     }
 
     private Coroutine finishCoroutine;
 
     private bool isInit = false;
-    private void Initialize()
+
+    [SerializeField]
+    private SafeArea blockSafeArea;
+    public void Initialize()
     {
         if (isInit) return;
         isInit = true;
@@ -64,6 +67,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         currentPoint = new ReactiveProperty<int>();
         
         HUD.Instance.Initialize(currentPoint);
+        blockSafeArea.refreshAction = RefreshPosition;
     }
 
     [SerializeField]
@@ -135,6 +139,30 @@ public class PuzzleManager : Singleton<PuzzleManager>
         if (finishCoroutine != null) StopCoroutine(finishCoroutine);
         finishCoroutine = StartCoroutine(CheckFinish());
     }
+
+    public void RefreshPosition()
+    {
+        if(currentLevel == null) return;
+        blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * currentLevel.column)) / currentLevel.column, (blocksRT.rect.height - (blockGap.y * currentLevel.row)) / currentLevel.row);
+        blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
+
+        for (int row = 0; row < currentLevel.row; row++)
+        {
+            for (int column = 0; column < currentLevel.column; column++)
+            {
+                //Block blockObj = pooler.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
+                
+                Block blockObj = blocks.SingleOrDefault(x => x.name == $"block_{column}_{row}");
+                blockObj.transform.localPosition = blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row);
+                //blockObj.name = $"block_{column}_{row}";
+                blockObj.SetSize(blockSize);
+                //blocks = blocks.Append(blockObj).ToArray();
+            }
+        }
+    }
+
+    private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
+    
 
     public void Shuffle()
     {
@@ -228,6 +256,12 @@ public class PuzzleManager : Singleton<PuzzleManager>
             {
                 blocks[i].Focus(focus.Contains(blocks[i]));
             }
+        }
+
+        if (lastOrientation != Util.GetDeviceOrientation())
+        {
+            RefreshPosition();
+            lastOrientation = Util.GetDeviceOrientation();
         }
     }
 }

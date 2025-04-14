@@ -106,12 +106,17 @@ public class Block : MonoBehaviour
             defaultFocusObj.SetActive(isFocus);
         }
     }
-
+    [SerializeField]
+    private string effectTag;
+    [SerializeField]
+    private float effectDuration = 3f;
+    [SerializeField]
+    private Vector3 effectScale;
     public void Break()
     {
         numObj.SetActive(false);
         data.num = 0;
-        ObjectPooler.Instance.GetObject<Effect>("block_break", PuzzleManager.Instance.transform, position : transform.localPosition, autoReturnTime: 1f);
+        ObjectPooler.Instance.GetObject<Effect>(effectTag, PuzzleManager.Instance.transform, scale : effectScale, position : transform.localPosition, autoReturnTime: effectDuration);
         if(bonus > 0)
         {
             ObjectPooler.Instance.GetObject<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);

@@ -208,16 +208,17 @@ public class UIManager : Singleton<UIManager>
         bg.SetActive(show);
 
     }
-
+    private Tweener loadingTweener;
     public void Loading(string message = "Loading", float bgAlpha = 1f, float fadeDuration = 0.5f, float fadeDelay = 1f, Action callback = null, Action completeCallback = null)
     {
         loadingObj.SetActive(true);
-        DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, bgAlpha, fadeDuration).OnComplete(() =>
+        loadingTweener?.Kill();
+        loadingTweener = DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, bgAlpha, fadeDuration).OnComplete(() =>
         {
             callback?.Invoke();
             if(fadeDelay > 0f)
             {
-                DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
+                loadingTweener = DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
                 {
                     completeCallback?.Invoke();
                     loadingObj.SetActive(false);
