@@ -25,8 +25,12 @@ import admin from "firebase-admin";
 import functions from "firebase-functions";
 const {region, HttpsError} = functions;
 
-admin.initializeApp(); // ✅ 기본 인증 사용
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+import {generateNicknameOnUserCreate} from "./generateNickname.js";
 
+export {generateNicknameOnUserCreate};
 export const GetRanking = region("asia-southeast1").https.onCall(async (data, context) => {
   const gameLevel = data.gameLevel;
   const date = data.date || "ALL";
@@ -66,37 +70,37 @@ export const GetRanking = region("asia-southeast1").https.onCall(async (data, co
   }
 });
 
-const db = admin.database();
+// const db = admin.database();
 
-export const generateNicknameOnUserCreate = functions.database
-  .ref("/Users/{userId}")
-  .onCreate(async (snapshot, context) => {
-    const userId = context.params.userId;
-    const userRef = snapshot.ref;
+// export const generateNicknameOnUserCreate = functions.database
+//     .ref("/Users/{userId}")
+//     .onCreate(async (snapshot, context) => {
+//       const userId = context.params.userId;
+//       const userRef = snapshot.ref;
 
-    // Step 1. 기본 닉네임 생성
-    let baseNickname = `Player_${userId.substring(0, 6)}`;
-    let nickname = baseNickname;
-    let counter = 0;
+//       // Step 1. 기본 닉네임 생성
+//       const baseNickname = `Player_${userId.substring(0, 6)}`;
+//       let nickname = baseNickname;
+//       let counter = 0;
 
-    // Step 2. 중복 닉네임 확인
-    const nicknamesSnapshot = await db.ref("UserNicknames").once("value");
-    const existingNicknames = new Set(
-      Object.values(nicknamesSnapshot.val() || {})
-    );
+//       // Step 2. 중복 닉네임 확인
+//       const nicknamesSnapshot = await db.ref("UserNicknames").once("value");
+//       const existingNicknames = new Set(
+//           Object.values(nicknamesSnapshot.val() || {}),
+//       );
 
-    while (existingNicknames.has(nickname)) {
-      counter++;
-      nickname = `${baseNickname}_${counter}`;
-    }
+//       while (existingNicknames.has(nickname)) {
+//         counter++;
+//         nickname = `${baseNickname}_${counter}`;
+//       }
 
-    // Step 3. 유저 데이터에 닉네임 저장
-    await userRef.update({nickname});
+//       // Step 3. 유저 데이터에 닉네임 저장
+//       await userRef.update({nickname});
 
-    // Step 4. 닉네임 전용 노드에 추가 (중복 방지용)
-    await db.ref(`UserNicknames/${userId}`).set(nickname);
+//       // Step 4. 닉네임 전용 노드에 추가 (중복 방지용)
+//       await db.ref(`UserNicknames/${userId}`).set(nickname);
 
-    console.log(`닉네임 생성 완료: ${nickname}`);
-    return null;
-  });
+//       console.log(`닉네임 생성 완료: ${nickname}`);
+//       return null;
+//     });
 
