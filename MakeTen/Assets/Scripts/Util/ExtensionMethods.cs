@@ -51,6 +51,12 @@ public static class ExtensionMethods
         return TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
     }
 
+    public static string MilliSecondsToTimeText(this int ticks)
+    {
+        TimeSpan time = TimeSpan.FromMilliseconds(ticks/10000);
+        return $"{time.Minutes:D2}:{time.Seconds:D2}.{(int)(time.Milliseconds / 10f):D2}";
+    }
+
     public static string ToTimeText(this long time)
     {
         return time.LongToDateTime().ToString(@"yyyy-MM-dd H\:mm\:ss");
@@ -60,7 +66,6 @@ public static class ExtensionMethods
     public static string ToTimeText(this DateTime time)
     {
         return time.ToString(@"yyyy-MM-dd H\:mm\:ss");
-        //return TimeSpan.FromSeconds(time).ToString(@"yyyy-MM-dd H\:mm\:ss");
     }
 
     public static long ToTick(this DateTime dateTime)
@@ -83,10 +88,20 @@ public static class ExtensionMethods
         return new StringBuilder().AppendFormat("{0} / {1}", current, max).ToString();
     }
 
+    public static string ToLevelText(this int level)
+    {
+        return new StringBuilder().AppendFormat("Lv.{0}", level).ToString();
+    }
+
     const int rateRange = 1000000;
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="rate">0.00~1.00</param>
+    /// <returns></returns>
     public static bool IsSuccess(this float rate)
     {
-        int thisRate = Mathf.FloorToInt(rate * rateRange);
+        int thisRate = Mathf.FloorToInt(rate * rateRange * 100);
         int ran = UnityEngine.Random.Range(0, rateRange);
         return thisRate > ran;
     }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using TMPro;
 
 public class Block : MonoBehaviour
 {
@@ -23,45 +24,47 @@ public class Block : MonoBehaviour
         }
     }
 
+    public int row => data.row;
+    public int column;
+
     public int bonus { private set; get; }
 
     [SerializeField]
     private GameObject numObj;
-    //[SerializeField]
-    //private Text numText;
-    //[SerializeField]
-    //private Color defaultColor;
-    //[SerializeField]
-    //private Color focusColor;
     [SerializeField]
     private RectTransform rectTransform;
 
     [SerializeField]
     private GameObject defaultObj;
     [SerializeField]
-    private Text defaultText;
+    private TextMeshProUGUI defaultNumText;
     [SerializeField]
-    private GameObject defaultFocusObj;
-    [SerializeField]
-    private Text defaultFocusText;
+    private TextMeshProUGUI defaultBonusText;
 
     [SerializeField]
-    private GameObject bonusObj;
+    private GameObject focusObj;
     [SerializeField]
-    private Text bonusText;
+    private TextMeshProUGUI focusNumText;
     [SerializeField]
-    private GameObject bonusFocusObj;
-    [SerializeField]
-    private Text bonusFocusText;
+    private TextMeshProUGUI focusBonusText;
 
+    [SerializeField]
+    private GameObject shuffleBonusObj;
+    
     public class Data
     {
+        public int column;
+        public int row;
+
         public int num;
         public int bonus;
         public bool shuffle;
 
-        public Data(GameData.GameLevel level)
+
+        public Data(int column, int row, GameData.GameLevel level)
         {
+            this.column = column;
+            this.row = row;
             num = Util.GenerateGaussianRandom(level.mean, level.stdDev);
             bonus = level.bonusRate.IsSuccess() ? Random.Range(level.bonusTimeMin, level.bonusTimeMax) : 0;
             shuffle = level.shuffleRate.IsSuccess();
@@ -72,10 +75,9 @@ public class Block : MonoBehaviour
     {
         this.data = data;
 
-        defaultText.text = defaultFocusText.text = bonusText.text = bonusFocusText.text = data.num.ToString();
+        defaultNumText.text = focusNumText.text = data.num.ToString();
+        defaultBonusText.text = focusBonusText.text = data.bonus > 0 ? $"+{data.bonus}s" : string.Empty;
         numObj.SetActive(data.num > 0);
-        bonusObj.SetActive(data.bonus > 0);
-        defaultObj.SetActive(data.bonus == 0);
         Focus(false);
     }
 
@@ -95,17 +97,10 @@ public class Block : MonoBehaviour
     public void Focus(bool isFocus)
     {
         if (!numObj.activeSelf) return;
-        if(bonus > 0)
-        {
-            bonusObj.SetActive(!isFocus);
-            bonusFocusObj.SetActive(isFocus);
-        }
-        else
-        {
-            defaultObj.SetActive(!isFocus);
-            defaultFocusObj.SetActive(isFocus);
-        }
+        defaultObj.SetActive(!isFocus);
+        focusObj.SetActive(isFocus);
     }
+
     [SerializeField]
     private string effectTag;
     [SerializeField]
@@ -117,9 +112,15 @@ public class Block : MonoBehaviour
         numObj.SetActive(false);
         data.num = 0;
         ObjectPooler.Instance.GetObject<Effect>(effectTag, PuzzleManager.Instance.transform, scale : effectScale, position : transform.localPosition, autoReturnTime: effectDuration);
-        if(bonus > 0)
+        if(data.bonus > 0)
         {
+            PuzzleManager.Instance.AddSeconds(data.bonus);
             ObjectPooler.Instance.GetObject<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
+        }
+        if(data.shuffle)
+        {
+            DataManager.Instance.userData.Charge(GameData.GoodsType.Shuffle, 1);
+            ObjectPooler.Instance.GetObject<Effect>("shuffle_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
         }
         
     }
@@ -133,22 +134,25 @@ public class Block : MonoBehaviour
     [SerializeField]
     private float randomChangeMax = 10f;
 
+    [SerializeField]
+    private GameObject[] randomAniObjs;
+    [SerializeField]
+    private TextMeshProUGUI[] randomAniTexts;
     private IEnumerator RandomAnimation()
     {
-        GameObject[] objs = new GameObject[4];
-        objs[0] = defaultObj;
-        objs[1] = defaultFocusObj;
-        objs[2] = bonusObj;
-        objs[3] = bonusFocusObj;
         int ran = Random.Range(1, 9);
-        defaultText.text = defaultFocusText.text = bonusText.text = bonusFocusText.text = ran.ToString();
+
+        for(int i = 0; i < randomAniTexts.Length; i++)
+        {
+            randomAniTexts[i].text = ran.ToString();
+        }
 
         while (gameObject.activeInHierarchy)
         {
             int ranShow = Random.Range(0, 4);
-            for (int i = 0; i < objs.Length; i++)
+            for (int i = 0; i < randomAniObjs.Length; i++)
             {
-                objs[i].SetActive(i == ranShow);
+                randomAniObjs[i].SetActive(i == ranShow);
             }
 
             yield return Yielders.Get(Random.Range(randomChangeMin, randomChangeMax));

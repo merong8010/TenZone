@@ -6,7 +6,7 @@ public class PopupRanking : Popup
 {
     public class RankingListWithMyRank
     {
-        public List<RankingList.Data> topRanks;
+        public List<RankingList.PointData> topRanks;
         public RankingList.Data myRank;
     }
     [SerializeField]
@@ -85,7 +85,7 @@ public class PopupRanking : Popup
             if (result == null) return;
             if(result.topRanks != null)
             {
-                rankingList.UpdateList(result.topRanks);
+                rankingList.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
                 myRankItem.SetData(result.myRank);
             }
         }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));

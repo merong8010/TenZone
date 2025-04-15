@@ -29,8 +29,10 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 import {generateNicknameOnUserCreate} from "./generateNickname.js";
-
 export {generateNicknameOnUserCreate};
+import {SubmitScore} from "./SubmitScore.js";
+export {SubmitScore};
+
 export const GetRanking = region("asia-southeast1").https.onCall(async (data, context) => {
   const gameLevel = data.gameLevel;
   const date = data.date || "ALL";
@@ -44,7 +46,9 @@ export const GetRanking = region("asia-southeast1").https.onCall(async (data, co
       const entry = child.val();
       rankingList.push({
         id: child.key,
-        userId: entry.userId || child.key,
+        rank: child.rank || 0,
+        level: child.level || 0,
+        name: entry.name || child.key,
         point: entry.point || 0,
         remainMilliSeconds: entry.remainMilliSeconds || 0,
         countryCode: entry.countryCode || "US",

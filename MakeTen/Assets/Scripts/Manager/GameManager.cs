@@ -176,4 +176,24 @@ public class GameManager : Singleton<GameManager>
 
         });
     }
+
+    public void SetScreenRoate(bool isPortrait, bool isRotate)
+    {
+        if(isPortrait)
+        {
+            Screen.orientation = ScreenOrientation.Portrait;
+            Screen.autorotateToPortrait = true;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = isRotate;
+            Screen.autorotateToLandscapeRight = isRotate;
+        }
+        else
+        {
+            Screen.orientation = Screen.orientation == ScreenOrientation.Portrait ? ScreenOrientation.LandscapeLeft : Screen.orientation;
+            Screen.autorotateToPortrait = isRotate;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = true;
+            Screen.autorotateToLandscapeRight = true;
+        }
+    }
 }

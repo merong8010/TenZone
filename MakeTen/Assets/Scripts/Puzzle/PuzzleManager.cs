@@ -4,6 +4,7 @@ using System.Linq;
 using UniRx;
 using System.Text;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 
 public class PuzzleManager : Singleton<PuzzleManager>
@@ -104,6 +105,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 Block blockObj = pooler.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
                 blockObj.name = $"block_{column}_{row}";
                 blockObj.SetSize(blockSize);
+                blockObj.SetData(new Block.Data(column, row, currentLevel));
                 blocks = blocks.Append(blockObj).ToArray();
             }
         }
@@ -111,10 +113,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
         currentPoint.Value = 0;
         remainMilliSeconds = 0;
         //System.Random rand = new System.Random();
-        for (int i = 0; i < blocks.Length; i++)
-        {
-            blocks[i].SetData(new Block.Data(currentLevel));
-        }
+        //for (int i = 0; i < blocks.Length; i++)
+        //{
+        //    blocks[i].SetData(new Block.Data(currentLevel));
+        //}
 
         int remain = blocks.Sum(x => x.num) % TargetSumNum;
         if (remain > 0)
@@ -138,6 +140,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
         finishTime = GameManager.Instance.dateTime.Value.AddSeconds(currentLevel.time);
         if (finishCoroutine != null) StopCoroutine(finishCoroutine);
         finishCoroutine = StartCoroutine(CheckFinish());
+
+        CheckHint();
     }
 
     public void RefreshPosition()
@@ -181,9 +185,14 @@ public class PuzzleManager : Singleton<PuzzleManager>
             yield return new WaitForEndOfFrame();
         }
 
-        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
-        
-        if(DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, true))
+        GameResult();
+
+        finishCoroutine = null;
+    }
+
+    private void GameResult()
+    {
+        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, true))
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value, remainMilliSeconds);
         }
@@ -191,9 +200,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value, remainMilliSeconds);
         }
+        int exp = Mathf.FloorToInt(currentLevel.exp * ((float)currentPoint.Value / (currentLevel.row * currentLevel.column)));
+        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, remainMilliSeconds, exp);
 
-        DataManager.Instance.userData.ChargeExp(Mathf.FloorToInt(currentLevel.exp * ((float)currentPoint.Value / (currentLevel.row * currentLevel.column))));
-        finishCoroutine = null;
+        DataManager.Instance.userData.ChargeExp(exp);
     }
 
 
@@ -204,7 +214,16 @@ public class PuzzleManager : Singleton<PuzzleManager>
     public void OnClick()
     {
         isDrag = true;
+        if (hintCoroutine != null)
+        {
+            StopCoroutine(hintCoroutine);
+            hintCoroutine = null;
 
+            for (int i = 0; i < blocks.Length; i++)
+            {
+                blocks[i].Focus(false);
+            }
+        }
         RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Input.mousePosition, cam, out startPos);
         dragTransform.gameObject.SetActive(true);
         dragTransform.rectTransform.anchoredPosition = startPos;
@@ -225,17 +244,25 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 }
                 currentPoint.Value += focus.Length;
                 remainMilliSeconds = (int)(finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
+
+                CheckHint();
+
+#if !UNITY_EDITOR
+                if (OptionManager.Instance.Get(OptionManager.Type.HAPTIC))
+                    Haptic.Execute();
+#endif
             }
             focus = null;
         }
+
+        isDrag = false;
+        dragTransform.gameObject.SetActive(false);
 
         for (int i = 0; i < blocks.Length; i++)
         {
             blocks[i].Focus(false);
         }
-
-        isDrag = false;
-        dragTransform.gameObject.SetActive(false);
+        hintCoroutine = StartCoroutine(ShowHint());
     }
 
     private Block[] focus = new Block[] { };
@@ -263,5 +290,173 @@ public class PuzzleManager : Singleton<PuzzleManager>
             RefreshPosition();
             lastOrientation = Util.GetDeviceOrientation();
         }
+    }
+
+    private void CheckHint()
+    {
+        hint.Clear();
+        for(int i = 0; i < blocks.Length; i++)
+        {
+            if (blocks[i].num == 0) continue;
+            Vector2Int resultColumn = CheckBlockColumn(blocks[i].column, blocks[i].row, blocks[i].num);
+            if(resultColumn != default(Vector2Int))
+            {
+                hint.Add(new Vector2Int(blocks[i].column, blocks[i].num), resultColumn);
+                continue;
+            }
+            else
+            {
+                Vector2Int resultRow = CheckBlockRow(blocks[i].column, blocks[i].row, blocks[i].num);
+                if (resultRow != default(Vector2Int))
+                {
+                    hint.Add(new Vector2Int(blocks[i].column, blocks[i].num), resultRow);
+                }
+            }
+        }
+        if(hint.Count == 0)
+        {
+            UIManager.Instance.Message.Show(Message.Type.Ask, "no block need use Shuffle", callback: confirm =>
+            {
+                if (confirm)
+                {
+                    Shuffle();
+                }
+                else
+                {
+                    //GameManager.Instance.GoScene(GameManager.Scene.Main);
+                    GameResult();
+                }
+            });
+        }
+    }
+
+    private const float hintWaitTime = 3f;
+    private const float hintShowTime = 1f;
+    private Coroutine hintCoroutine;
+    private IEnumerator ShowHint()
+    {
+        yield return Yielders.Get(hintWaitTime);
+        var list = hint.ToList();
+        var show = list[UnityEngine.Random.Range(0, list.Count)];
+        Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
+        for(int i = 0; i < focusBlocks.Length; i++)
+        {
+            focusBlocks[i].Focus(true);
+        }
+        yield return Yielders.Get(hintShowTime);
+        for (int i = 0; i < focusBlocks.Length; i++)
+        {
+            focusBlocks[i].Focus(false);
+        }
+    }
+    
+    Dictionary<Vector2Int, Vector2Int> hint = new Dictionary<Vector2Int, Vector2Int>();
+
+    private Vector2Int CheckBlockColumn(int column, int row, int num)
+    {
+        int searchColumn = 1;
+        int searchRow = 0;
+        int sum = num;
+        bool endColumn = false;
+        while (true)
+        {
+            if(endColumn)
+            {
+                sum += blocks.Where(x => x.column >= column && x.column <= column + searchColumn && x.row == row + searchRow).Sum(x=>x.num);
+            }
+            else
+            {
+                sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
+            }
+            
+            if (sum == TargetSumNum) return new Vector2Int(searchColumn, searchRow);
+            if(sum < TargetSumNum)
+            {
+                if(column+searchColumn < currentLevel.column -1 )
+                {
+                    searchColumn += 1;
+                }
+                else
+                {
+                    searchRow += 1;
+                    endColumn = true;
+                }
+            }
+            else
+            {
+                if(!endColumn)
+                {
+                    searchColumn -= 1;
+                    searchRow += 1;
+                    endColumn = true;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        return default(Vector2Int);
+
+    }
+
+    private Vector2Int CheckBlockRow(int column, int row, int num)
+    {
+        int searchColumn = 0;
+        int searchRow = 1;
+        int sum = num;
+        bool endRow = false;
+        while (true)
+        {
+            if (endRow)
+            {
+                sum += blocks.Where(x => x.row >= row && x.row <= row + searchRow && x.column == column + searchColumn).Sum(x => x.num);
+            }
+            else
+            {
+                sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
+            }
+
+            if (sum == TargetSumNum) return new Vector2Int(searchColumn, searchRow);
+            if (sum < TargetSumNum)
+            {
+                if (row + searchRow < currentLevel.row - 1)
+                {
+                    searchRow += 1;
+                }
+                else
+                {
+                    searchColumn += 1;
+                    endRow = true;
+                }
+            }
+            else
+            {
+                if (!endRow)
+                {
+                    searchRow -= 1;
+                    searchColumn += 1;
+                    endRow = true;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        return default(Vector2Int);
+    }
+
+    public void AddSeconds(float sec)
+    {
+        finishTime = finishTime.AddSeconds(sec);
+        HUD.Instance.ShowAddSeconds(sec);
+    }
+
+    private RectTransform tutorialTransform;
+
+    public void Tutorial()
+    {
+
     }
 }

@@ -148,6 +148,11 @@ public class HUD : Singleton<HUD>
         puzzleRect.Show(show);
     }
 
+    public void ShowAddSeconds(float sec)
+    {
+        ObjectPooler.Instance.GetObject<Effect>("add_seconds", timeBar.transform.parent, timeBar.transform.localPosition, autoReturnTime: 1f).SetText($"+{sec}s");
+    }
+
     [SerializeField]
     private string id;
     [SerializeField]

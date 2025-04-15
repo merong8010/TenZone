@@ -4,15 +4,18 @@ using UnityEngine.UI;
 public class PopupResult : Popup
 {
     [SerializeField]
-    private Text scoreText;
+    private TMPro.TextMeshProUGUI scoreText;
     [SerializeField]
-    private Text timeText;
+    private TMPro.TextMeshProUGUI timeText;
 
-    public void SetData(int point, float time)
+    [SerializeField]
+    private TMPro.TextMeshProUGUI expText;
+
+    public void SetData(int point, int time, int exp)
     {
         scoreText.text = point.ToString();
-        timeText.text = time.ToString("n0");
-        //FirebaseManager.Instance.SubmitScore(point);
+        timeText.text = time.MilliSecondsToTimeText();
+        expText.text = exp.ToString();
     }
 
     public override void Close()

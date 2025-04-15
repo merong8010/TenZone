@@ -8,6 +8,8 @@ namespace GameData
         Gold,
         Gem,
         Shuffle,
+        Time_5s,
+        Time_10s,
     }
 
     public class Data

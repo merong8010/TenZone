@@ -19,6 +19,9 @@ public class UserData
     public int exp;
     public int level;
 
+    //cheater is not empty
+    public string banMessage;
+
     public class Record : IComparable<Record>
     {
         public int point;

@@ -55,18 +55,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, int milliseconds)
-    {
-        RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, DataManager.Instance.userData.nickname, score, milliseconds, DataManager.Instance.userData.countryCode);
-        db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
-    }
-
-    public void TestSubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int score, int milliSeconds, string countryCode)
-    {
-        RankingList.Data entry = new RankingList.Data(userId, nickname, score, milliSeconds, countryCode);
-        db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
-    }
-
     public void LoadAllGameDatas(Action<DataSnapshot> callback)
     {
         db.Child("GameData").GetValueAsync().ContinueWithOnMainThread(task =>
@@ -114,7 +102,20 @@ public class FirebaseManager : Singleton<FirebaseManager>
         }
         else
         {
-            GetUserData(SystemInfo.deviceUniqueIdentifier, callback);
+            DeviceIDManager.deviceIDHandler += OnDeviceID;
+            DeviceIDManager.GetDeviceID();
+
+            void OnDeviceID(string deviceID)
+            {
+                Debug.Log($"::: CustomLogin {deviceID}");
+                if (!string.IsNullOrEmpty(deviceID))
+                {
+                    GetUserData(deviceID, callback);
+                }
+
+                DeviceIDManager.deviceIDHandler -= OnDeviceID;
+            }
+            
         }
     }
 
@@ -129,7 +130,17 @@ public class FirebaseManager : Singleton<FirebaseManager>
         if (args.Snapshot.Exists)
         {
             string json = args.Snapshot.GetRawJsonValue();
-            DataManager.Instance.UpdateUserData(JsonConvert.DeserializeObject<UserData>(json));
+            UserData myData = JsonConvert.DeserializeObject<UserData>(json);
+            if (!string.IsNullOrEmpty(myData.banMessage))
+            {
+                UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
+                {
+                    Application.Quit();
+                });
+                return;
+            }
+
+            DataManager.Instance.UpdateUserData(myData);
         }
     }
 
@@ -140,7 +151,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
             myDB = db.Child(KEY.USER).Child(userId);
             myDB.ValueChanged += HandleMyDBChanged;
         }
-            
 
         myDB.GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
@@ -149,7 +159,16 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 if (snapshot.Exists)
                 {
                     Debug.Log("User Info: " + snapshot.GetRawJsonValue());
-                    callback.Invoke(JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue()));
+                    UserData myData = JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue());
+                    if (!string.IsNullOrEmpty(myData.banMessage))
+                    {
+                        UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
+                        {
+                            Application.Quit();
+                        });
+                        return;
+                    }
+                    callback.Invoke(myData);
                 }
                 else
                 {
@@ -500,6 +519,48 @@ public class FirebaseManager : Singleton<FirebaseManager>
     }
     #endregion
 
+    public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, int milliseconds, Action<int> callback = null)
+    {
+        RankingList.Data entry = new RankingList.PointData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, milliseconds, DataManager.Instance.userData.countryCode);
+#if UNITY_EDITOR
+        db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
+        callback.Invoke(0);
+#else
+        var data = new Dictionary<string, object>
+        {
+            { "gameLevel", gameLevel.ToString() },
+            { "date", date },
+            { "id", entry.id },
+            { "level", entry.level },
+            { "name", entry.name },
+            { "point", entry.point },
+            { "remainMilliSeconds", entry.remainMilliSeconds },
+            { "timeStamp", entry.timeStamp },
+            { "countryCode", entry.countryCode }
+        };
+
+        functions.GetHttpsCallable("SubmitScore").CallAsync(data).ContinueWith(task =>
+        {
+            if (task.IsFaulted)
+            {
+                Debug.LogError("랭킹 등록 실패: " + task.Exception);
+                return;
+            }
+
+            var result = task.Result.Data as Dictionary<string, object>;
+            int myRank = Convert.ToInt32(result["myRank"]);
+            callback?.Invoke(myRank);
+        });
+#endif
+
+
+    }
+
+    public void TestSubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int score, int milliSeconds, string countryCode)
+    {
+        RankingList.Data entry = new RankingList.PointData(userId, UnityEngine.Random.Range(10, 40), nickname, score, milliSeconds, countryCode);
+        db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
+    }
 
     public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleManager.Level gameLevel = PuzzleManager.Level.Normal)
     {
@@ -511,21 +572,57 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 DataSnapshot dataSnapshot = task.Result;
                 if (dataSnapshot.Exists)
                 {
+                    
+                    PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
+                    resultData.topRanks = new List<RankingList.PointData>();
+
+                    //for (int i = 0; i < topRankings.Count; i++)
+                    //{
+                    //    var entry = topRankings[i] as Dictionary<string, object>;
+                    //    RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
+                    //    data.rank = i + 1;
+                    //    resultData.topRanks.Add(data);
+                    //}
+
+                    //// 내 랭킹 파싱
+                    //int myRank = Convert.ToInt32(result["myRank"]);
+                    //if (myRank > 0)
+                    //{
+                    //    var myEntry = result["myEntry"] as Dictionary<string, object>;
+                    //    RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(myEntry));
+                    //    data.rank = myRank;
+                    //    resultData.myRank = data;
+                    //}
+                    //else
+                    //{
+                    //    Debug.Log("내 랭킹 정보가 없습니다.");
+                    //}
                     foreach (var user in dataSnapshot.Children)
                     {
                         string id = user.Key;
                         var json = user.Value as Dictionary<string, object>;
-                        //RankingList.Data entry = new RankingList.Data(id, json.ContainsKey("name") ? json["name"].ToString() : "Unknown", json.ContainsKey("point") ? Convert.ToInt32(json["point"]) : 0, json.ContainsKey("countryCode") ? json["countryCode"].ToString() : "??",)
-                        
-                        //rankingList.Add(entry);
-                    }
+                        RankingList.PointData entry = new RankingList.PointData(id,
+                            json.ContainsKey("level") ? Convert.ToInt32(json["level"].ToString()) : 0,
+                            json.ContainsKey("name") ? json["name"].ToString() : "Unknown",
+                            json.ContainsKey("point") ? Convert.ToInt32(json["point"]) : 0,
+                            json.ContainsKey("remainMilliSeconds") ? Convert.ToInt32(json["remainMilliSeconds"].ToString()) : 0,
+                            json.ContainsKey("countryCode") ? json["countryCode"].ToString() : "??",
+                            json.ContainsKey("timeStamp") ? Convert.ToInt32(json["timeStamp"].ToString()) : 0);
 
+                        resultData.topRanks.Add(entry);
+                    }
+                    resultData.topRanks.Sort();
+                    for (int i = 0; i < resultData.topRanks.Count; i++)
+                    {
+                        resultData.topRanks[i].rank = i + 1;
+                    }
+                    resultData.myRank = resultData.topRanks.SingleOrDefault(x => x.id == userId);
                     // 랭킹 포인트 순으로 정렬
                     //rankingList.Sort((a, b) => b.point.CompareTo(a.point));
+
+                    callback?.Invoke(resultData);
                 }
-                PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
-                //resultData.topRanks = new
-                callback?.Invoke(resultData);
+                
             }
         });
         
@@ -557,12 +654,12 @@ public class FirebaseManager : Singleton<FirebaseManager>
             var topRankings = result["topRankings"] as List<object>;
             Debug.Log("=== 전체 랭킹 ===");
             PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
-            resultData.topRanks = new List<RankingList.Data>();
+            resultData.topRanks = new List<RankingList.PointData>();
 
             for (int i = 0; i < topRankings.Count; i++)
             {
                 var entry = topRankings[i] as Dictionary<string, object>;
-                RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
+                RankingList.PointData data = JsonConvert.DeserializeObject<RankingList.PointData>(JsonConvert.SerializeObject(entry));
                 data.rank = i + 1;
                 resultData.topRanks.Add(data);
             }

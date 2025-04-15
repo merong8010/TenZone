@@ -13,6 +13,8 @@ public class OptionManager : Singleton<OptionManager>
         LOW_SPEC = 3, //sleep mode
         PUSH = 4,
         HAPTIC = 5,
+        PORTRAIT = 6,
+        ROTATE_SCREEN = 7,
         MAX,
     }
 
