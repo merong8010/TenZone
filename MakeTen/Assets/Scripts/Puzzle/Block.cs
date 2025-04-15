@@ -24,7 +24,7 @@ public class Block : MonoBehaviour
         }
     }
 
-    public int row => data.row;
+    public int row;
     public int column;
 
     public int bonus { private set; get; }
@@ -50,7 +50,8 @@ public class Block : MonoBehaviour
 
     [SerializeField]
     private GameObject shuffleBonusObj;
-    
+
+    [System.Serializable]
     public class Data
     {
         public int column;
@@ -70,14 +71,18 @@ public class Block : MonoBehaviour
             shuffle = level.shuffleRate.IsSuccess();
         }
     }
+    [SerializeField]
     private Data data;
     public void SetData(Data data)
     {
         this.data = data;
+        column = data.column;
+        row = data.row;
 
         defaultNumText.text = focusNumText.text = data.num.ToString();
         defaultBonusText.text = focusBonusText.text = data.bonus > 0 ? $"+{data.bonus}s" : string.Empty;
         numObj.SetActive(data.num > 0);
+        shuffleBonusObj.SetActive(data.shuffle);
         Focus(false);
     }
 
@@ -88,6 +93,7 @@ public class Block : MonoBehaviour
     public void SetNum(int num)
     {
         data.num = num;
+        defaultNumText.text = focusNumText.text = data.num.ToString();
     }
     public void SetSize(Vector2 size)
     {
@@ -115,12 +121,12 @@ public class Block : MonoBehaviour
         if(data.bonus > 0)
         {
             PuzzleManager.Instance.AddSeconds(data.bonus);
-            ObjectPooler.Instance.GetObject<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
+            //ObjectPooler.Instance.GetObject<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
         }
         if(data.shuffle)
         {
             DataManager.Instance.userData.Charge(GameData.GoodsType.Shuffle, 1);
-            ObjectPooler.Instance.GetObject<Effect>("shuffle_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
+            //ObjectPooler.Instance.GetObject<Effect>("shuffle_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
         }
         
     }

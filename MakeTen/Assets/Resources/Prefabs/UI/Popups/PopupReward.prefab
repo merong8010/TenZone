@@ -381,4 +381,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94cb6c7e7431f47068af9a2b1bc2bbf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  portraitObj: {fileID: 0}
+  landscapeObj: {fileID: 0}
+  safeArea: {fileID: 0}
+  rt: {fileID: 280358984962536473}
   rewardList: {fileID: 9219744100764057518}

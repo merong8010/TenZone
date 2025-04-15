@@ -101,7 +101,7 @@ public static class ExtensionMethods
     /// <returns></returns>
     public static bool IsSuccess(this float rate)
     {
-        int thisRate = Mathf.FloorToInt(rate * rateRange * 100);
+        int thisRate = Mathf.FloorToInt(rate * rateRange);
         int ran = UnityEngine.Random.Range(0, rateRange);
         return thisRate > ran;
     }

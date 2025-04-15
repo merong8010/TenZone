@@ -174,8 +174,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
         
         for(int i = 0; i < blocks.Length; i++)
         {
+            datas[i].column = blocks[i].column;
+            datas[i].row = blocks[i].row;
             blocks[i].SetData(datas[i]);
         }
+        CheckHint();
     }
 
     private IEnumerator CheckFinish()
@@ -262,7 +265,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             blocks[i].Focus(false);
         }
-        hintCoroutine = StartCoroutine(ShowHint());
     }
 
     private Block[] focus = new Block[] { };
@@ -295,13 +297,13 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private void CheckHint()
     {
         hint.Clear();
-        for(int i = 0; i < blocks.Length; i++)
+        for(int i = 0; i < blocks.Length-1; i++)
         {
             if (blocks[i].num == 0) continue;
             Vector2Int resultColumn = CheckBlockColumn(blocks[i].column, blocks[i].row, blocks[i].num);
             if(resultColumn != default(Vector2Int))
             {
-                hint.Add(new Vector2Int(blocks[i].column, blocks[i].num), resultColumn);
+                hint.Add(new Vector2Int(blocks[i].column, blocks[i].row), resultColumn);
                 continue;
             }
             else
@@ -309,7 +311,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 Vector2Int resultRow = CheckBlockRow(blocks[i].column, blocks[i].row, blocks[i].num);
                 if (resultRow != default(Vector2Int))
                 {
-                    hint.Add(new Vector2Int(blocks[i].column, blocks[i].num), resultRow);
+                    hint.Add(new Vector2Int(blocks[i].column, blocks[i].row), resultRow);
                 }
             }
         }
@@ -328,17 +330,25 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 }
             });
         }
+        else
+        {
+            if(hintCoroutine != null)  StopCoroutine(hintCoroutine);
+            hintCoroutine = StartCoroutine(ShowHint());
+        }
     }
 
-    private const float hintWaitTime = 3f;
-    private const float hintShowTime = 1f;
+    private const float hintWaitTime = 1f;
+    private const float hintShowTime = 2f;
     private Coroutine hintCoroutine;
     private IEnumerator ShowHint()
     {
+        Debug.Log($"ShowHint {hint.Count}");
         yield return Yielders.Get(hintWaitTime);
         var list = hint.ToList();
         var show = list[UnityEngine.Random.Range(0, list.Count)];
+        Debug.Log(show.Key + " | " + show.Value);
         Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
+        Debug.Log($"FocusBlocks {focusBlocks.Length}");
         for(int i = 0; i < focusBlocks.Length; i++)
         {
             focusBlocks[i].Focus(true);
@@ -349,18 +359,20 @@ public class PuzzleManager : Singleton<PuzzleManager>
             focusBlocks[i].Focus(false);
         }
     }
-    
+    [SerializeField]
     Dictionary<Vector2Int, Vector2Int> hint = new Dictionary<Vector2Int, Vector2Int>();
 
     private Vector2Int CheckBlockColumn(int column, int row, int num)
     {
-        int searchColumn = 1;
-        int searchRow = 0;
+        if (row == currentLevel.row - 1 && column == currentLevel.column - 1) return default(Vector2Int);
+        bool endColumn = column + 1 == currentLevel.column;
+        int searchColumn = endColumn ? 0 : 1;
+        int searchRow = endColumn ? 1 : 0;
         int sum = num;
-        bool endColumn = false;
+        
         while (true)
         {
-            if(endColumn)
+            if (endColumn)
             {
                 sum += blocks.Where(x => x.column >= column && x.column <= column + searchColumn && x.row == row + searchRow).Sum(x=>x.num);
             }
@@ -369,15 +381,19 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
             }
             
-            if (sum == TargetSumNum) return new Vector2Int(searchColumn, searchRow);
+            if (sum == TargetSumNum) return new Vector2Int(column+searchColumn, row+searchRow);
             if(sum < TargetSumNum)
             {
-                if(column+searchColumn < currentLevel.column -1 )
+                if(column+searchColumn < currentLevel.column -1)
                 {
                     searchColumn += 1;
                 }
                 else
                 {
+                    if(row + searchRow == currentLevel.row -1)
+                    {
+                        break;
+                    }
                     searchRow += 1;
                     endColumn = true;
                 }
@@ -386,6 +402,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
             {
                 if(!endColumn)
                 {
+                    if (row + searchRow == currentLevel.row - 1)
+                    {
+                        break;
+                    }
                     searchColumn -= 1;
                     searchRow += 1;
                     endColumn = true;
@@ -402,10 +422,12 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     private Vector2Int CheckBlockRow(int column, int row, int num)
     {
-        int searchColumn = 0;
-        int searchRow = 1;
+        if(row == currentLevel.row-1 && column == currentLevel.column-1) return default(Vector2Int);
+        bool endRow = row + 1 == currentLevel.row;
+        int searchColumn = endRow ? 1 : 0;
+        int searchRow = endRow ? 0 : 1;
         int sum = num;
-        bool endRow = false;
+        
         while (true)
         {
             if (endRow)
@@ -417,7 +439,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
             }
 
-            if (sum == TargetSumNum) return new Vector2Int(searchColumn, searchRow);
+            if (sum == TargetSumNum) return new Vector2Int(column+searchColumn, row+searchRow);
             if (sum < TargetSumNum)
             {
                 if (row + searchRow < currentLevel.row - 1)
@@ -426,6 +448,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 }
                 else
                 {
+                    if (column + searchColumn == currentLevel.column - 1)
+                    {
+                        break;
+                    }
                     searchColumn += 1;
                     endRow = true;
                 }
@@ -434,6 +460,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
             {
                 if (!endRow)
                 {
+                    if (column + searchColumn == currentLevel.column - 1)
+                    {
+                        break;
+                    }
                     searchRow -= 1;
                     searchColumn += 1;
                     endRow = true;
@@ -450,7 +480,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
     public void AddSeconds(float sec)
     {
         finishTime = finishTime.AddSeconds(sec);
-        HUD.Instance.ShowAddSeconds(sec);
+        //HUD.Instance.ShowAddSeconds(sec);
     }
 
     private RectTransform tutorialTransform;
