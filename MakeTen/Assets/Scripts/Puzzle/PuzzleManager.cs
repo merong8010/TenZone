@@ -356,13 +356,15 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private DateTime searchTime;
     public void Search()
     {
+        Debug.Log($"Search  {hint.Count()} | {GameManager.Instance.dateTime.Value.Ticks} | {searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks}  | {GameManager.Instance.dateTime.Value.Ticks < searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks}" );
         if (hint.Count() == 0) return;
-        if (GameManager.Instance.dateTime.Value < searchTime.AddSeconds(DataManager.Instance.SearchTerm)) return;
+        if (GameManager.Instance.dateTime.Value.Ticks < searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks) return;
         if (DataManager.Instance.userData.Use(GameData.GoodsType.Search, 1))
         {
             var list = hint.ToList();
             var show = list[UnityEngine.Random.Range(0, list.Count)];
             Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
+            Debug.Log($"Search! {focusBlocks.Length}");
             for (int i = 0; i < focusBlocks.Length; i++)
             {
                 focusBlocks[i].Focus(true);

@@ -524,7 +524,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     {
         RankingList.PointData entry = new RankingList.PointData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, milliseconds, DataManager.Instance.userData.countryCode);
         db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
-        callback.Invoke(0);
+        callback?.Invoke(0);
 //#if UNITY_EDITOR
 //        //db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).GetValueAsync().ContinueWithOnMainThread(task =>
 //        //{

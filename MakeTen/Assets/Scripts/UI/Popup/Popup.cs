@@ -21,9 +21,11 @@ public class Popup : MonoBehaviour
     public virtual void Open()
     {
         gameObject.SetActive(true);
-        Vector2 origin = rt.anchoredPosition;
-        rt.anchoredPosition = new Vector2(origin.x, origin.y - 1000);
-        rt.DOAnchorPosY(origin.y, 0.5f).SetEase(Ease.InOutElastic);
+        rt.localScale = Vector3.zero;
+        rt.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+        //Vector2 origin = rt.anchoredPosition;
+        //rt.anchoredPosition = new Vector2(origin.x, origin.y - 1000);
+        //rt.DOAnchorPosY(origin.y, 0.5f).SetEase(Ease.InOutElastic);
     }
 
     public virtual void Close()
@@ -33,7 +35,7 @@ public class Popup : MonoBehaviour
 
     public virtual void Refresh()
     {
-        portraitObj?.SetActive(Util.GetDeviceOrientation() == DeviceOrientation.Portrait);
-        landscapeObj?.SetActive(Util.GetDeviceOrientation() == DeviceOrientation.Landscape);
+        if(portraitObj != null) portraitObj?.SetActive(Util.GetDeviceOrientation() == DeviceOrientation.Portrait);
+        if(landscapeObj != null) landscapeObj?.SetActive(Util.GetDeviceOrientation() == DeviceOrientation.Landscape);
     }
 }

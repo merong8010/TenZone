@@ -107,7 +107,7 @@ public class HUD : Singleton<HUD>
 
     public void ClickSetting()
     {
-
+        UIManager.Instance.Open<PopupSettings>();
     }
 
     public void ClickNickname()
@@ -127,6 +127,7 @@ public class HUD : Singleton<HUD>
 
     public void ClickShuffle()
     {
+        Debug.Log("ClickShuffle");
         PuzzleManager.Instance.Shuffle();
     }
 
@@ -134,6 +135,7 @@ public class HUD : Singleton<HUD>
     private Image searchCoolImage;
     public void ClickSearch()
     {
+        Debug.Log("ClickSearch");
         PuzzleManager.Instance.Search();
     }
 
@@ -146,7 +148,7 @@ public class HUD : Singleton<HUD>
     {
         while(coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
         {
-            searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000) / max;
+            searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
             yield return Yielders.EndOfFrame;
         }
     }

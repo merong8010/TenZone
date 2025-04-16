@@ -94,17 +94,6 @@ public class UserData
 
     public MailList.Data[] mailDatas;
 
-    //private void UpdateHeartByTime()
-    //{
-    //    TimeSpan timePassed = DateTime.Now - lastHeartTime;
-    //    int recoverCount = Mathf.FloorToInt((float)timePassed.TotalMinutes / heartRecoveryTimeMinutes);
-    //    if (recoverCount > 0)
-    //    {
-    //        currentHeart = Mathf.Min(currentHeart + recoverCount, maxHeart);
-    //        lastHeartTime = lastHeartTime.AddMinutes(recoverCount * heartRecoveryTimeMinutes);
-    //        SaveHeartData();
-    //    }
-    //}
     public int Heart
     {
         get
@@ -120,22 +109,6 @@ public class UserData
                         heart = Mathf.Min(heart + recoverCount, DataManager.Instance.MaxHeart);
                         lastHeartTime = lastHeartTime + (recoverCount * DataManager.Instance.HeartChargeTime);
                     }
-                    //long currentTime = GameManager.Instance.dateTime.Value.ToTick();
-                    //if (lastHeartTime + DataManager.Instance.HeartChargeTime < currentTime)
-                    //{
-                    //    //heart += 1;
-                    //    heart += (int)((currentTime - lastHeartTime) / DataManager.Instance.HeartChargeTime);
-                    //    if(heart >= DataManager.Instance.MaxHeart)
-                    //    {
-                    //        heart = DataManager.Instance.MaxHeart;
-                    //        lastHeartTime = currentTime;
-                    //    }
-                    //    else
-                    //    {
-                    //        lastHeartTime = currentTime - ((currentTime - lastHeartTime) % DataManager.Instance.HeartChargeTime);
-                    //        //lastHeartChargeTime = currentTime + ((currentTime - lastHeartChargeTime) % DataManager.Instance.HeartChargeTime);
-                    //    }
-                    //}
                 }
             }
             
@@ -191,7 +164,7 @@ public class UserData
         heart += 1;
         if (heart == DataManager.Instance.MaxHeart)
         {
-            lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
+            lastHeartTime = GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.HeartChargeTime;
         }
         FirebaseManager.Instance.SaveUserData(this);
     }
@@ -248,6 +221,7 @@ public class UserData
 
     public bool Use(GameData.GoodsType type, int amount)
     {
+        Debug.Log($"Use {type} | {amount}");
         if (!goods.ContainsKey(type)) return false;
         if (goods[type] < amount) return false;
         goods[type] -= amount;
