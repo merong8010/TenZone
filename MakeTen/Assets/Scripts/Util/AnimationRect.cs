@@ -33,6 +33,9 @@ public class AnimationRect : MonoBehaviour
     Vector3 scaleStart = new Vector3(0.0f, 0.0f, 0.0f);
 
     private Dictionary<RectTransform, Vector2> origin = new Dictionary<RectTransform, Vector2>();
+
+    //private float maxDuration;
+
     private void OnEnable()
     {
 #if DOTWEEN
@@ -72,6 +75,7 @@ public class AnimationRect : MonoBehaviour
         for (int i = 0; i < rectAnimScale.Length; i++)
         {
             if (rectAnimScale[i] == null) continue;
+            rectAnimScale[i].gameObject.SetActive(true);
             rectAnimScale[i].localScale = scaleStart;
             rectAnimScale[i].DOScale(Vector3.one, timeAnimScale).SetEase(Ease.OutBack).SetDelay(timeDelayScale + timeDelayScale * i);
         }
@@ -83,7 +87,8 @@ public class AnimationRect : MonoBehaviour
         {
             if (rectAnimScale[i] == null) continue;
             rectAnimScale[i].localScale = Vector3.one;
-            rectAnimScale[i].DOScale(scaleStart, timeAnimScale).SetEase(Ease.OutBack).SetDelay(timeDelayScale + timeDelayScale * i);
+            RectTransform target = rectAnimScale[i];
+            target.DOScale(scaleStart, timeAnimScale).SetEase(Ease.OutBack).SetDelay(timeDelayScale + timeDelayScale * i).OnComplete(()=>target.gameObject.SetActive(false));
         }
     }
 
@@ -94,6 +99,7 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimRight[i] == null) continue;
             origin.TryAdd(rectAnimRight[i], rectAnimRight[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimRight[i]];
+            rectAnimRight[i].gameObject.SetActive(true);
             rectAnimRight[i].anchoredPosition = new Vector2(vector2.x + 1000, vector2.y);
             rectAnimRight[i].DOAnchorPosX(vector2.x, timeAnimRight).SetEase(Ease.OutCubic).SetDelay(timeDelayRight + timeDelayRightNext * i);
         }
@@ -106,8 +112,9 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimRight[i] == null) continue;
             origin.TryAdd(rectAnimRight[i], rectAnimRight[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimRight[i]];
-            rectAnimRight[i].anchoredPosition = new Vector2(vector2.x, vector2.y);
-            rectAnimRight[i].DOAnchorPosX(vector2.x+1000, timeAnimRight).SetEase(Ease.OutCubic).SetDelay(timeDelayRight + timeDelayRightNext * i);
+            RectTransform target = rectAnimRight[i];
+            target.anchoredPosition = new Vector2(vector2.x, vector2.y);
+            target.DOAnchorPosX(vector2.x+1000, timeAnimRight).SetEase(Ease.OutCubic).SetDelay(timeDelayRight + timeDelayRightNext * i).OnComplete(() => target.gameObject.SetActive(false));
         }
     }
 
@@ -118,6 +125,7 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimLeft[i] == null) continue;
             origin.TryAdd(rectAnimLeft[i], rectAnimLeft[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimLeft[i]];
+            rectAnimLeft[i].gameObject.SetActive(true);
             rectAnimLeft[i].anchoredPosition = new Vector2(vector2.x - 1000, vector2.y);
             rectAnimLeft[i].DOAnchorPosX(vector2.x, timeAnimLeft).SetEase(Ease.OutCubic).SetDelay(timeDelayLeft + timeDelayLeftNext * i);
         }
@@ -130,8 +138,9 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimLeft[i] == null) continue;
             origin.TryAdd(rectAnimLeft[i], rectAnimLeft[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimLeft[i]];
-            rectAnimLeft[i].anchoredPosition = new Vector2(vector2.x, vector2.y);
-            rectAnimLeft[i].DOAnchorPosX(vector2.x-1000, timeAnimLeft).SetEase(Ease.OutCubic).SetDelay(timeDelayLeft + timeDelayLeftNext * i);
+            RectTransform target = rectAnimLeft[i];
+            target.anchoredPosition = new Vector2(vector2.x, vector2.y);
+            target.DOAnchorPosX(vector2.x-1000, timeAnimLeft).SetEase(Ease.OutCubic).SetDelay(timeDelayLeft + timeDelayLeftNext * i).OnComplete(() => target.gameObject.SetActive(false));
         }
     }
 
@@ -142,6 +151,7 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimTop[i] == null) continue;
             origin.TryAdd(rectAnimTop[i], rectAnimTop[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimTop[i]];
+            rectAnimTop[i].gameObject.SetActive(true);
             rectAnimTop[i].anchoredPosition = new Vector2(vector2.x, vector2.y + 1000);
             rectAnimTop[i].DOAnchorPosY(vector2.y, timeAnimTop).SetEase(Ease.OutCubic).SetDelay(timeDelayTop + timeDelayTopNext * i);
         }
@@ -154,8 +164,9 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimTop[i] == null) continue;
             origin.TryAdd(rectAnimTop[i], rectAnimTop[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimTop[i]];
-            rectAnimTop[i].anchoredPosition = new Vector2(vector2.x, vector2.y);
-            rectAnimTop[i].DOAnchorPosY(vector2.y+1000, timeAnimTop).SetEase(Ease.OutCubic).SetDelay(timeDelayTop + timeDelayTopNext * i);
+            RectTransform target = rectAnimTop[i];
+            target.anchoredPosition = new Vector2(vector2.x, vector2.y);
+            target.DOAnchorPosY(vector2.y+1000, timeAnimTop).SetEase(Ease.OutCubic).SetDelay(timeDelayTop + timeDelayTopNext * i).OnComplete(() => target.gameObject.SetActive(false));
         }
     }
 
@@ -166,6 +177,7 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimBot[i] == null) continue;
             origin.TryAdd(rectAnimBot[i], rectAnimBot[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimBot[i]];
+            rectAnimBot[i].gameObject.SetActive(true);
             rectAnimBot[i].anchoredPosition = new Vector2(vector2.x, vector2.y - 1000);
             rectAnimBot[i].DOAnchorPosY(vector2.y, timeAnimBot).SetEase(Ease.OutCubic).SetDelay(timeDelayBot + timeDelayBotNext * i);
         }
@@ -178,8 +190,9 @@ public class AnimationRect : MonoBehaviour
             if (rectAnimBot[i] == null) continue;
             origin.TryAdd(rectAnimBot[i], rectAnimBot[i].anchoredPosition);
             Vector2 vector2 = origin[rectAnimBot[i]];
-            rectAnimBot[i].anchoredPosition = new Vector2(vector2.x, vector2.y);
-            rectAnimBot[i].DOAnchorPosY(vector2.y-1000, timeAnimBot).SetEase(Ease.OutCubic).SetDelay(timeDelayBot + timeDelayBotNext * i);
+            RectTransform target = rectAnimBot[i];
+            target.anchoredPosition = new Vector2(vector2.x, vector2.y);
+            target.DOAnchorPosY(vector2.y-1000, timeAnimBot).SetEase(Ease.OutCubic).SetDelay(timeDelayBot + timeDelayBotNext * i).OnComplete(() => target.gameObject.SetActive(false));
         }
     }
 

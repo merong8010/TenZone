@@ -29,6 +29,7 @@ public class DataManager : Singleton<DataManager>
 
     public int MaxHeart;
     public int HeartChargeTime;
+    public int SearchTerm;
 
     public UserData userData;
 
@@ -36,6 +37,16 @@ public class DataManager : Singleton<DataManager>
     {
         gameDatas.Clear();
         StartCoroutine(LoadAllGameDatas());
+    }
+
+    public int GetConfig(string key)
+    {
+        return Get<GameData.Config>().SingleOrDefault(x => x.key == key).Get();
+    }
+
+    public GameData.GoodsType GetConfigGoodsType(string key)
+    {
+        return Get<GameData.Config>().SingleOrDefault(x => x.key == key).GetGoodsType();
     }
 
     private IEnumerator LoadAllGameDatas()
@@ -56,8 +67,9 @@ public class DataManager : Singleton<DataManager>
         string countryCode = PlayerPrefs.GetString("Locale", RegionInfo.CurrentRegion.TwoLetterISORegionName);
         TextManager.LoadDatas(countryCode, Get<GameData.Language>());
 
-        MaxHeart = Get<GameData.Config>().SingleOrDefault(x => x.key == "maxHeart").val;
-        HeartChargeTime = Get<GameData.Config>().SingleOrDefault(x => x.key == "heartChargeTime").val;
+        MaxHeart = GetConfig("maxHeart");
+        HeartChargeTime = GetConfig("heartChargeTime");
+        SearchTerm = GetConfig("searchTerm");
 
         FirebaseManager.Instance.GetUserData((UserData userData) =>
         {

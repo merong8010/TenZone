@@ -8,7 +8,7 @@ namespace GameData
         Gold,
         Gem,
         Shuffle,
-        Time_5s,
+        Search,
         Time_10s,
     }
 
@@ -21,7 +21,24 @@ namespace GameData
     {
         public int id;
         public string key;
-        public int val;
+        public string val;
+
+        public int Get()
+        {
+            if(int.TryParse(val, out int result))
+            {
+                return result;
+            }
+            return 0;
+        }
+        public GoodsType GetGoodsType()
+        {
+            if(System.Enum.TryParse<GoodsType>(val, out GoodsType type))
+            {
+                return type;
+            }
+            return GoodsType.None;
+        }
     }
 
     public class Language : Data
@@ -45,8 +62,7 @@ namespace GameData
         public int unlockLevel;
         public int bonusTimeMin;
         public int bonusTimeMax;
-        public float bonusRate;
-        public float shuffleRate;
+        public int bonusCount;
     }
 
     public class UserLevel : Data

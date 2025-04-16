@@ -36,11 +36,12 @@ public class HUD : Singleton<HUD>
     private TMPro.TextMeshProUGUI timeText;
     [SerializeField]
     private Image timeBar;
-    [SerializeField]
-    private TMPro.TextMeshProUGUI shuffleCountText;
+    //[SerializeField]
+    //private GoodsDisplay shuffleDisplay;
+    //[SerializeField]
+    //private GoodsDisplay autoBreakDisplay;
 
     private IDisposable disposable;
-
 
     public void UpdateUserData(UserData data)
     {
@@ -97,8 +98,6 @@ public class HUD : Singleton<HUD>
                 timeBar.fillAmount = (float)timeSpan.TotalSeconds / PuzzleManager.Instance.CurrentGameTime;
             }
         });
-
-        DataManager.Instance.userData.goods.ObserveReplace().Where(x => x.Key == GameData.GoodsType.Shuffle).Subscribe(x => shuffleCountText.text = x.ToString());
     }
 
     public void ClickGameStart()
@@ -129,6 +128,27 @@ public class HUD : Singleton<HUD>
     public void ClickShuffle()
     {
         PuzzleManager.Instance.Shuffle();
+    }
+
+    [SerializeField]
+    private Image searchCoolImage;
+    public void ClickSearch()
+    {
+        PuzzleManager.Instance.Search();
+    }
+
+    public void StartSearchCool(DateTime coolFinish, float max)
+    {
+        StartCoroutine(CheckShearchCool(coolFinish, max));
+    }
+
+    private IEnumerator CheckShearchCool(DateTime coolFinish, float max)
+    {
+        while(coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
+        {
+            searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000) / max;
+            yield return Yielders.EndOfFrame;
+        }
     }
 
     public void UpdateScene(GameManager.Scene scene)
@@ -179,4 +199,6 @@ public class HUD : Singleton<HUD>
         }
 
     }
+
+    
 }

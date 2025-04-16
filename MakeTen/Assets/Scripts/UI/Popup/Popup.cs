@@ -23,7 +23,7 @@ public class Popup : MonoBehaviour
         gameObject.SetActive(true);
         Vector2 origin = rt.anchoredPosition;
         rt.anchoredPosition = new Vector2(origin.x, origin.y - 1000);
-        rt.DOAnchorPosY(origin.y, 0.5f);
+        rt.DOAnchorPosY(origin.y, 0.5f).SetEase(Ease.InOutElastic);
     }
 
     public virtual void Close()

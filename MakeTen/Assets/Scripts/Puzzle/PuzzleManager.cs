@@ -71,8 +71,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
         blockSafeArea.refreshAction = RefreshPosition;
     }
 
-    [SerializeField]
-    private ObjectPooler pooler;
+    //[SerializeField]
+    //private ObjectPooler pooler;
 
     [SerializeField]
     private RectTransform blocksRT;
@@ -89,7 +89,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             for(int i = 0; i < blocks.Length; i++)
             {
-                pooler.ReturnObject("block", blocks[i].gameObject);
+                ObjectPooler.Instance.ReturnObject("block", blocks[i].gameObject);
             }
         }
 
@@ -102,7 +102,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             for (int column = 0; column < currentLevel.column; column++)
             {
-                Block blockObj = pooler.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
+                Block blockObj = ObjectPooler.Instance.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
                 blockObj.name = $"block_{column}_{row}";
                 blockObj.SetSize(blockSize);
                 blockObj.SetData(new Block.Data(column, row, currentLevel));
@@ -112,12 +112,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
         currentPoint.Value = 0;
         remainMilliSeconds = 0;
-        //System.Random rand = new System.Random();
-        //for (int i = 0; i < blocks.Length; i++)
-        //{
-        //    blocks[i].SetData(new Block.Data(currentLevel));
-        //}
-
+        
         int remain = blocks.Sum(x => x.num) % TargetSumNum;
         if (remain > 0)
         {
@@ -141,6 +136,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
         if (finishCoroutine != null) StopCoroutine(finishCoroutine);
         finishCoroutine = StartCoroutine(CheckFinish());
 
+        searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
+        HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
         CheckHint();
     }
 
@@ -154,13 +151,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             for (int column = 0; column < currentLevel.column; column++)
             {
-                //Block blockObj = pooler.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
-                
                 Block blockObj = blocks.SingleOrDefault(x => x.name == $"block_{column}_{row}");
                 blockObj.transform.localPosition = blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row);
-                //blockObj.name = $"block_{column}_{row}";
                 blockObj.SetSize(blockSize);
-                //blocks = blocks.Append(blockObj).ToArray();
             }
         }
     }
@@ -317,38 +310,75 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
         if(hint.Count == 0)
         {
-            UIManager.Instance.Message.Show(Message.Type.Ask, "no block need use Shuffle", callback: confirm =>
+            Block[] aliveBlocks = blocks.Where(x => x.num > 0).ToArray();
+            float sum = (float)aliveBlocks.Sum(x => x.num);
+            if(sum/(aliveBlocks.Length/2) > TargetSumNum || !DataManager.Instance.userData.Has(GameData.GoodsType.Shuffle, 1))
             {
-                if (confirm)
+                UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("NoMoreMatch"), callback: confirm =>
                 {
-                    Shuffle();
-                }
-                else
-                {
-                    //GameManager.Instance.GoScene(GameManager.Scene.Main);
                     GameResult();
-                }
-            });
+                });
+            }
+            else
+            {
+                UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("NeedShuffle"), callback: confirm =>
+                {
+                    if (confirm)
+                    {
+                        if(DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
+                        {
+                            Shuffle();
+                        }
+                    }
+                    else
+                    {
+                        GameResult();
+                    }
+                });
+            }
         }
         else
         {
-            if(hintCoroutine != null)  StopCoroutine(hintCoroutine);
-            hintCoroutine = StartCoroutine(ShowHint());
+            if(isTraining)
+            {
+                if (hintCoroutine != null) StopCoroutine(hintCoroutine);
+                hintCoroutine = StartCoroutine(ShowHint());
+            }
         }
     }
+
+    private bool isTraining = false;
 
     private const float hintWaitTime = 1f;
     private const float hintShowTime = 2f;
     private Coroutine hintCoroutine;
+
+    private DateTime searchTime;
+    public void Search()
+    {
+        if (hint.Count() == 0) return;
+        if (GameManager.Instance.dateTime.Value < searchTime.AddSeconds(DataManager.Instance.SearchTerm)) return;
+        if (DataManager.Instance.userData.Use(GameData.GoodsType.Search, 1))
+        {
+            var list = hint.ToList();
+            var show = list[UnityEngine.Random.Range(0, list.Count)];
+            Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
+            for (int i = 0; i < focusBlocks.Length; i++)
+            {
+                focusBlocks[i].Focus(true);
+            }
+
+            searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
+            HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
+        }
+    }
+
     private IEnumerator ShowHint()
     {
-        Debug.Log($"ShowHint {hint.Count}");
         yield return Yielders.Get(hintWaitTime);
         var list = hint.ToList();
         var show = list[UnityEngine.Random.Range(0, list.Count)];
-        Debug.Log(show.Key + " | " + show.Value);
         Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
-        Debug.Log($"FocusBlocks {focusBlocks.Length}");
         for(int i = 0; i < focusBlocks.Length; i++)
         {
             focusBlocks[i].Focus(true);

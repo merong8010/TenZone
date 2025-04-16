@@ -19,6 +19,8 @@ public class UserData
     public int exp;
     public int level;
 
+    public int nicknameChangeCount = 0;
+
     //cheater is not empty
     public string banMessage;
 
@@ -158,9 +160,11 @@ public class UserData
         countryCode = RegionInfo.CurrentRegion.TwoLetterISORegionName;
         heart = DataManager.Instance.MaxHeart;
         lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
-        goods.Add(GameData.GoodsType.Gold, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultGold").val);
-        goods.Add(GameData.GoodsType.Gem, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultGem").val);
-        goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "defaultShuffle").val);
+        goods.Add(GameData.GoodsType.Gold, DataManager.Instance.GetConfig("defaultGold"));
+        goods.Add(GameData.GoodsType.Gem, DataManager.Instance.GetConfig("defaultGem"));
+        goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.GetConfig("defaultShuffle"));
+        goods.Add(GameData.GoodsType.Search, DataManager.Instance.GetConfig("defaultSearch"));
+        goods.Add(GameData.GoodsType.Time_10s, DataManager.Instance.GetConfig("defaultTime_10s"));
         level = 1;
         FirebaseManager.Instance.SaveUserData(this);
     }
@@ -185,11 +189,10 @@ public class UserData
     public void ChargeHeart()
     {
         heart += 1;
-        //lastHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
-        //if(heart >= DataManager.Instance.MaxHeart)
-        //{
-        //    lastHeartChargeTime = GameManager.Instance.dateTime.Value.ToTick();
-        //}
+        if (heart == DataManager.Instance.MaxHeart)
+        {
+            lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
+        }
         FirebaseManager.Instance.SaveUserData(this);
     }
 
@@ -249,6 +252,13 @@ public class UserData
         if (goods[type] < amount) return false;
         goods[type] -= amount;
         FirebaseManager.Instance.SaveUserData(this);
+        return true;
+    }
+
+    public bool Has(GameData.GoodsType type, int amount)
+    {
+        if (!goods.ContainsKey(type)) return false;
+        if (goods[type] < amount) return false;
         return true;
     }
 }

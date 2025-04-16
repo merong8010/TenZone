@@ -2,12 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-public class PopupRanking : Popup
+public class PopupRankingLevel : Popup
 {
     public class RankingListWithMyRank
     {
-        public List<RankingList.PointData> topRanks;
-        public RankingList.PointData myRank;
+        public List<RankingList.LevelData> topRanks;
+        public RankingList.LevelData myRank;
     }
     [SerializeField]
     private TabGroup levelTabs;

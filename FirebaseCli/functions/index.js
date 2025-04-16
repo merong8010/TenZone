@@ -30,8 +30,10 @@ if (!admin.apps.length) {
 }
 import {generateNicknameOnUserCreate} from "./generateNickname.js";
 export {generateNicknameOnUserCreate};
-import {SubmitScore} from "./SubmitScore.js";
-export {SubmitScore};
+import {RankUpdateScheduler} from "./RankUpdateScheduler.js";
+export {RankUpdateScheduler};
+import {RankBackupScheduler} from "./RankBackupScheduler.js";
+export {RankBackupScheduler};
 
 export const GetRanking = region("asia-southeast1").https.onCall(async (data, context) => {
   const gameLevel = data.gameLevel;
@@ -59,7 +61,7 @@ export const GetRanking = region("asia-southeast1").https.onCall(async (data, co
     rankingList.sort((a, b) => {
       if (b.point !== a.point) return b.point - a.point;
       if (b.remainMilliSeconds !== a.remainMilliSeconds) return b.remainMilliSeconds - a.remainMilliSeconds;
-      return b.timeStamp - a.timeStamp;
+      return a.timeStamp - b.timeStamp;
     });
 
     const topRankings = rankingList.slice(0, limit);

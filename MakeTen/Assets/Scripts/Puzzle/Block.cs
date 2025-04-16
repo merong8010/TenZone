@@ -48,9 +48,6 @@ public class Block : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI focusBonusText;
 
-    [SerializeField]
-    private GameObject shuffleBonusObj;
-
     [System.Serializable]
     public class Data
     {
@@ -59,16 +56,14 @@ public class Block : MonoBehaviour
 
         public int num;
         public int bonus;
-        public bool shuffle;
-
-
+        
         public Data(int column, int row, GameData.GameLevel level)
         {
             this.column = column;
             this.row = row;
             num = Util.GenerateGaussianRandom(level.mean, level.stdDev);
-            bonus = level.bonusRate.IsSuccess() ? Random.Range(level.bonusTimeMin, level.bonusTimeMax) : 0;
-            shuffle = level.shuffleRate.IsSuccess();
+            //bonus = ((float)level.bonusCount/(level.row * level.column)).IsSuccess() ? Random.Range(level.bonusTimeMin, level.bonusTimeMax) : 0;
+            bonus = ((float)level.bonusCount / (level.row * level.column)).IsSuccess() ? Util.GenerateGaussianRandom(level.bonusTimeMin, level.bonusTimeMax) : 0;
         }
     }
     [SerializeField]
@@ -82,7 +77,6 @@ public class Block : MonoBehaviour
         defaultNumText.text = focusNumText.text = data.num.ToString();
         defaultBonusText.text = focusBonusText.text = data.bonus > 0 ? $"+{data.bonus}s" : string.Empty;
         numObj.SetActive(data.num > 0);
-        shuffleBonusObj.SetActive(data.shuffle);
         Focus(false);
     }
 
@@ -123,12 +117,6 @@ public class Block : MonoBehaviour
             PuzzleManager.Instance.AddSeconds(data.bonus);
             //ObjectPooler.Instance.GetObject<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
         }
-        if(data.shuffle)
-        {
-            DataManager.Instance.userData.Charge(GameData.GoodsType.Shuffle, 1);
-            //ObjectPooler.Instance.GetObject<Effect>("shuffle_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
-        }
-        
     }
     public void InitRandom()
     {

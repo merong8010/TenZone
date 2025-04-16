@@ -27,6 +27,19 @@ public static class Util
         // 1~9 범위를 벗어나지 않도록 보정
         return UnityEngine.Mathf.Clamp(UnityEngine.Mathf.RoundToInt(randNormal), 1, 9);
     }
+
+    public static int GenerateGaussianRandom(int min, int max)
+    {
+        float u1 = 1.0f - UnityEngine.Random.value; // 0~1 사이 난수 (0 포함 X)
+        float u2 = 1.0f - UnityEngine.Random.value;
+
+        float randStdNormal = UnityEngine.Mathf.Sqrt(-2.0f * UnityEngine.Mathf.Log(u1)) * UnityEngine.Mathf.Sin(2.0f * UnityEngine.Mathf.PI * u2);
+        float randNormal = 3 + 3 * randStdNormal;
+
+        // 1~9 범위를 벗어나지 않도록 보정
+        return UnityEngine.Mathf.Clamp(UnityEngine.Mathf.RoundToInt(randNormal), min, max);
+    }
+
     public static Vector2Int GetScreenSize()
     {
         if (UnityEngine.Device.SystemInfo.deviceType == DeviceType.Handheld)
