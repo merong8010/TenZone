@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class MailListItem : ListItem<MailList.Data>
 {
@@ -7,9 +8,11 @@ public class MailListItem : ListItem<MailList.Data>
     private Text titleText;
     [SerializeField]
     private Text descText;
-
+    [SerializeField]
+    private Text dateText;
     [SerializeField]
     private GoodsList rewardList;
+    
 
     private Text timeText;
 
@@ -21,6 +24,8 @@ public class MailListItem : ListItem<MailList.Data>
         descText.text = TextManager.Get(data.desc);
 
         rewardList.UpdateList(data.rewards);
-        timeText.text = data.receiveDate.ToTimeText();
+        
+        dateText.text = DateTimeOffset.FromUnixTimeMilliseconds(data.receiveDate).DateTime.ToTimeText();
     }
 }
+    

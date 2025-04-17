@@ -160,7 +160,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
     
-
     public void Shuffle()
     {
         Block.Data[] datas  = blocks.Select(x => x.GetData()).ToArray().Shuffle();
@@ -172,6 +171,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
             blocks[i].SetData(datas[i]);
         }
         CheckHint();
+        while (State() != GameState.Continue)
+        {
+            Shuffle();
+            CheckHint();
+        }
     }
 
     private IEnumerator CheckFinish()
@@ -241,8 +245,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 currentPoint.Value += focus.Length;
                 remainMilliSeconds = (int)(finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
 
-                CheckHint();
-
+                if(blocks.ToList().Exists(x => x.num > 0))
+                {
+                    CheckHint();
+                    CheckGameState();
+                }
 #if !UNITY_EDITOR
                 if (OptionManager.Instance.Get(OptionManager.Type.HAPTIC))
                     Haptic.Execute();
@@ -292,7 +299,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
         hint.Clear();
         for(int i = 0; i < blocks.Length-1; i++)
         {
-            if (blocks[i].num == 0) continue;
             Vector2Int resultColumn = CheckBlockColumn(blocks[i].column, blocks[i].row, blocks[i].num);
             if(resultColumn != default(Vector2Int))
             {
@@ -308,11 +314,14 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 }
             }
         }
-        if(hint.Count == 0)
+    }
+
+    private void CheckGameState()
+    {
+        GameState state = State();
+        if (state > GameState.Continue)
         {
-            Block[] aliveBlocks = blocks.Where(x => x.num > 0).ToArray();
-            float sum = (float)aliveBlocks.Sum(x => x.num);
-            if(sum/(aliveBlocks.Length/2) > TargetSumNum || !DataManager.Instance.userData.Has(GameData.GoodsType.Shuffle, 1))
+            if (state == GameState.NeedShuffle && !DataManager.Instance.userData.Has(GameData.GoodsType.Shuffle, 1) || state == GameState.NoMoreMatch)
             {
                 UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("NoMoreMatch"), callback: confirm =>
                 {
@@ -325,7 +334,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 {
                     if (confirm)
                     {
-                        if(DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
+                        if (DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
                         {
                             Shuffle();
                         }
@@ -337,14 +346,32 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 });
             }
         }
-        else
+    }
+
+    private enum GameState
+    {
+        Continue,
+        NeedShuffle,
+        NoMoreMatch,
+    }
+    /// <summary>
+    /// 게임이 진행 가능한지 체크 
+    /// </summary>
+    /// <returns>
+    /// 0 : 진행가능 ,
+    /// 1 : 블록섞기 필요
+    /// 2 : 진행 불가능,
+    /// </returns>
+    private GameState State()
+    {
+        if(hint.Count == 0)
         {
-            if(isTraining)
-            {
-                if (hintCoroutine != null) StopCoroutine(hintCoroutine);
-                hintCoroutine = StartCoroutine(ShowHint());
-            }
+            Block[] aliveBlocks = blocks.Where(x => x.num > 0).ToArray();
+            if (HasCombinationSum(aliveBlocks.Select(x => x.num).ToArray()))
+                return GameState.NeedShuffle;
+            return GameState.NoMoreMatch;
         }
+        return GameState.Continue;
     }
 
     private bool isTraining = false;
@@ -354,6 +381,20 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private Coroutine hintCoroutine;
 
     private DateTime searchTime;
+
+    private void Explode()
+    {
+        var list = hint.ToList();
+        var show = list[UnityEngine.Random.Range(0, list.Count)];
+        Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
+        for (int i = 0; i < focusBlocks.Length; i++)
+        {
+            focusBlocks[i].Break();
+        }
+        CheckHint();
+        CheckGameState();
+    }
+
     public void Search()
     {
         Debug.Log($"Search  {hint.Count()} | {GameManager.Instance.dateTime.Value.Ticks} | {searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks}  | {GameManager.Instance.dateTime.Value.Ticks < searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks}" );
@@ -361,6 +402,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
         if (GameManager.Instance.dateTime.Value.Ticks < searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks) return;
         if (DataManager.Instance.userData.Use(GameData.GoodsType.Search, 1))
         {
+#if UNITY_EDITOR
+            Explode();
+#else
             var list = hint.ToList();
             var show = list[UnityEngine.Random.Range(0, list.Count)];
             Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
@@ -372,6 +416,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
             searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
             HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
+#endif
         }
     }
 
@@ -513,6 +558,30 @@ public class PuzzleManager : Singleton<PuzzleManager>
     {
         finishTime = finishTime.AddSeconds(sec);
         //HUD.Instance.ShowAddSeconds(sec);
+    }
+
+    private bool HasCombinationSum(int[] nums)
+    {
+        return CheckSumRecursive(nums, 0, 0, 0);
+    }
+
+    // 재귀 함수로 모든 조합 탐색
+    private bool CheckSumRecursive(int[] nums, int index, int currentSum, int count)
+    {
+        if (count >= 2 && currentSum == TargetSumNum)
+            return true;
+        if (index >= nums.Length || currentSum > TargetSumNum)
+            return false;
+
+        // 현재 숫자를 포함하는 경우
+        if (CheckSumRecursive(nums, index + 1, currentSum + nums[index], count + 1))
+            return true;
+
+        // 현재 숫자를 포함하지 않는 경우
+        if (CheckSumRecursive(nums, index + 1, currentSum, count))
+            return true;
+
+        return false;
     }
 
     private RectTransform tutorialTransform;

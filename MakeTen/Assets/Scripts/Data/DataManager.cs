@@ -69,7 +69,11 @@ public class DataManager : Singleton<DataManager>
 
         MaxHeart = GetConfig("maxHeart");
         HeartChargeTime = GetConfig("heartChargeTime");
+#if UNITY_EDITOR
+        SearchTerm = 0;
+#else
         SearchTerm = GetConfig("searchTerm");
+#endif
 
         FirebaseManager.Instance.GetUserData((UserData userData) =>
         {

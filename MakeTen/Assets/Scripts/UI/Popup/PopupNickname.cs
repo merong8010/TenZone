@@ -47,19 +47,33 @@ public class PopupNickname : Popup
         }
         FirebaseManager.Instance.CheckNickname(nicknameInput.text, result =>
         {
-            Refresh();
             if (result.success)
             {
-                if (DataManager.Instance.userData.nicknameChangeCount > 0)
+                FirebaseManager.Instance.UpdateNickName(nicknameInput.text, changeCallback =>
                 {
-                    DataManager.Instance.userData.Use(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
-                }
-                else
-                {
+                    if (changeCallback.success)
+                    {
+                        DataManager.Instance.userData.nicknameChangeCount += 1;
+
+                        if (DataManager.Instance.userData.nicknameChangeCount > 1)
+                        {
+                            DataManager.Instance.userData.Use(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
+                        }
+                    }
                     resultText.text = result.message;
-                }
+                    resultText.color = result.success ? Color.green : Color.red;
+
+                    Refresh();
+                });
+                
             }
-            //result.message == nicknameInput.text
+            else
+            {
+                resultText.text = result.message;
+                resultText.color = Color.red;
+
+                Refresh();
+            }
         });
 
 

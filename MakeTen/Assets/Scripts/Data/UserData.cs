@@ -92,7 +92,8 @@ public class UserData
         }
     }
 
-    public MailList.Data[] mailDatas;
+    //public MailList.Data[] mailDatas;
+    public Dictionary<string, MailList.Data> mailDatas = new Dictionary<string, MailList.Data>();
 
     public int Heart
     {

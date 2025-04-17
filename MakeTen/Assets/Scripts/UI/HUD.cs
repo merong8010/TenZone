@@ -112,7 +112,12 @@ public class HUD : Singleton<HUD>
 
     public void ClickNickname()
     {
+        UIManager.Instance.Open<PopupNickname>();
+    }
 
+    public void ClickMail()
+    {
+        UIManager.Instance.Open<PopupMail>();
     }
 
     public void ClickRanking()
@@ -127,7 +132,6 @@ public class HUD : Singleton<HUD>
 
     public void ClickShuffle()
     {
-        Debug.Log("ClickShuffle");
         PuzzleManager.Instance.Shuffle();
     }
 
@@ -135,7 +139,6 @@ public class HUD : Singleton<HUD>
     private Image searchCoolImage;
     public void ClickSearch()
     {
-        Debug.Log("ClickSearch");
         PuzzleManager.Instance.Search();
     }
 
