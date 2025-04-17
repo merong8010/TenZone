@@ -61,7 +61,21 @@ public class CanvasScalerAutoAdjuster : MonoBehaviour
         {
             scaler.referenceResolution = new Vector2(width, height);
         }
-        for(int i = 0; i < safeAreas.Length; i++)
+
+        Vector2Int screenSize = Util.GetScreenSize();
+        float screenRatio = (float)screenSize.x / screenSize.y;
+        
+        // 기준 비율 (예: 1080x1920 = 약 0.56)
+        float referenceRatio = scaler.referenceResolution.x / scaler.referenceResolution.y;
+
+        // 비율을 기준으로 자동 보간
+        //float t = Mathf.InverseLerp(referenceRatio, 1.0f, screenRatio);
+        //scaler.matchWidthOrHeight = Mathf.Lerp(1f, 0f, t);
+        scaler.matchWidthOrHeight = screenRatio > referenceRatio ? 1f : 0f;
+
+        Debug.Log($"CanvasScaler match 자동조정: {scaler.matchWidthOrHeight:F2}");
+
+        for (int i = 0; i < safeAreas.Length; i++)
         {
             safeAreas[i].Refresh();
         }

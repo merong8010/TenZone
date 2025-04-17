@@ -6,8 +6,8 @@ public class PopupRanking : Popup
 {
     public class RankingListWithMyRank
     {
-        public List<RankingList.PointData> topRanks;
-        public RankingList.PointData myRank;
+        public List<RankingList.Data> topRanks;
+        public RankingList.Data myRank;
     }
     [SerializeField]
     private TabGroup levelTabs;
@@ -40,18 +40,19 @@ public class PopupRanking : Popup
             currentTypeIdx = idx;
             Refresh();
         });
-
     }
 
     public override void Open()
     {
         base.Open();
         Initialize();
+        Refresh();
+
         //FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
         //{
-        //    rankingList.UpdateList(result.topRanks);
+        //    rankingList.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
         //    myRankItem.SetData(result.myRank);
-        //}, date : );
+        //}, date:currentTypeIdx == 0 ? GameManager.Instance.dateTime.Value.ToDateText() : "ALL", limit : 50, (PuzzleManager.Level)currentLevelIdx);
         //FirebaseManager.Instance.GetTopScores(100, datas =>
         //{
         //    rankingList.UpdateList(datas);
@@ -70,22 +71,24 @@ public class PopupRanking : Popup
         //    //    });
         //    //}
         //});
-        
+
     }
 
     public override void Refresh()
     {
         base.Refresh();
+        Debug.Log("Refresh");
         string date = currentTypeIdx == 0 ? GameManager.Instance.dateTime.Value.ToDateText() : "ALL";
 
-        UIManager.Instance.Loading("Loading Rank");
+        //UIManager.Instance.Loading("Loading Rank");
         FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
         {
-            UIManager.Instance.CloseLoading();
+            //UIManager.Instance.CloseLoading();
+            Debug.Log($"GetRankingFromServer : {result.topRanks?.Count}");
             if (result == null) return;
             if(result.topRanks != null)
             {
-                rankingList.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
+                rankingList.UpdateList(result.topRanks.ToArray());
                 myRankItem.SetData(result.myRank);
             }
         }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));

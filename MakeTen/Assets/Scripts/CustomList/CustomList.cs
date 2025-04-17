@@ -127,6 +127,7 @@ public class CustomList<T> : MonoBehaviour where T : class
     }
     public virtual void UpdateList(List<T> datas)
     {
+        Debug.Log("UpdateList  " + datas.Count);
         if (datas == null) return;
 
         if (grid == null)

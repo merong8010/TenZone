@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class InfiniteScroll<T> : MonoBehaviour where T : class
 {
     [SerializeField]
-    protected ScrollRect scrollRect;
+    protected RectTransform content;
     [SerializeField]
     protected GameObject itemPrefab;
     [SerializeField]
@@ -19,31 +19,31 @@ public class InfiniteScroll<T> : MonoBehaviour where T : class
     protected List<T> dataList;
 
     protected List<ListItem<T>> items = new List<ListItem<T>>();
-    protected RectTransform content;
+    //protected RectTransform content;
     protected float itemHeight;
     protected int topIndex = 0;
 
     protected bool isInit = false;
-    private void Initialize()
+    private void Init()
     {
+        Debug.Log($"gameObject.name : {gameObject.name} | {isInit}");
         if (isInit) return;
         isInit = true;
 
-        content = scrollRect.content;
+        //content = scrollRect.content;
         itemHeight = ((RectTransform)itemPrefab.transform).sizeDelta.y + gap.y;
-
+        Debug.Log("Initialize " + poolSize);
         // 초기화
         for (int i = 0; i < poolSize; i++)
         {
             var go = Instantiate(itemPrefab, content);
             var item = go.GetComponent<ListItem<T>>();
-            item.SetData(dataList[i]);
+            //item.SetData(dataList[i]);
             item.rect.anchoredPosition = new Vector2(padding.x, -padding.y -(i * itemHeight));
             items.Add(item);
         }
 
-        UpdateVisibleItems();
-        scrollRect.onValueChanged.AddListener(_ => OnScroll());
+        //scrollRect.onValueChanged.AddListener(_ => OnScroll());
     }
     //void Start()
     //{
@@ -52,8 +52,32 @@ public class InfiniteScroll<T> : MonoBehaviour where T : class
 
     public void UpdateList(List<T> datas)
     {
+        Debug.Log("UpdateList!!");
+        Debug.Log("UpdateList" + datas.Count);
         dataList = datas;
-        Initialize();
+        Debug.Log("UpdateList" + dataList.Count+" | "+ content);
+        //Debug.Log("UpdateList" + dataList.Count + " | " + scrollRect.content);
+
+        //content = scrollRect.content;
+        //Debug.Log("content" + content);
+        itemHeight = ((RectTransform)itemPrefab.transform).sizeDelta.y + gap.y;
+        Debug.Log("Initialize " + poolSize);
+        // 초기화
+        for (int i = 0; i < poolSize; i++)
+        {
+            var go = Instantiate(itemPrefab, content);
+            var item = go.GetComponent<ListItem<T>>();
+            //item.SetData(dataList[i]);
+            item.rect.anchoredPosition = new Vector2(padding.x, -padding.y - (i * itemHeight));
+            items.Add(item);
+        }
+
+        //Init();
+        for (int i = 0; i < items.Count; i++)
+        {
+            items[i].SetData(dataList[i]);
+        }
+        UpdateVisibleItems();
     }
 
     void OnScroll()

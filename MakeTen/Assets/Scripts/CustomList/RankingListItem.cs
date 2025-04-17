@@ -23,17 +23,8 @@ public class RankingListItem : ListItem<RankingList.Data>
     {
         base.SetData(data);
 
-        if(data.GetType() == typeof(RankingList.PointData))
-        {
-            RankingList.PointData pointData = (RankingList.PointData)data;
-            pointText.text = pointData.point.ToString();
-            remainTimeText.text = pointData.remainMilliSeconds.MilliSecondsToTimeText();
-        }
-        else if(data.GetType() == typeof(RankingList.LevelData))
-        {
-            RankingList.LevelData levelData = (RankingList.LevelData)data;
-            pointText.text = levelData.exp.ToString();
-        }
+        pointText.text = data.point.ToString();
+        remainTimeText.text = data.remainMilliSeconds.MilliSecondsToTimeText();
 
         rankText.text = data.rank.ToString();
         levelText.text = data.level.ToLevelText();
