@@ -21,15 +21,15 @@ public class SafeArea : MonoBehaviour
     //    Refresh();
     //}
 
-    private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
-    private void Update()
-    {
-        if(lastOrientation != Util.GetDeviceOrientation())
-        {
-            Refresh();
-            lastOrientation = Util.GetDeviceOrientation();
-        }
-    }
+    //private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
+    //private void Update()
+    //{
+    //    if(lastOrientation != Util.GetDeviceOrientation())
+    //    {
+    //        Refresh();
+    //        lastOrientation = Util.GetDeviceOrientation();
+    //    }
+    //}
 
     public void Refresh()
     {
