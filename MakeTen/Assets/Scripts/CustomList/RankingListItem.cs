@@ -23,13 +23,27 @@ public class RankingListItem : ListItem<RankingList.Data>
     {
         base.SetData(data);
 
-        pointText.text = data.point.ToString();
-        remainTimeText.text = data.remainMilliSeconds.MilliSecondsToTimeText();
-
+        if(data.GetType() == typeof(RankingList.PointData))
+        {
+            RankingList.PointData pointData = (RankingList.PointData)data;
+            pointText.text = pointData.point.ToString();
+            remainTimeText.text = pointData.remainMilliSeconds.MilliSecondsToTimeText();
+        }
+        else
+        {
+            RankingList.LevelData levelData = (RankingList.LevelData)data;
+            pointText.text = levelData.exp.ToString();
+        }
+        
         rankText.text = data.rank.ToString();
         levelText.text = data.level.ToLevelText();
         nameText.text = data.name;
-        countryImage.sprite = Resources.Load<SpriteAtlas>("Graphics/Flags").GetSprite(data.countryCode.ToLower());
+        SpriteAtlas sa = Resources.Load<SpriteAtlas>("Graphics/Flags");
+        Sprite flag = sa.GetSprite(data.countryCode.ToLower());
+        Debug.Log(sa + " |" + flag + " | " + data.countryCode.ToLower()+" | "+ sa.spriteCount);
+        
+        //countryImage.sprite = Resources.Load<SpriteAtlas>("Graphics/Flags").GetSprite(data.countryCode.ToLower());
+        countryImage.sprite = flag;
         timeStampText.text = data.timeStamp.ToTimeText();
         //DataManager.Instance.GetFlags(data.countryCode, flagSprite => countryImage.sprite = flagSprite);
     }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,8 +7,8 @@ public class PopupRanking : Popup
 {
     public class RankingListWithMyRank
     {
-        public List<RankingList.Data> topRanks;
-        public RankingList.Data myRank;
+        public List<RankingList.PointData> topRanks;
+        public RankingList.PointData myRank;
     }
     [SerializeField]
     private TabGroup levelTabs;
@@ -23,6 +24,9 @@ public class PopupRanking : Popup
 
     private int currentLevelIdx;
     private int currentTypeIdx;
+
+    [SerializeField]
+    private Text stateText;
 
     private void Initialize()
     {
@@ -47,48 +51,36 @@ public class PopupRanking : Popup
         base.Open();
         Initialize();
         Refresh();
-
-        //FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
-        //{
-        //    rankingList.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
-        //    myRankItem.SetData(result.myRank);
-        //}, date:currentTypeIdx == 0 ? GameManager.Instance.dateTime.Value.ToDateText() : "ALL", limit : 50, (PuzzleManager.Level)currentLevelIdx);
-        //FirebaseManager.Instance.GetTopScores(100, datas =>
-        //{
-        //    rankingList.UpdateList(datas);
-
-        //    //string[] countryCodes = datas.Select(x => x.countryCode).Distinct().ToArray();
-        //    //foreach (string countryCode in countryCodes)
-        //    //{
-        //    //    DataManager.Instance.GetFlags(countryCode, flag =>
-        //    //    {
-        //    //        //List<RankingListItem> items = (List<RankingListItem>)rankingList.GetList().Where(x => x.GetData().countryCode == countryCode);
-        //    //        //for (int i = 0; i < items.Count; i++)
-        //    //        //{
-        //    //        //    items[i].UpdateFlag(flag);
-        //    //        //}
-        //    //        rankingList.UpdateFlags(countryCode, flag);
-        //    //    });
-        //    //}
-        //});
-
     }
 
     public override void Refresh()
     {
         base.Refresh();
-        Debug.Log("Refresh");
+
+        stateText.text = "Loading";
+        rankingList.gameObject.SetActive(false);
+        myRankItem.gameObject.SetActive(false);
+
         string date = currentTypeIdx == 0 ? GameManager.Instance.dateTime.Value.ToDateText() : "ALL";
 
-        //UIManager.Instance.Loading("Loading Rank");
         FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
         {
-            //UIManager.Instance.CloseLoading();
-            Debug.Log($"GetRankingFromServer : {result.topRanks?.Count}");
-            if (result == null) return;
-            if(result.topRanks != null)
+            if (result == null)
             {
-                rankingList.UpdateList(result.topRanks.ToArray());
+                stateText.text = TextManager.Get("FailLoadRank");
+                return;
+            }
+            stateText.text = string.Empty;
+
+            if (result.topRanks != null)
+            {
+                rankingList.gameObject.SetActive(true);
+                rankingList.UpdateList(result.topRanks.Select(x=> (RankingList.Data)x).ToList());
+            }
+
+            if(result.myRank != null)
+            {
+                myRankItem.gameObject.SetActive(true);
                 myRankItem.SetData(result.myRank);
             }
         }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));

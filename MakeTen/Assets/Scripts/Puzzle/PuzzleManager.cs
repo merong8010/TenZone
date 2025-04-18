@@ -6,6 +6,7 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using UnityEngine.InputSystem;
 
 public class PuzzleManager : Singleton<PuzzleManager>
 {
@@ -224,7 +225,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 blocks[i].Focus(false);
             }
         }
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Input.mousePosition, cam, out startPos);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Mouse.current.position.ReadValue(), cam, out startPos);
         dragTransform.gameObject.SetActive(true);
         dragTransform.rectTransform.anchoredPosition = startPos;
         dragTransform.rectTransform.sizeDelta = Vector2.zero;
@@ -274,7 +275,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             // 현재 터치 위치까지 크기 조정
             //Vector2 currentPos = Input.mousePosition;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Input.mousePosition, cam, out Vector2 currentPos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Mouse.current.position.ReadValue(), cam, out Vector2 currentPos);
             Vector2 size = currentPos - startPos;
             dragTransform.rectTransform.sizeDelta = new Vector2(Mathf.Abs(size.x), Mathf.Abs(size.y));
             // 위치 조정 (좌상단 기준)

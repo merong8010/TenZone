@@ -10,6 +10,7 @@ namespace GameData
         Shuffle,
         Search,
         Time_10s,
+        Heart,
     }
 
     public enum ShopCostType

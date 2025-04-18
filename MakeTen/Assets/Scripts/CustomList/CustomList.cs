@@ -13,16 +13,16 @@ public class CustomList<T> : MonoBehaviour where T : class
     protected List<ListItem<T>> listItems = new List<ListItem<T>>();
     [Header("Grid")]
 	[SerializeField]
-	protected GridLayoutGroup grid;
+	protected Transform grid;
     [Header("None Grid")]
     [SerializeField]
     protected Transform listParent;
     [SerializeField]
-    private Vector2 itemSize;
+    protected Vector2 itemSize;
     [SerializeField]
-    private Vector2 itemSpace;
+    protected Vector2 itemSpace;
     [SerializeField]
-    private int itemCountInRow;
+    protected int itemCountInRow;
 
     [SerializeField]
 	protected GameObject itemObj;
@@ -127,19 +127,9 @@ public class CustomList<T> : MonoBehaviour where T : class
     }
     public virtual void UpdateList(List<T> datas)
     {
-        Debug.Log("UpdateList  " + datas.Count);
         if (datas == null) return;
-
         if (grid == null)
         {
-            //ListItem<T>[] childs = listParent.GetComponentsInChildren<ListItem<T>>();
-            //if(childs.Length > listItems.Count)
-            //{
-            //    for(int i = 0; i < childs.Length; i++)
-            //    {
-            //        if(litItems[i])
-            //    }
-            //}
             if (listParent.childCount > listItems.Count)
             {
                 for (int i = 0; i < listParent.childCount; i++)

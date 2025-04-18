@@ -85,8 +85,8 @@ public class PopupRankingLevel : Popup
             if (result == null) return;
             if(result.topRanks != null)
             {
-                rankingList.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
-                myRankItem.SetData(result.myRank);
+                //rankingList.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
+                //myRankItem.SetData(result.myRank);
             }
         }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));
     }

@@ -24,6 +24,8 @@ public class UserData
     //cheater is not empty
     public string banMessage;
 
+    public string lastPlayDate;
+
     public class Record : IComparable<Record>
     {
         public int point;
@@ -52,6 +54,12 @@ public class UserData
         Record newRecord = new Record(point, remain);
         if (today)
         {
+            if(lastPlayDate != GameManager.Instance.dateTime.Value.ToDateText())
+            {
+                recordToday.Clear();
+            }
+            lastPlayDate = GameManager.Instance.dateTime.Value.ToDateText();
+
             if(recordToday.ContainsKey(level))
             {
                 if(recordToday[level].CompareTo(newRecord) < 0)
@@ -184,10 +192,10 @@ public class UserData
         if(this.exp > DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).exp)
         {
             List<GoodsList.Data> rewards = new List<GoodsList.Data>();
-            while (this.exp > DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).exp)
+            while (this.exp >= DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).exp)
             {
-                this.level += 1;
                 this.exp -= DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).exp;
+                this.level += 1;
                 rewards.AddRange(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == level).rewards);
             }
 
@@ -199,6 +207,7 @@ public class UserData
             UIManager.Instance.Open<PopupReward>().SetData(rewards);
         }
 
+        FirebaseManager.Instance.SubmitScoreLevel(DataManager.Instance.Get<GameData.UserLevel>().Where(x => x.level < level).Sum(x => x.exp) + exp);
         FirebaseManager.Instance.SaveUserData(this);
     }
 

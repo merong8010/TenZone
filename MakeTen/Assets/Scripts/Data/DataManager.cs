@@ -83,6 +83,8 @@ public class DataManager : Singleton<DataManager>
 
         yield return new WaitUntil(() => userData != null);
 
+        
+
     }
 
     public void UpdateUserData(UserData data)

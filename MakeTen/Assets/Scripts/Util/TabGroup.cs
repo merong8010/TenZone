@@ -18,10 +18,15 @@ public class TabGroup : MonoBehaviour
         tabButtons = GetComponentsInChildren<Tab>();
         for(int i = 0; i < tabButtons.Length; i++)
         {
-            if (i == idx) tabButtons[i].Select();
+            if (i == idx)
+            {
+                selectedTab = tabButtons[i];
+                tabButtons[i].Select();
+            }
             else tabButtons[i].Deselect();
             tabButtons[i].Init(this, i);
         }
+        selectedIdx = idx;
         //OnTabSelected(tabButtons[idx]);
     }
 
