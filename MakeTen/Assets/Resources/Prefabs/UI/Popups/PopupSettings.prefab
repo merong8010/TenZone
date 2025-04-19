@@ -1918,9 +1918,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
-        m_MethodName: ClickGameStart
+      - m_Target: {fileID: 4936204497387624892}
+        m_TargetAssemblyTypeName: PopupSettings, Assembly-CSharp
+        m_MethodName: ClickGoogleLogin
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

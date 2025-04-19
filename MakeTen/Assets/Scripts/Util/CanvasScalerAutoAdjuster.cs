@@ -28,6 +28,7 @@ public class CanvasScalerAutoAdjuster : MonoBehaviour
     
     public void Refresh()
     {
+        Debug.Log($"CanvasScalerAutoAdjuster.Refresh() {Util.GetDeviceOrientation()}");
         if (Util.GetDeviceOrientation() == DeviceOrientation.Portrait)
         {
             scaler.referenceResolution = new Vector2(refSize.y, refSize.x);

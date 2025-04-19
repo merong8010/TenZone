@@ -113,6 +113,7 @@ public class UserData
                 {
                     int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - lastHeartTime);
                     int recoverCount = Mathf.FloorToInt((float)passedSec / DataManager.Instance.HeartChargeTime);
+                    //Debug.Log($"passedSec : {heart} | {passedSec} | {recoverCount}");
                     if(recoverCount > 0)
                     {
                         heart = Mathf.Min(heart + recoverCount, DataManager.Instance.MaxHeart);
@@ -171,7 +172,7 @@ public class UserData
     public void ChargeHeart()
     {
         heart += 1;
-        if (heart == DataManager.Instance.MaxHeart)
+        if (heart >= DataManager.Instance.MaxHeart)
         {
             lastHeartTime = GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.HeartChargeTime;
         }

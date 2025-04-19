@@ -33,6 +33,7 @@ public class SafeArea : MonoBehaviour
 
     public void Refresh()
     {
+        Debug.Log($"SafeArea.Refresh {UnityEngine.Device.SystemInfo.deviceType} | {Screen.safeArea} | {Screen.width},{Screen.height} | {Util.GetScreenSize()}");
         if(UnityEngine.Device.SystemInfo.deviceType == DeviceType.Handheld)
         {
             ApplySafeArea(Screen.safeArea, Util.GetScreenSize());

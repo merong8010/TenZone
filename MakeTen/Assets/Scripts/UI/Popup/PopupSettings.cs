@@ -109,4 +109,9 @@ public class PopupSettings : Popup
         loginObjs.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
         logoutObj.SetActive(DataManager.Instance.userData.authType != FirebaseManager.AuthenticatedType.None);
     }
+
+    public void ClickGoogleLogin()
+    {
+        FirebaseManager.Instance.StartGoogleLogin();
+    }
 }

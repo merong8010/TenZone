@@ -610,7 +610,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleManager.Level gameLevel = PuzzleManager.Level.Normal)
     {
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         db.Child("Leaderboard").Child(gameLevel.ToString()).Child(date).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsCompletedSuccessfully)
@@ -653,60 +653,60 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
         });
 
-        return;
-#endif
-        var data = new Dictionary<string, object>
-        {
-            { "gameLevel", gameLevel.ToString() },
-            { "date", date },
-            { "userId", userId },
-            { "limit", limit }
-        };
+        //return;
+//#endif
+//        var data = new Dictionary<string, object>
+//        {
+//            { "gameLevel", gameLevel.ToString() },
+//            { "date", date },
+//            { "userId", userId },
+//            { "limit", limit }
+//        };
 
-        functions.GetHttpsCallable("GetRanking").CallAsync(data).ContinueWithOnMainThread(task =>
-        {
-            if (task.IsFaulted)
-            {
-                //foreach (var e in task.Exception.Flatten().InnerExceptions)
-                //{
-                //    Debug.LogError($"Function call error: {e.Message}");
-                //}
-                Debug.LogError("랭킹 가져오기 실패: " + task.Exception);
-                callback?.Invoke(null);
-                return;
-            }
+//        functions.GetHttpsCallable("GetRanking").CallAsync(data).ContinueWithOnMainThread(task =>
+//        {
+//            if (task.IsFaulted)
+//            {
+//                //foreach (var e in task.Exception.Flatten().InnerExceptions)
+//                //{
+//                //    Debug.LogError($"Function call error: {e.Message}");
+//                //}
+//                Debug.LogError("랭킹 가져오기 실패: " + task.Exception);
+//                callback?.Invoke(null);
+//                return;
+//            }
 
-            var result = task.Result.Data as Dictionary<string, object>;
+//            var result = task.Result.Data as Dictionary<string, object>;
 
-            // Top 랭킹 파싱
-            var topRankings = result["topRankings"] as List<object>;
-            Debug.Log("=== 전체 랭킹 ===");
-            PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
-            resultData.topRanks = new List<RankingList.PointData>();
+//            // Top 랭킹 파싱
+//            var topRankings = result["topRankings"] as List<object>;
+//            Debug.Log("=== 전체 랭킹 ===");
+//            PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
+//            resultData.topRanks = new List<RankingList.PointData>();
 
-            for (int i = 0; i < topRankings.Count; i++)
-            {
-                var entry = topRankings[i] as Dictionary<string, object>;
-                RankingList.PointData data = JsonConvert.DeserializeObject<RankingList.PointData>(JsonConvert.SerializeObject(entry));
-                resultData.topRanks.Add(data);
-            }
+//            for (int i = 0; i < topRankings.Count; i++)
+//            {
+//                var entry = topRankings[i] as Dictionary<string, object>;
+//                RankingList.PointData data = JsonConvert.DeserializeObject<RankingList.PointData>(JsonConvert.SerializeObject(entry));
+//                resultData.topRanks.Add(data);
+//            }
 
-            resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
-            // 내 랭킹 파싱
-            int myRank = Convert.ToInt32(result["myRank"]);
-            if (myRank > 0)
-            {
-                var myEntry = result["myEntry"] as Dictionary<string, object>;
-                RankingList.PointData data = JsonConvert.DeserializeObject<RankingList.PointData>(JsonConvert.SerializeObject(myEntry));
-                data.rank = myRank;
-                resultData.myRank = data;
-            }
-            else
-            {
-                Debug.Log("내 랭킹 정보가 없습니다.");
-            }
-            callback?.Invoke(resultData);
-        });
+//            resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
+//            // 내 랭킹 파싱
+//            int myRank = Convert.ToInt32(result["myRank"]);
+//            if (myRank > 0)
+//            {
+//                var myEntry = result["myEntry"] as Dictionary<string, object>;
+//                RankingList.PointData data = JsonConvert.DeserializeObject<RankingList.PointData>(JsonConvert.SerializeObject(myEntry));
+//                data.rank = myRank;
+//                resultData.myRank = data;
+//            }
+//            else
+//            {
+//                Debug.Log("내 랭킹 정보가 없습니다.");
+//            }
+//            callback?.Invoke(resultData);
+//        });
     }
 
 

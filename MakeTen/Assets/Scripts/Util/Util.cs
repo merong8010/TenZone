@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public static class Util
 {
@@ -50,6 +51,7 @@ public static class Util
         {
             return new Vector2Int(Screen.width, Screen.height);
         }
+        //return new Vector2Int(Screen.width, Screen.height);
     }
 
     public static DeviceOrientation GetDeviceOrientation()
@@ -74,6 +76,27 @@ public static class Util
                 return Screen.width > Screen.height ? DeviceOrientation.Landscape : DeviceOrientation.Portrait;
         }
 #endif
+    }
+
+    public static Vector2 GetMousePosition()
+    {
+        //#if UNITY_EDITOR || UNITY_STANDALONE
+        Debug.Log($"{Mouse.current} | {Touchscreen.current}");
+        Vector2 inputPosition = Vector2.zero;
+        if (Mouse.current != null)
+        {
+            //return Mouse.current.position.ReadValue();
+            inputPosition = Mouse.current.position.ReadValue();
+        }
+//#elif UNITY_IOS || UNITY_ANDROID
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            inputPosition = Touchscreen.current.primaryTouch.position.ReadValue();
+            //return Touchscreen.current.primaryTouch.position.ReadValue();
+        }
+        //#endif
+        Debug.Log(inputPosition);
+        return inputPosition;
     }
 }
 public enum DeviceOrientation

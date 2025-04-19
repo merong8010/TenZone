@@ -65,15 +65,17 @@ public class HUD : Singleton<HUD>
         {
             disposable = GameManager.Instance.reactiveTime.Subscribe(x =>
             {
-                if(data.Heart >= DataManager.Instance.MaxHeart)
-                {
-                    heartChargeRemainTime.text = "MAX";
-                }
-                else
-                {
-                    int passedSec = (int)(x.ToTick() - DataManager.Instance.userData.lastHeartTime);
-                    heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
-                }
+                //Debug.Log(data.Heart);
+                //if(data.Heart >= DataManager.Instance.MaxHeart)
+                //{
+                //    heartChargeRemainTime.text = "MAX";
+                //}
+                //else
+                //{
+                //    int passedSec = (int)(x.ToTick() - DataManager.Instance.userData.lastHeartTime);
+                //    heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+                //}
+                UpdateHeart();
             });
         }
     }
@@ -81,9 +83,17 @@ public class HUD : Singleton<HUD>
     public void UpdateHeart()
     {
         heartCount.text = DataManager.Instance.userData.Heart.ToString();
-
-        int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
-        heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+        if (DataManager.Instance.userData.Heart >= DataManager.Instance.MaxHeart)
+        {
+            heartChargeRemainTime.text = "MAX";
+        }
+        else
+        {
+            int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
+            heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+        }
+        //int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
+        //heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
     }
 
     public void Initialize(ReactiveProperty<int> pointProperty)

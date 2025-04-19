@@ -145,7 +145,35 @@ public class PuzzleManager : Singleton<PuzzleManager>
     public void RefreshPosition()
     {
         if(currentLevel == null) return;
-        blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * currentLevel.column)) / currentLevel.column, (blocksRT.rect.height - (blockGap.y * currentLevel.row)) / currentLevel.row);
+        StartCoroutine(RefreshDelay(0f));
+        //StartCoroutine(RefreshDelay(0.5f));
+        //float width = blocksRT.rect.xMax - blocksRT.rect.xMin;
+        //float height = blocksRT.rect.yMax - blocksRT.rect.yMin;
+
+        //Debug.Log($"PuzzleManager.RefreshPosition {blocksRT.rect.width},{blocksRT.rect.height} | {width} , {height} | {((RectTransform)blocksRT.parent).rect.width},{((RectTransform)blocksRT.parent).rect.height}");
+        //blockSize = new Vector2((width - (blockGap.x * currentLevel.column)) / currentLevel.column, (height - (blockGap.y * currentLevel.row)) / currentLevel.row);
+        //blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
+
+        //for (int row = 0; row < currentLevel.row; row++)
+        //{
+        //    for (int column = 0; column < currentLevel.column; column++)
+        //    {
+        //        Block blockObj = blocks.SingleOrDefault(x => x.name == $"block_{column}_{row}");
+        //        blockObj.transform.localPosition = blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row);
+        //        blockObj.SetSize(blockSize);
+        //    }
+        //}
+    }
+
+    private IEnumerator RefreshDelay(float delay)
+    {
+        yield return Yielders.EndOfFrame;
+        yield return Yielders.Get(delay);
+        float width = blocksRT.rect.xMax - blocksRT.rect.xMin;
+        float height = blocksRT.rect.yMax - blocksRT.rect.yMin;
+
+        Debug.Log($"PuzzleManager.RefreshPosition {blocksRT.rect.width},{blocksRT.rect.height} | {width} , {height} | {((RectTransform)blocksRT.parent).rect.width},{((RectTransform)blocksRT.parent).rect.height}");
+        blockSize = new Vector2((width - (blockGap.x * currentLevel.column)) / currentLevel.column, (height - (blockGap.y * currentLevel.row)) / currentLevel.row);
         blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
 
         for (int row = 0; row < currentLevel.row; row++)
@@ -159,7 +187,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
     }
 
-    private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
+    //private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
     
     public void Shuffle()
     {
@@ -225,7 +253,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 blocks[i].Focus(false);
             }
         }
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Mouse.current.position.ReadValue(), cam, out startPos);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
         dragTransform.gameObject.SetActive(true);
         dragTransform.rectTransform.anchoredPosition = startPos;
         dragTransform.rectTransform.sizeDelta = Vector2.zero;
@@ -251,10 +279,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
                     CheckHint();
                     CheckGameState();
                 }
-#if !UNITY_EDITOR
-                if (OptionManager.Instance.Get(OptionManager.Type.HAPTIC))
-                    Haptic.Execute();
-#endif
+//#if !UNITY_EDITOR
+//                if (OptionManager.Instance.Get(OptionManager.Type.HAPTIC))
+//                    Haptic.Execute();
+//#endif
             }
             focus = null;
         }
@@ -269,13 +297,13 @@ public class PuzzleManager : Singleton<PuzzleManager>
     }
 
     private Block[] focus = new Block[] { };
-    void Update()
+    void LateUpdate()
     {
         if (isDrag)
         {
             // 현재 터치 위치까지 크기 조정
             //Vector2 currentPos = Input.mousePosition;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Mouse.current.position.ReadValue(), cam, out Vector2 currentPos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out Vector2 currentPos);
             Vector2 size = currentPos - startPos;
             dragTransform.rectTransform.sizeDelta = new Vector2(Mathf.Abs(size.x), Mathf.Abs(size.y));
             // 위치 조정 (좌상단 기준)
@@ -288,11 +316,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
             }
         }
 
-        if (lastOrientation != Util.GetDeviceOrientation())
-        {
-            RefreshPosition();
-            lastOrientation = Util.GetDeviceOrientation();
-        }
+        //if (lastOrientation != Util.GetDeviceOrientation())
+        //{
+        //    RefreshPosition();
+        //    lastOrientation = Util.GetDeviceOrientation();
+        //}
     }
 
     private void CheckHint()
