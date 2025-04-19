@@ -169,9 +169,9 @@ public class UserData
         return false;
     }
 
-    public void ChargeHeart()
+    public void ChargeHeart(int count = 1)
     {
-        heart += 1;
+        heart += count;
         if (heart >= DataManager.Instance.MaxHeart)
         {
             lastHeartTime = GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.HeartChargeTime;
@@ -223,6 +223,17 @@ public class UserData
 
     public void Charge(GameData.GoodsType type, int amount)
     {
+        if(type == GameData.GoodsType.Heart)
+        {
+            ChargeHeart(amount);
+            return;
+        }
+        if( type == GameData.GoodsType.EXP)
+        {
+            ChargeExp(amount);
+            return;
+        }
+
         if(!goods.TryAdd(type, amount))
         {
             goods[type] += amount;

@@ -11,6 +11,7 @@ namespace GameData
         Search,
         Time_10s,
         Heart,
+        EXP,
     }
 
     public enum ShopCostType

@@ -309,7 +309,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
             // 위치 조정 (좌상단 기준)
             dragTransform.rectTransform.anchoredPosition = startPos + size / 2;
 
-            focus = blocks.Where(x => dragTransform.rectTransform.IsInside(x.transform)).ToArray();
+            focus = blocks.Where(x => dragTransform.rectTransform.IsInside(x.transform) && x.num > 0).ToArray();
             for (int i = 0; i < blocks.Length; i++)
             {
                 blocks[i].Focus(focus.Contains(blocks[i]));

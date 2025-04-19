@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 using TMPro;
+using System.Runtime.CompilerServices;
 
 public class Block : MonoBehaviour
 {
@@ -120,7 +121,15 @@ public class Block : MonoBehaviour
     }
     public void InitRandom()
     {
-        StartCoroutine(RandomAnimation());
+        if (aniCoroutine != null) StopCoroutine(aniCoroutine);
+        aniCoroutine = StartCoroutine(RandomAnimation());
+    }
+
+    private Coroutine aniCoroutine;
+    private void OnEnable()
+    {
+        if(randomAniObjs != null && randomAniObjs.Length > 0)
+            InitRandom();
     }
 
     [SerializeField]

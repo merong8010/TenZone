@@ -323,7 +323,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3dae0a9e85474381a0e8a98f8eb3dac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  grid: {fileID: 1751256970083223052}
+  grid: {fileID: 6605823131845482319}
   listParent: {fileID: 0}
   itemSize: {x: 0, y: 0}
   itemSpace: {x: 0, y: 0}
@@ -823,7 +823,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 6961350521575871609}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

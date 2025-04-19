@@ -27,7 +27,7 @@ public class PopupMail : Popup
     {
         base.Refresh();
 
-        if (DataManager.Instance.userData.mailDatas.Count > 0)
+        if (DataManager.Instance.userData.mailDatas != null && DataManager.Instance.userData.mailDatas.Count > 0)
         {
             mailList.gameObject.SetActive(true);
             noMailObj.SetActive(false);

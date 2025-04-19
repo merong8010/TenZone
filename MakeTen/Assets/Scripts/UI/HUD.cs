@@ -135,9 +135,10 @@ public class HUD : Singleton<HUD>
         UIManager.Instance.Open<PopupRanking>();
     }
 
-    public void ClickCharge()
+    public void ClickCheat()
     {
-        DataManager.Instance.userData.ChargeHeart();
+        UIManager.Instance.Open<PopupCheat>();
+        //DataManager.Instance.userData.ChargeHeart();
     }
 
     public void ClickShuffle()

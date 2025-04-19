@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.InputSystem;
 public class SoundManager : Singleton<SoundManager>
 {
     [SerializeField]
@@ -129,10 +129,10 @@ public class SoundManager : Singleton<SoundManager>
     
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (effectMute || effectVolume == 0f) return;
-            effectSource.PlayOneShot(clickClip);
-        }
+        //if (Mouse.current..GetMouseButtonDown(0))
+        //{
+        //    if (effectMute || effectVolume == 0f) return;
+        //    effectSource.PlayOneShot(clickClip);
+        //}
     }
 }

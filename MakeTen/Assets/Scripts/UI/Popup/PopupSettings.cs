@@ -106,12 +106,12 @@ public class PopupSettings : Popup
     {
         base.Refresh();
         loginStatus.text = DataManager.Instance.userData.authType.ToString();
-        loginObjs.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
-        logoutObj.SetActive(DataManager.Instance.userData.authType != FirebaseManager.AuthenticatedType.None);
+        //loginObjs.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
+        //logoutObj.SetActive(DataManager.Instance.userData.authType != FirebaseManager.AuthenticatedType.None);
     }
 
     public void ClickGoogleLogin()
     {
-        FirebaseManager.Instance.StartGoogleLogin();
+        //FirebaseManager.Instance.StartGoogleLogin();
     }
 }
