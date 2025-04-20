@@ -81,7 +81,6 @@ public static class Util
     public static Vector2 GetMousePosition()
     {
         //#if UNITY_EDITOR || UNITY_STANDALONE
-        Debug.Log($"{Mouse.current} | {Touchscreen.current}");
         Vector2 inputPosition = Vector2.zero;
         if (Mouse.current != null)
         {

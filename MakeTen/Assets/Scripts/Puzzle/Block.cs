@@ -113,7 +113,8 @@ public class Block : MonoBehaviour
         numObj.SetActive(false);
         data.num = 0;
         ObjectPooler.Instance.GetObject<Effect>(effectTag, PuzzleManager.Instance.transform, scale : effectScale, position : transform.localPosition, autoReturnTime: effectDuration);
-        if(data.bonus > 0)
+        ObjectPooler.Instance.GetObject<Effect>("textPoint", PuzzleManager.Instance.transform, position : transform.localPosition, autoReturnTime : 1f).SetText($"+1");
+        if (data.bonus > 0)
         {
             PuzzleManager.Instance.AddSeconds(data.bonus);
             //ObjectPooler.Instance.GetObject<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);

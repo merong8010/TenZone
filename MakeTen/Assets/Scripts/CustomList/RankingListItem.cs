@@ -27,7 +27,6 @@ public class RankingListItem : ListItem<RankingList.Data>
         {
             RankingList.PointData pointData = (RankingList.PointData)data;
             pointText.text = pointData.point.ToString();
-            remainTimeText.text = pointData.remainMilliSeconds.MilliSecondsToTimeText();
         }
         else
         {

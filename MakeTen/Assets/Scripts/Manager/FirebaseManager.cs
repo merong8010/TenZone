@@ -10,7 +10,9 @@ using Firebase.Auth;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
-
+using GooglePlayGames;
+using GooglePlayGames.BasicApi;
+using UnityEngine.SocialPlatforms;
 
 public class FirebaseManager : Singleton<FirebaseManager>
 {
@@ -222,7 +224,29 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void StartGoogleLogin()
     {
-        TheBackend.ToolKit.GoogleLogin.Android.GoogleLogin(true, GoogleLoginCallback);
+        //PlayGamesClientConfiguration config = new PlayGamesClientConfiguration.Builder()
+        //    .RequestEmail()
+        //    .RequestServerAuthCode(false)
+        //    .RequestIdToken()
+        //    .Build();
+
+        //PlayGamesPlatform.InitializeInstance(config);
+        //PlayGamesPlatform.Activate();
+
+        //// 로그인 시도
+        //Social.localUser.Authenticate(success =>
+        //{
+        //    if (success)
+        //    {
+        //        Debug.Log("Google Play Games 로그인 성공!");
+        //        Debug.Log("유저 이름: " + Social.localUser.userName);
+        //    }
+        //    else
+        //    {
+        //        Debug.LogError("Google Play Games 로그인 실패");
+        //    }
+        //});
+        //TheBackend.ToolKit.GoogleLogin.Android.GoogleLogin(true, GoogleLoginCallback);
     }
 
     private void GoogleLoginCallback(bool isSuccess, string errorMessage, string token)
@@ -252,7 +276,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
                             {
                                 auth.SignOut();
                             }
-                            UIManager.Instance.Main.Refresh();
+                            UIManager.Instance.Get<PopupSettings>().Refresh();
+                            //UIManager.Instance.Main.Refresh();
                         });
                     }
                     else
@@ -261,7 +286,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
                         UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
                         DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
                         RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-                        UIManager.Instance.Main.Refresh();
+                        UIManager.Instance.Get<PopupSettings>().Refresh();
+                        //UIManager.Instance.Main.Refresh();
                     }
                 });
             }
@@ -270,31 +296,31 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void StartAppleLogin()
     {
-        TheBackend.ToolKit.AppleLogin.Android.AppleLogin("com.thebackend.testapp.applelogin", out var error, true, token => {
-            Debug.Log("토큰 : " + token);
-            Debug.Log("토큰 발급이 완료되었습니다. 로그인이 가능합니다.");
-            auth.SignInWithCredentialAsync(OAuthProvider.GetCredential("apple.com", token, null, null)).ContinueWith(authTask =>
-            {
-                if (authTask.IsCompleted && !authTask.IsFaulted)
-                {
-                    user = authTask.Result;
-                }
-            });
+        //TheBackend.ToolKit.AppleLogin.Android.AppleLogin("com.thebackend.testapp.applelogin", out var error, true, token => {
+        //    Debug.Log("토큰 : " + token);
+        //    Debug.Log("토큰 발급이 완료되었습니다. 로그인이 가능합니다.");
+        //    auth.SignInWithCredentialAsync(OAuthProvider.GetCredential("apple.com", token, null, null)).ContinueWith(authTask =>
+        //    {
+        //        if (authTask.IsCompleted && !authTask.IsFaulted)
+        //        {
+        //            user = authTask.Result;
+        //        }
+        //    });
 
 
-            // 경고! : 다음과 같이 동기 함수를 호출하지 마세요
-            // var bro = Backend.BMember.AuthorizeFederation(token, FederationType.Apple);
+        //    // 경고! : 다음과 같이 동기 함수를 호출하지 마세요
+        //    // var bro = Backend.BMember.AuthorizeFederation(token, FederationType.Apple);
 
-            // 아래와 같이 비동기 함수를 호출해주세요,
-            //Backend.BMember.AuthorizeFederation(token, FederationType.Apple, callback => {
-            //    Debug.Log("애플 로그인 결과 : " + callback);
-            //});
-        });
+        //    // 아래와 같이 비동기 함수를 호출해주세요,
+        //    //Backend.BMember.AuthorizeFederation(token, FederationType.Apple, callback => {
+        //    //    Debug.Log("애플 로그인 결과 : " + callback);
+        //    //});
+        //});
 
-        if (string.IsNullOrEmpty(error) == false)
-        {
-            Debug.Log("에러 : " + error);
-        }
+        //if (string.IsNullOrEmpty(error) == false)
+        //{
+        //    Debug.Log("에러 : " + error);
+        //}
     }
 
     public void LogOut()
@@ -519,9 +545,9 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     }
 
-    public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, int milliseconds, Action<int> callback = null)
+    public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, Action<int> callback = null)
     {
-        RankingList.PointData entry = new RankingList.PointData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, milliseconds, DataManager.Instance.userData.countryCode);
+        RankingList.PointData entry = new RankingList.PointData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, DataManager.Instance.userData.countryCode);
         db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
         callback?.Invoke(0);
 //#if UNITY_EDITOR
@@ -602,9 +628,9 @@ public class FirebaseManager : Singleton<FirebaseManager>
 //#endif
     }
 
-    public void TestSubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int score, int milliSeconds, string countryCode)
+    public void TestSubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int score, string countryCode)
     {
-        RankingList.PointData entry = new RankingList.PointData(userId, UnityEngine.Random.Range(10, 40), nickname, score, milliSeconds, countryCode);
+        RankingList.PointData entry = new RankingList.PointData(userId, UnityEngine.Random.Range(10, 40), nickname, score, countryCode);
         db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
     }
 
@@ -629,7 +655,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
                             json.ContainsKey("level") ? Convert.ToInt32(json["level"].ToString()) : 0,
                             json.ContainsKey("name") ? json["name"].ToString() : "Unknown",
                             json.ContainsKey("point") ? Convert.ToInt32(json["point"]) : 0,
-                            json.ContainsKey("remainMilliSeconds") ? Convert.ToInt32(json["remainMilliSeconds"].ToString()) : 0,
                             json.ContainsKey("countryCode") ? json["countryCode"].ToString() : "??",
                             json.ContainsKey("timeStamp") ? Convert.ToInt32(json["timeStamp"].ToString()) : 0);
 

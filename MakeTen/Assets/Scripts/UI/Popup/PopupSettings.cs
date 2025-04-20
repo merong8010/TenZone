@@ -112,6 +112,6 @@ public class PopupSettings : Popup
 
     public void ClickGoogleLogin()
     {
-        //FirebaseManager.Instance.StartGoogleLogin();
+        FirebaseManager.Instance.StartGoogleLogin();
     }
 }

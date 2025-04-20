@@ -29,29 +29,26 @@ public class UserData
     public class Record : IComparable<Record>
     {
         public int point;
-        public int remainMilliSeconds;
         public long timeStamp;
 
-        public Record(int point, int remain)
+        public Record(int point)
         {
             this.point = point;
-            this.remainMilliSeconds = remain;
             timeStamp = GameManager.Instance.dateTime.Value.Ticks;
         }
 
         public int CompareTo(Record other)
         {
             if (point != other.point) return point - other.point;
-            if (remainMilliSeconds != other.remainMilliSeconds) return other.remainMilliSeconds - remainMilliSeconds;
             return (int)(other.timeStamp - timeStamp);
         }
     }
     public Dictionary<PuzzleManager.Level, Record> recordAll = new Dictionary<PuzzleManager.Level, Record>();
     public Dictionary<PuzzleManager.Level, Record> recordToday = new Dictionary<PuzzleManager.Level, Record>();
 
-    public bool IsNewRecord(PuzzleManager.Level level, int point, int remain, bool today)
+    public bool IsNewRecord(PuzzleManager.Level level, int point, bool today)
     {
-        Record newRecord = new Record(point, remain);
+        Record newRecord = new Record(point);
         if (today)
         {
             if(lastPlayDate != GameManager.Instance.dateTime.Value.ToDateText())
@@ -138,9 +135,10 @@ public class UserData
     public UserData(string userId)
     {
         id = userId;
-
+        CultureInfo ci = CultureInfo.InstalledUICulture; // ¶Ç´Â new CultureInfo(Application.systemLanguage.ToString())
+        RegionInfo region = new RegionInfo(ci.Name);
         //string country = RegionInfo.CurrentRegion.EnglishName; // ???? ????
-        countryCode = RegionInfo.CurrentRegion.TwoLetterISORegionName;
+        countryCode = region.TwoLetterISORegionName;
         heart = DataManager.Instance.MaxHeart;
         lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
         goods.Add(GameData.GoodsType.Gold, DataManager.Instance.GetConfig("defaultGold"));

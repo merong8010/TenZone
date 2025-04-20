@@ -3,7 +3,7 @@
     "m_SelectedProcess": {
         "deviceId": "R5CT51F03LT",
         "name": "studio.jjm.maketen",
-        "processId": 25658,
+        "processId": 17521,
         "exited": false
     },
     "m_SelectedPriority": 0,
@@ -34,30 +34,6 @@
         },
         {
             "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 12456,
-            "exited": true
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 12776,
-            "exited": true
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 13876,
-            "exited": true
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 20689,
-            "exited": true
-        },
-        {
-            "deviceId": "R5CT51F03LT",
             "name": "com.sec.android.app.launcher",
             "processId": 2214,
             "exited": false
@@ -65,19 +41,37 @@
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 23730,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 24599,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
             "processId": 25658,
+            "exited": true
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 3550,
+            "exited": true
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 4293,
+            "exited": true
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 4756,
+            "exited": true
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 6196,
+            "exited": false
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 17521,
             "exited": false
         }
     ],

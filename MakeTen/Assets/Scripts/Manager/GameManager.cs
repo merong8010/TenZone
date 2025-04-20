@@ -24,11 +24,11 @@ public class GameManager : Singleton<GameManager>
     {
         if (focus)
         {
-            Pause();
+            Resume();
         }
         else
         {
-            Resume();
+            Pause();
         }
     }
 
@@ -155,6 +155,7 @@ public class GameManager : Singleton<GameManager>
                     break;
                 case Scene.Puzzle:
                     PuzzleManager.Instance.gameObject.SetActive(true);
+                    PuzzleManager.Instance.ClearBlocks();
                     UIManager.Instance.Main.gameObject.SetActive(false);
                     break;
             }

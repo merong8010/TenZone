@@ -84,18 +84,20 @@ public class PuzzleManager : Singleton<PuzzleManager>
         InitBlocks();
     }
 
-    public void InitBlocks()
+    public void ClearBlocks()
     {
-        if(blocks.Length > 0)
+        if (blocks.Length > 0)
         {
-            for(int i = 0; i < blocks.Length; i++)
+            for (int i = 0; i < blocks.Length; i++)
             {
                 ObjectPooler.Instance.ReturnObject("block", blocks[i].gameObject);
             }
         }
-
         blocks = new Block[] { };
+    }
 
+    public void InitBlocks()
+    {
         blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * currentLevel.column)) / currentLevel.column, (blocksRT.rect.height - (blockGap.y * currentLevel.row)) / currentLevel.row);
         blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
 
@@ -112,7 +114,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
 
         currentPoint.Value = 0;
-        remainMilliSeconds = 0;
+        lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
         
         int remain = blocks.Sum(x => x.num) % TargetSumNum;
         if (remain > 0)
@@ -140,29 +142,14 @@ public class PuzzleManager : Singleton<PuzzleManager>
         searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
         HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
         CheckHint();
+        IsPause = false;
     }
 
     public void RefreshPosition()
     {
-        if(currentLevel == null) return;
+        if (currentLevel == null) return;
+        if (!gameObject.activeInHierarchy) return;
         StartCoroutine(RefreshDelay(0f));
-        //StartCoroutine(RefreshDelay(0.5f));
-        //float width = blocksRT.rect.xMax - blocksRT.rect.xMin;
-        //float height = blocksRT.rect.yMax - blocksRT.rect.yMin;
-
-        //Debug.Log($"PuzzleManager.RefreshPosition {blocksRT.rect.width},{blocksRT.rect.height} | {width} , {height} | {((RectTransform)blocksRT.parent).rect.width},{((RectTransform)blocksRT.parent).rect.height}");
-        //blockSize = new Vector2((width - (blockGap.x * currentLevel.column)) / currentLevel.column, (height - (blockGap.y * currentLevel.row)) / currentLevel.row);
-        //blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
-
-        //for (int row = 0; row < currentLevel.row; row++)
-        //{
-        //    for (int column = 0; column < currentLevel.column; column++)
-        //    {
-        //        Block blockObj = blocks.SingleOrDefault(x => x.name == $"block_{column}_{row}");
-        //        blockObj.transform.localPosition = blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row);
-        //        blockObj.SetSize(blockSize);
-        //    }
-        //}
     }
 
     private IEnumerator RefreshDelay(float delay)
@@ -207,30 +194,37 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
     }
 
+    public bool IsPause;
+
     private IEnumerator CheckFinish()
     {
-        while (blocks.ToList().Exists(x => x.num > 0) && GameManager.Instance.dateTime.Value.Ticks <= finishTime.Ticks)
+        while (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0) && GameManager.Instance.dateTime.Value.Ticks <= finishTime.Ticks)
         {
-            yield return new WaitForEndOfFrame();
+            yield return Yielders.EndOfFrame;
         }
-
+        if(blocks != null && !blocks.ToList().Exists(x => x != null && x.num > 0))
+        {
+            IsPause = true;
+        }
         GameResult();
 
         finishCoroutine = null;
     }
 
+    //private bool isFinish
+
     private void GameResult()
     {
-        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, true))
+        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, true))
         {
-            FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value, remainMilliSeconds);
+            FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value);
         }
-        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, remainMilliSeconds, false))
+        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, false))
         {
-            FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value, remainMilliSeconds);
+            FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value);
         }
         int exp = Mathf.FloorToInt(currentLevel.exp * ((float)currentPoint.Value / (currentLevel.row * currentLevel.column)));
-        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, remainMilliSeconds, exp);
+        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, exp);
 
         DataManager.Instance.userData.ChargeExp(exp);
     }
@@ -259,7 +253,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         dragTransform.rectTransform.sizeDelta = Vector2.zero;
     }
 
-    private int remainMilliSeconds;
+    private long lastPointTicks;
 
     public void OnRelease()
     {
@@ -271,10 +265,22 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 {
                     focus[i].Break();
                 }
-                currentPoint.Value += focus.Length;
-                remainMilliSeconds = (int)(finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
+                
+                //lastPointTicks = (int)(finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
 
-                if(blocks.ToList().Exists(x => x.num > 0))
+                int bonus = 10 - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks)/10000000f);
+                if(bonus > 0)
+                {
+                    //ObjectPooler.Instance.GetObject<Effect>("textPointBonus").SetText($"+{bonus}");
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
+                    ObjectPooler.Instance.GetObject<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
+                }
+
+                currentPoint.Value += focus.Length+bonus;
+
+                lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
+
+                if (blocks.ToList().Exists(x => x.num > 0))
                 {
                     CheckHint();
                     CheckGameState();
@@ -316,6 +322,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
             }
         }
 
+        if(IsPause)
+        {
+            finishTime = finishTime.AddSeconds(Time.deltaTime);
+        }
         //if (lastOrientation != Util.GetDeviceOrientation())
         //{
         //    RefreshPosition();
@@ -325,6 +335,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     private void CheckHint()
     {
+        if (blocks != null && !blocks.ToList().Exists(x => x != null && x.num > 0))
+        {
+            return;
+        }
         hint.Clear();
         for(int i = 0; i < blocks.Length-1; i++)
         {
@@ -415,13 +429,25 @@ public class PuzzleManager : Singleton<PuzzleManager>
     {
         var list = hint.ToList();
         var show = list[UnityEngine.Random.Range(0, list.Count)];
-        Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
+        Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y && x.num > 0).ToArray();
+        int bonus = 10 - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks) / 10000000f);
+        if (bonus > 0)
+        {
+            //ObjectPooler.Instance.GetObject<Effect>("textPointBonus").SetText($"+{bonus}");
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
+            ObjectPooler.Instance.GetObject<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
+        }
+        currentPoint.Value += focusBlocks.Length+bonus;
+        lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
         for (int i = 0; i < focusBlocks.Length; i++)
         {
             focusBlocks[i].Break();
         }
-        CheckHint();
-        CheckGameState();
+        if (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0))
+        {
+            CheckHint();
+            CheckGameState();
+        }
     }
 
     public void Search()

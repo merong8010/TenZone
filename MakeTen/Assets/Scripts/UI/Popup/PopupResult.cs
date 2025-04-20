@@ -5,16 +5,13 @@ public class PopupResult : Popup
 {
     [SerializeField]
     private TMPro.TextMeshProUGUI scoreText;
-    [SerializeField]
-    private TMPro.TextMeshProUGUI timeText;
-
+    
     [SerializeField]
     private TMPro.TextMeshProUGUI expText;
 
-    public void SetData(int point, int time, int exp)
+    public void SetData(int point, int exp)
     {
         scoreText.text = point.ToString();
-        timeText.text = time.MilliSecondsToTimeText();
         expText.text = exp.ToString();
     }
 

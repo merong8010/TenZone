@@ -39,7 +39,11 @@ public class GoodsDisplay : MonoBehaviour
 
     private void OnEnable()
     {
-        Subscribe();
+        if(isSubscribe)
+        {
+            icon.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(type.ToString());
+            Subscribe();
+        }
     }
 
     private void OnDisable()

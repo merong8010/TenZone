@@ -21,6 +21,9 @@ public static class TextManager
             case "TW":
                 vals = data.Select(x => x.TW).ToArray();
                 break;
+            default:
+                vals = data.Select(x => x.US).ToArray();
+                break;
         }
 
         dic.Clear();
@@ -32,7 +35,8 @@ public static class TextManager
 
     public static string Get(string key)
     {
-        if (!dic.ContainsKey(key)) return key;
+        //Debug.Log(dic.ContainsKey(key))
+        if (!dic.ContainsKey(key) || string.IsNullOrEmpty(dic[key])) return key;
         return dic[key];
     }
 }

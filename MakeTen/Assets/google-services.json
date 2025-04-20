@@ -13,7 +13,20 @@
           "package_name": "studio.jjm.maketen"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "8377165168-kun81bhl2p8o6l8nbn1eo75vfgq478gh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "studio.jjm.maketen",
+            "certificate_hash": "cb636ed8c02c1166b81cbfcf81c85dd647b0991b"
+          }
+        },
+        {
+          "client_id": "8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAVW9I6MNhBDAW72DY5QGewnRHPMhCNHh0"
@@ -21,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
