@@ -33,7 +33,6 @@ public class SafeArea : MonoBehaviour
 
     public void Refresh()
     {
-        Debug.Log($"SafeArea.Refresh {UnityEngine.Device.SystemInfo.deviceType} | {Screen.safeArea} | {Screen.width},{Screen.height} | {Util.GetScreenSize()}");
         if(UnityEngine.Device.SystemInfo.deviceType == DeviceType.Handheld)
         {
             ApplySafeArea(Screen.safeArea, Util.GetScreenSize());
@@ -48,7 +47,6 @@ public class SafeArea : MonoBehaviour
 
     void ApplySafeArea(Rect r, Vector2Int size)
     {
-        Debug.Log($"ApplySafeArea : {r} | {size}");
         Vector2 anchorMin = r.position;
         Vector2 anchorMax = r.position + r.size;
 

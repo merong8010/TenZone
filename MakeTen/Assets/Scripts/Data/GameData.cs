@@ -6,7 +6,6 @@ namespace GameData
     {
         None,
         Gold,
-        Gem,
         Shuffle,
         Search,
         Time_10s,
@@ -135,5 +134,6 @@ namespace GameData
         public int buyMaxCount;
         public int unlockLevel;
         public int unlockShopId;
+        public bool isRewardMail;
     }
 }

@@ -128,8 +128,10 @@ public class GameManager : Singleton<GameManager>
         yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
         PuzzleManager.Instance.Initialize();
         UIManager.Instance.Title.SetStatus("", showTap: true);
-        //UIManager.Instance.Main.Refresh();
+
+        ADManager.Instance.Initialize();
     }
+
     public enum Scene
     {
         Title,

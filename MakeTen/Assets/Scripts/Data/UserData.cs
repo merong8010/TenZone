@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 
 public class UserData
 {
+    public bool isVIP = false;
     public FirebaseManager.AuthenticatedType authType;
     public string id;
     public string nickname;
@@ -135,7 +136,7 @@ public class UserData
     public UserData(string userId)
     {
         id = userId;
-        CultureInfo ci = CultureInfo.InstalledUICulture; // ¶Ç´Â new CultureInfo(Application.systemLanguage.ToString())
+        CultureInfo ci = CultureInfo.InstalledUICulture; // ???? new CultureInfo(Application.systemLanguage.ToString())
         RegionInfo region = new RegionInfo(ci.Name);
         //string country = RegionInfo.CurrentRegion.EnglishName; // ???? ????
         countryCode = region.TwoLetterISORegionName;

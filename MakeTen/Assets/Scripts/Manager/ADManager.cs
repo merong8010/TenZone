@@ -1,22 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System;
 using Newtonsoft.Json;
+using UnityEngine;
+using UnityEngine.Advertisements;
+//using Advertise
 /// <summary>
 /// Advertise Manager
 /// </summary>
-public class ADManager : Singleton<ADManager>
+public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
 {
-    //private const string maxSdkKey = "1f7NNgB9E4w-7idGBBcbq3wvbmFFonHpQPBp4NzJRuITbwqn6QMwUHq423KqqbdF_q24B0OdugBTb0EhQbcwuQ";
-    //private const string adUnitId = "";
-    private const string bannerId = "88aec1eaee4f191d";
-    private const string interId = "b3c26fbbfa31f8ea";
-#if UNITY_ANDROID 
-    private const string rewardId = "67ba5712196753af";
+#if UNITY_ANDROID
+    private string gameId = "5838019";
+    private string bannerId = "Banner_Android";
+    private string rewardedId = "Rewarded_Android";
 #elif UNITY_IOS
-    private const string rewardId = "e2c6a320f0083a99";
+    private string gameId = "5838018";
+    private string bannerId = "Banner_iOS";
+    private string rewardedId = "Rewarded_iOS";
 #endif
+    //Organization Core ID
+    //14569505087296
+
+    //Game ID
+    //iOS 5838018
+
+    //Android 5838019
+
+    //Monetization Stats API Key
+    //92d5c848e7f474cb5d7dee72b51d8b4018ca74a6d0aff2428280e01cd8cef5ea
 
     public enum Result
     {
@@ -45,294 +57,164 @@ public class ADManager : Singleton<ADManager>
         }
     }
 
-    public bool IsFree;
-
     protected override void Awake()
     {
         base.Awake();
+
+        //Initialize();
     }
 
-    //    private bool isInitialize = false;
+    private bool isInit = false;
+    private bool isWaitShowReward = false;
+    private bool isWaitShowBanner = false;
 
-    //    public void Initialize()
-    //    {
-    //        if (isInitialize) return;
-    //        isInitialize = true;
+    private bool isLoadedReward = false;
+    private bool isLoadedBanner = false;
+    private Action rewardCallback;
 
-    //        Debug.Log("ADManager.Initialize");
-    //        MaxSdkCallbacks.OnSdkInitializedEvent += (MaxSdkBase.SdkConfiguration sdkConfiguration) =>
-    //        {
-    //            InitializeRewardedAds();
-    //        };
+    public void Initialize()
+    {
+        Debug.Log($"ADManager.Initialize isVIP : {DataManager.Instance.userData.isVIP} | Advertisement.isInitialized : {Advertisement.isInitialized} | Advertisement.isSupported: {Advertisement.isSupported}");
+        if (DataManager.Instance.userData.isVIP) return;
+        if (isInit) return;
+        if (!Advertisement.isInitialized && Advertisement.isSupported)
+        //if (!Advertisement.isInitialized)
+        {
+#if RELEASE
+            Advertisement.Initialize(gameId, false, this);
+#else
+            Advertisement.Initialize(gameId, true, this);
+#endif
+            isWaitShowBanner = true;
+        }
+    }
 
-    //        MaxSdk.InitializeSdk();
-    //    }
+    public void ShowReward(Action callback)
+    {
+        if(DataManager.Instance.userData.isVIP)
+        {
+            callback?.Invoke();
+            return;
+        }
 
-    //    //private AdvertiseCallback currentRewardCallback;
-    //    public void ShowRewardVideo(int id, AdvertiseCallback callback)
-    //    {
-    //        this.callback = callback;
-    //        currentRewardId = id;
+        rewardCallback = callback;
+        isWaitShowReward = true;
+        if(!isLoadedReward)
+        {
+            Advertisement.Load(rewardedId, this);
+            return;
+        }
 
-    //        if (DataManager.IsAdsRemoved())
-    //        {
-    //            CompleteVideo();
-    //            return;
-    //        }
-    //#if UNITY_EDITOR
-    //        UISystem.Instance.Open<PopupDialogBox>().Init("Advertise TEST", "this is Advertise TEST!\nDo you want reward?", TextManager.Get("yes"), TextManager.Get("no"),
-    //            delegate (bool yes)
-    //            {
-    //                if (yes) CompleteVideo();
-    //                else CancelVideo();
-    //            });
-    //#else
-    //         if (!GameManager.Instance.CurrentServer.isAdvertiseTest)
-    //         {
-    //            if (MaxSdk.IsRewardedAdReady(rewardId))
-    //            {
-    //                BackendChatManagerV2.Instance.Dispose();
-    //                MaxSdk.ShowRewardedAd(rewardId);
-    //            }
-    //            else
-    //            {
-    //                UISystem.Instance.Open<PopupDialogBox>().Init(TextManager.Get("notice"), TextManager.Get("no_ads_retry"), TextManager.Get("yes"));
-    //                LoadRewardedAd();
-    //            }
-    //         }
-    //         else
-    //         {
-    //            UISystem.Instance.Open<PopupDialogBox>().Init("Advertise TEST", "this is Advertise TEST!\nDo you want reward?", TextManager.Get("yes"), TextManager.Get("no"),
-    //            delegate (bool yes)
-    //            {
-    //                if (yes) CompleteVideo();
-    //                else CancelVideo();
-    //            });
-    //         }
-    //#endif
+        Advertisement.Show(rewardedId, this);
+    }
 
-    //        //#endif
-    //    }
+    public void ShowBanner()
+    {
+        if (DataManager.Instance.userData.isVIP)
+        {
+            return;
+        }
 
-    //    private int currentRewardId;
+        isWaitShowBanner = true;
+        if (!isLoadedBanner)
+        {
+            Advertisement.Load(bannerId, this);
+            return;
+        }
 
-    //    public void CompleteVideo()
-    //    {
-    //        if (callback != null)
-    //        {
-    //            callback.Invoke(Result.SUCCESS);
-    //            callback = null;
+        Advertisement.Show(bannerId, this);
+    }
 
-    //            StartCoroutine(BackendChatManagerV2.Instance.Init());
-    //            DataManager.Instance.QuestAction(Chart.QuestType.WATCH_AD, 1);
-    //        }
-    //    }
+    public void OnInitializationComplete()
+    {
+        Debug.Log("OnInitializationComplete");
+        isInit = true;
+        Advertisement.Load(bannerId, this);
+        Advertisement.Load(rewardedId, this);
+    }
 
-    //    public void CancelVideo()
-    //    {
-    //        if (callback != null)
-    //        {
-    //            callback.Invoke(Result.FAIL);
-    //            callback = null;
-    //        }
-    //    }
+    public void OnInitializationFailed(UnityAdsInitializationError error, string message)
+    {
+        Debug.Log("OnInitializationFailed "+error+" | "+message);
+        UIManager.Instance.Message.Show(Message.Type.Confirm, error.ToString(), callback: confirm =>
+        {
+            Initialize();
+        });
+    }
 
+    public void OnUnityAdsAdLoaded(string placementId)
+    {
+        if(placementId == bannerId)
+        {
+            isLoadedReward = true;
+            if (isWaitShowBanner)
+            {
+                Advertisement.Show(bannerId, this);
+            }
+        }
+        else
+        {
+            isLoadedReward = true;
+            if(isWaitShowReward)
+            {
+                Advertisement.Show(rewardedId, this);
+            }
+        }
+    }
 
-    //    int retryAttempt;
+    public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message)
+    {
+        Advertisement.Load(placementId, this);
+        if(isWaitShowReward && placementId == rewardedId)
+        {
+            UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format("RetryLoadAds", error.ToString(), message), callback: confirm =>
+            {
+                if (confirm)
+                    Advertisement.Load(rewardedId, this);
+            });
+        }
+    }
 
-    //    public void InitializeRewardedAds()
-    //    {
-    //        Debug.Log("InitializeRewardedAds");
-    //        // Attach callback
-    //        MaxSdkCallbacks.Rewarded.OnAdLoadedEvent += OnRewardedAdLoadedEvent;
-    //        MaxSdkCallbacks.Rewarded.OnAdLoadFailedEvent += OnRewardedAdLoadFailedEvent;
-    //        MaxSdkCallbacks.Rewarded.OnAdDisplayedEvent += OnRewardedAdDisplayedEvent;
-    //        MaxSdkCallbacks.Rewarded.OnAdClickedEvent += OnRewardedAdClickedEvent;
-    //        MaxSdkCallbacks.Rewarded.OnAdRevenuePaidEvent += OnRewardedAdRevenuePaidEvent;
-    //        MaxSdkCallbacks.Rewarded.OnAdHiddenEvent += OnRewardedAdHiddenEvent;
-    //        MaxSdkCallbacks.Rewarded.OnAdDisplayFailedEvent += OnRewardedAdFailedToDisplayEvent;
-    //        MaxSdkCallbacks.Rewarded.OnAdReceivedRewardEvent += OnRewardedAdReceivedRewardEvent;
+    public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
+    {
+        if (isWaitShowReward && placementId == rewardedId)
+        {
+            UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format("RetryLoadAds", error.ToString(), message), callback: confirm =>
+            {
+                if (confirm)
+                    Advertisement.Show(rewardedId, this);
+            });
+        }
+    }
 
-    //        LoadRewardedAd();
-    //    }
+    public void OnUnityAdsShowStart(string placementId)
+    {
+        if (placementId == rewardedId) isWaitShowReward = false;
+        else isWaitShowBanner = false;
+    }
 
-    //    private void LoadRewardedAd()
-    //    {
-    //        MaxSdk.LoadRewardedAd(rewardId);
-    //    }
+    public void OnUnityAdsShowClick(string placementId)
+    {
+        throw new NotImplementedException();
+    }
 
-    //    private void OnRewardedAdLoadedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
-    //    {
-
-    //        Debug.Log("OnRewardedAdLoadedEvent   adUnitId : " + adUnitId);
-    //        // Rewarded ad is ready for you to show. MaxSdk.IsRewardedAdReady(adUnitId) now returns 'true'.
-
-    //        // Reset retry attempt
-    //        retryAttempt = 0;
-    //    }
-
-    //    private void OnRewardedAdLoadFailedEvent(string adUnitId, MaxSdkBase.ErrorInfo errorInfo)
-    //    {
-    //        Debug.Log("OnRewardedAdLoadFailedEvent adUnitId : " + adUnitId + " | errorInfo.Message : " + errorInfo.Message);
-    //        // Rewarded ad failed to load 
-    //        // AppLovin recommends that you retry with exponentially higher delays, up to a maximum delay (in this case 64 seconds).
-
-    //        retryAttempt++;
-    //        double retryDelay = Math.Pow(2, Math.Min(6, retryAttempt));
-
-    //        Invoke("LoadRewardedAd", (float)retryDelay);
-    //    }
-
-    //    private void OnRewardedAdDisplayedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
-    //    {
-    //        Debug.Log("OnRewardedAdFailedToDisplayEvent  adUnitId : " + adUnitId + " | errorInfo : " + adInfo.NetworkName);
-    //        // Rewarded ad failed to display. AppLovin recommends that you load the next ad.
-    //        //LoadRewardedAd();
-
-    //        //CompleteVideo();
-    //    }
-
-    //    private void OnRewardedAdFailedToDisplayEvent(string adUnitId, MaxSdkBase.ErrorInfo errorInfo, MaxSdkBase.AdInfo adInfo)
-    //    {
-    //        Debug.Log("OnRewardedAdFailedToDisplayEvent  adUnitId : " + adUnitId + " | errorInfo : " + errorInfo.Message);
-    //        // Rewarded ad failed to display. AppLovin recommends that you load the next ad.
-    //        LoadRewardedAd();
-    //        CancelVideo();
-    //    }
-
-    //    private void OnRewardedAdClickedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo) { }
-
-    //    private void OnRewardedAdHiddenEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
-    //    {
-    //        // Rewarded ad is hidden. Pre-load the next ad
-    //        LoadRewardedAd();
-    //    }
-
-    //    private void OnRewardedAdReceivedRewardEvent(string adUnitId, MaxSdk.Reward reward, MaxSdkBase.AdInfo adInfo)
-    //    {
-    //        Debug.Log("OnRewardedAdReceiveRewardEvent   " + adUnitId + " || reward : " + reward + "  || " + reward.Amount + " || " + adInfo.NetworkName);
-    //        CompleteVideo();
-    //        // The rewarded ad displayed and the user should receive the reward.
-    //    }
-
-    //    private void OnRewardedAdRevenuePaidEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
-    //    {
-    //        Debug.Log("OnRewardedAdRevenuePaidEvent   " + adUnitId + "  || " + adInfo);
-    //        //OnRewardedAdRevenuePaidEvent
-    //        // Ad revenue paid. Use this callback to track user revenue.
-    //    }
+    public void OnUnityAdsShowComplete(string placementId, UnityAdsShowCompletionState showCompletionState)
+    {
+        if(placementId == rewardedId)
+        {
+            if (rewardCallback != null) rewardCallback.Invoke();
+            rewardCallback = null;
+            Advertisement.Load(rewardedId, this);
+        }
+        else if(placementId == bannerId)
+        {
+            Advertisement.Load(bannerId, this);
+        }
+        //throw new NotImplementedException();
+    }
 }
 
 
 
 
-//using UnityEngine;
-//using UnityEngine.Advertisements;
 
-//public class AdManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowListener
-//{
-//    public static AdManager Instance;
-
-//    [Header("Ad Unit IDs")]
-//    [SerializeField] private string androidGameId = "YOUR_ANDROID_GAME_ID";
-//    [SerializeField] private string iosGameId = "YOUR_IOS_GAME_ID";
-
-//    [SerializeField] private string interstitialAdUnitId = "Interstitial_Android";
-//    [SerializeField] private string rewardedAdUnitId = "Rewarded_Android";
-
-//    private string gameId;
-//    private bool testMode = true;
-
-//    void Awake()
-//    {
-//        if (Instance == null)
-//        {
-//            Instance = this;
-//            DontDestroyOnLoad(gameObject);
-//            InitializeAds();
-//        }
-//        else
-//        {
-//            Destroy(gameObject);
-//        }
-//    }
-
-//    void InitializeAds()
-//    {
-//#if UNITY_ANDROID
-//        gameId = androidGameId;
-//#elif UNITY_IOS
-//        gameId = iosGameId;
-//#endif
-//        Advertisement.Initialize(gameId, testMode);
-//    }
-
-//    #region 전면 광고
-//    public void ShowInterstitialAd()
-//    {
-//        if (Advertisement.IsReady(interstitialAdUnitId))
-//        {
-//            Advertisement.Show(interstitialAdUnitId, this);
-//        }
-//        else
-//        {
-//            Debug.Log("전면 광고 준비 안됨");
-//            Advertisement.Load(interstitialAdUnitId, this);
-//        }
-//    }
-//    #endregion
-
-//    #region 보상형 광고
-//    public void ShowRewardedAd(System.Action onSuccess)
-//    {
-//        if (Advertisement.IsReady(rewardedAdUnitId))
-//        {
-//            Advertisement.Show(rewardedAdUnitId, new ShowOptions
-//            {
-//                resultCallback = result =>
-//                {
-//                    if (result == ShowResult.Finished)
-//                    {
-//                        Debug.Log("보상형 광고 성공!");
-//                        onSuccess?.Invoke();
-//                    }
-//                    else
-//                    {
-//                        Debug.LogWarning("광고 중단 또는 실패");
-//                    }
-//                }
-//            });
-//        }
-//        else
-//        {
-//            Debug.Log("보상형 광고 준비 안됨");
-//            Advertisement.Load(rewardedAdUnitId, this);
-//        }
-//    }
-//    #endregion
-
-//    #region 광고 콜백 (선택)
-//    public void OnUnityAdsAdLoaded(string adUnitId)
-//    {
-//        Debug.Log($"{adUnitId} 광고 로드 완료");
-//    }
-
-//    public void OnUnityAdsFailedToLoad(string adUnitId, UnityAdsLoadError error, string message)
-//    {
-//        Debug.LogError($"광고 로드 실패: {adUnitId} - {error.ToString()} - {message}");
-//    }
-
-//    public void OnUnityAdsShowComplete(string adUnitId, UnityAdsShowCompletionState showCompletionState)
-//    {
-//        Debug.Log($"{adUnitId} 광고 종료 상태: {showCompletionState}");
-//    }
-
-//    public void OnUnityAdsShowFailure(string adUnitId, UnityAdsShowError error, string message)
-//    {
-//        Debug.LogError($"광고 표시 실패: {adUnitId} - {message}");
-//    }
-
-//    public void OnUnityAdsShowStart(string adUnitId) { }
-//    public void OnUnityAdsShowClick(string adUnitId) { }
-//    #endregion
-//}

@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
 using GooglePlayGames;
+using Google;
 using GooglePlayGames.BasicApi;
 using UnityEngine.SocialPlatforms;
 
@@ -49,6 +50,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 auth = FirebaseAuth.DefaultInstance;
                 functions = FirebaseFunctions.GetInstance("asia-southeast1");
                 user = auth.CurrentUser;
+
+#if UNITY_ANDROID
+                InitializePlayGamesLogin();
+#endif
             }
             else
             {
@@ -222,41 +227,56 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    public void StartGoogleLogin()
+    void InitializePlayGamesLogin()
     {
-        //PlayGamesClientConfiguration config = new PlayGamesClientConfiguration.Builder()
-        //    .RequestEmail()
-        //    .RequestServerAuthCode(false)
-        //    .RequestIdToken()
-        //    .Build();
+        var config = new PlayGamesClientConfiguration.Builder()
+        .RequestIdToken()
+        .Build();
 
-        //PlayGamesPlatform.InitializeInstance(config);
-        //PlayGamesPlatform.Activate();
-
-        //// 로그인 시도
-        //Social.localUser.Authenticate(success =>
-        //{
-        //    if (success)
-        //    {
-        //        Debug.Log("Google Play Games 로그인 성공!");
-        //        Debug.Log("유저 이름: " + Social.localUser.userName);
-        //    }
-        //    else
-        //    {
-        //        Debug.LogError("Google Play Games 로그인 실패");
-        //    }
-        //});
-        //TheBackend.ToolKit.GoogleLogin.Android.GoogleLogin(true, GoogleLoginCallback);
+        PlayGamesPlatform.InitializeInstance(config);
+        PlayGamesPlatform.DebugLogEnabled = true;
+        PlayGamesPlatform.Activate();
     }
 
-    private void GoogleLoginCallback(bool isSuccess, string errorMessage, string token)
+    //void LoginGoogle()
+    //{
+    //    Social.localUser.Authenticate(OnGoogleLogin);
+    //}
+
+    //void OnGoogleLogin(bool success)
+    //{
+    //    if (success)
+    //    {
+    //        // Call Unity Authentication SDK to sign in or link with Google.
+    //        Debug.Log("Login with Google done. IdToken: " + ((PlayGamesLocalUser)Social.localUser).GetIdToken());
+    //    }
+    //    else
+    //    {
+    //        Debug.Log("Unsuccessful login");
+    //    }
+    //}
+
+    public void StartGoogleLogin()
     {
-        if (isSuccess == false)
+        PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptOnce, (result) =>
         {
-            Debug.LogError(errorMessage);
-            return;
-        }
-        
+            if (result == SignInStatus.Success)
+            {
+                Debug.Log("GPGS 로그인 성공!");
+                string idToken = PlayGamesPlatform.Instance.GetIdToken();
+                Debug.Log("ID Token: " + idToken);
+                GoogleLoginCallback(idToken);
+                // 이 토큰을 Unity Authentication에 전달할 수 있음
+            }
+            else
+            {
+                Debug.LogError("GPGS 로그인 실패: " + result);
+            }
+        });
+    }
+
+    private void GoogleLoginCallback(string token)
+    {
         auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(token, null)).ContinueWith(authTask =>
         {
             if (authTask.IsCompleted)
