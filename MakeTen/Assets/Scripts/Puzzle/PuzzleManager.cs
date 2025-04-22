@@ -70,7 +70,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
         
         HUD.Instance.Initialize(currentPoint);
         blockSafeArea.refreshAction = RefreshPosition;
+        //bonusMaxPoint = DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "bonusMaxPoint").val
+        bonusMaxPoint = DataManager.Instance.GetConfig("bonusMaxPoint");
     }
+
+    private int bonusMaxPoint;
 
     //[SerializeField]
     //private ObjectPooler pooler;
@@ -105,7 +109,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             for (int column = 0; column < currentLevel.column; column++)
             {
-                Block blockObj = ObjectPooler.Instance.GetObject<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
+                Block blockObj = ObjectPooler.Instance.Get<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
                 blockObj.name = $"block_{column}_{row}";
                 blockObj.SetSize(blockSize);
                 blockObj.SetData(new Block.Data(column, row, currentLevel));
@@ -140,7 +144,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
         finishCoroutine = StartCoroutine(CheckFinish());
 
         searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
+        explodeTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
         HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
+        HUD.Instance.StartExplodeCool(searchTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
         CheckHint();
         IsPause = false;
     }
@@ -268,12 +274,12 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 
                 //lastPointTicks = (int)(finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
 
-                int bonus = 10 - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks)/10000000f);
+                int bonus = bonusMaxPoint - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks)/10000000f);
                 if(bonus > 0)
                 {
                     //ObjectPooler.Instance.GetObject<Effect>("textPointBonus").SetText($"+{bonus}");
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
-                    ObjectPooler.Instance.GetObject<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
+                    ObjectPooler.Instance.Get<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
                 }
 
                 currentPoint.Value += focus.Length+bonus;
@@ -303,7 +309,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
     }
 
     private Block[] focus = new Block[] { };
-    void LateUpdate()
+    void Update()
     {
         if (isDrag)
         {
@@ -424,29 +430,43 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private Coroutine hintCoroutine;
 
     private DateTime searchTime;
+    private DateTime explodeTime;
 
-    private void Explode()
+    public void Explode()
     {
-        var list = hint.ToList();
-        var show = list[UnityEngine.Random.Range(0, list.Count)];
-        Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y && x.num > 0).ToArray();
-        int bonus = 10 - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks) / 10000000f);
-        if (bonus > 0)
+        Debug.Log($"Explode  {hint.Count()} | {GameManager.Instance.dateTime.Value.Ticks} | {explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm).Ticks}  | {GameManager.Instance.dateTime.Value.Ticks < explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm).Ticks}");
+        if (hint.Count() == 0) return;
+        if (GameManager.Instance.dateTime.Value.Ticks < explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm).Ticks) return;
+        if (DataManager.Instance.userData.Use(GameData.GoodsType.Explode, 1))
         {
-            //ObjectPooler.Instance.GetObject<Effect>("textPointBonus").SetText($"+{bonus}");
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
-            ObjectPooler.Instance.GetObject<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
-        }
-        currentPoint.Value += focusBlocks.Length+bonus;
-        lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
-        for (int i = 0; i < focusBlocks.Length; i++)
-        {
-            focusBlocks[i].Break();
-        }
-        if (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0))
-        {
-            CheckHint();
-            CheckGameState();
+            var list = hint.ToList();
+            var show = list[UnityEngine.Random.Range(0, list.Count)];
+            Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
+            for (int i = 0; i < focusBlocks.Length; i++)
+            {
+                focusBlocks[i].Focus(true);
+            }
+
+            int bonus = bonusMaxPoint - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks) / 10000000f);
+            if (bonus > 0)
+            {
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
+                ObjectPooler.Instance.Get<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
+            }
+            currentPoint.Value += focusBlocks.Length + bonus;
+            lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
+            for (int i = 0; i < focusBlocks.Length; i++)
+            {
+                focusBlocks[i].Break();
+            }
+            if (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0))
+            {
+                CheckHint();
+                CheckGameState();
+            }
+
+            explodeTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
+            HUD.Instance.StartExplodeCool(explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
         }
     }
 
@@ -457,13 +477,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
         if (GameManager.Instance.dateTime.Value.Ticks < searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks) return;
         if (DataManager.Instance.userData.Use(GameData.GoodsType.Search, 1))
         {
-#if UNITY_EDITOR
-            Explode();
-#else
             var list = hint.ToList();
             var show = list[UnityEngine.Random.Range(0, list.Count)];
             Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
-            Debug.Log($"Search! {focusBlocks.Length}");
             for (int i = 0; i < focusBlocks.Length; i++)
             {
                 focusBlocks[i].Focus(true);
@@ -471,7 +487,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
             searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
             HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
-#endif
         }
     }
 

@@ -10,4 +10,9 @@ public class PopupReward : Popup
     {
         rewardList.UpdateList(datas);
     }
+
+    public void SetData(GoodsList.Data[] datas)
+    {
+        rewardList.UpdateList(datas);
+    }
 }

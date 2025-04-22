@@ -8,9 +8,18 @@ namespace GameData
         Gold,
         Shuffle,
         Search,
+        Explode,
         Time_10s,
         Heart,
         EXP,
+    }
+
+    public enum ShopCategory
+    {
+        Cash,
+        Goods,
+        Daily,
+        Weekly,
     }
 
     public enum ShopCostType
@@ -127,13 +136,24 @@ namespace GameData
     public class ShopData : RewardData
     {
         public string id;
+        public ShopCategory category;
         public ShopCostType costType;
         public GoodsType goodsType;
         public int costAmount;
         public TimePeriod buyPeriod;
         public int buyMaxCount;
         public int unlockLevel;
-        public int unlockShopId;
+        public string unlockShopId;
         public bool isRewardMail;
+        public string name;
+        public string desc;
+        public string resource;
+    }
+
+    public class AttendanceData : RewardData
+    {
+        public int id;
+        public int date;
     }
 }
+ 

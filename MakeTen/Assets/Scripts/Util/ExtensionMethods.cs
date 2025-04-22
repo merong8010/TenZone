@@ -93,6 +93,36 @@ public static class ExtensionMethods
         return new StringBuilder().AppendFormat("Lv.{0}", level).ToString();
     }
 
+    public static bool IsSameDate(this DateTime date, DateTime other)
+    {
+        return date.Year == other.Year && date.Month == other.Month && date.Date == other.Date;
+    }
+
+    public static bool IsSameWeek(this DateTime date, DateTime other)
+    {
+        return date.AddDays(-(int)date.DayOfWeek).IsSameDate(other.AddDays(-(int)other.DayOfWeek));
+    }
+
+    public static bool IsSameMonth(this DateTime date, DateTime other)
+    {
+        return date.Year == other.Year && date.Month == other.Month;
+    }
+
+    public static int RemainTimeNextDay(this DateTime date)
+    {
+        return (int)(new DateTime(date.Year, date.Month, date.Day, 0, 0, 0).AddDays(1) - date).TotalSeconds;
+    }
+
+    public static int RemainTimeNextWeek(this DateTime date)
+    {
+        return (int)(new DateTime(date.Year, date.Month, date.Day, 0, 0, 0).AddDays(7-(int)date.DayOfWeek) - date).TotalSeconds;
+    }
+
+    public static int RemainTimeNextMonth(this DateTime date)
+    {
+        return (int)(new DateTime(date.Year, date.Month, 0, 0, 0, 0).AddMonths(1) - date).TotalSeconds;
+    }
+
     const int rateRange = 1000000;
     /// <summary>
     /// 

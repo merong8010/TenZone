@@ -39,7 +39,7 @@ public class UIManager : Singleton<UIManager>
         {
             for (int y = 0; y < blockCounts.y; y++)
             {
-                Block blockObj = ObjectPooler.Instance.GetObject<Block>("block_title", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * x, (blockSize.y + blockGap.y) * y), Vector3.one);
+                Block blockObj = ObjectPooler.Instance.Get<Block>("block_title", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * x, (blockSize.y + blockGap.y) * y), Vector3.one);
                 blockObj.SetSize(blockSize);
                 blockObj.InitRandom();
             }

@@ -94,13 +94,13 @@ public class ObjectPooler : Singleton<ObjectPooler>
 
         StartCoroutine(CleanupPool(path, newPool.cleanupDelay));
 
-        return GetObject<T>(path, parent, position, scale, rotation, autoReturnTime);
+        return Get<T>(path, parent, position, scale, rotation, autoReturnTime);
     }
 
     /// <summary>
     /// 태그 또는 경로 기반으로 오브젝트 가져오기 (부족하면 자동 확장)
     /// </summary>
-    public T GetObject<T>(string tagOrPath, Transform parent = null, Vector3 position = default(Vector3), Vector3 scale = default(Vector3), Quaternion rotation = default(Quaternion), float autoReturnTime = 0f) where T : MonoBehaviour
+    public T Get<T>(string tagOrPath, Transform parent = null, Vector3 position = default(Vector3), Vector3 scale = default(Vector3), Quaternion rotation = default(Quaternion), float autoReturnTime = 0f) where T : MonoBehaviour
     {
         string tag = tagOrPath;
         if (!poolDictionary.ContainsKey(tag))

@@ -39,8 +39,8 @@ public class PopupLevelSelect : Popup
             UIManager.Instance.Message.Show(Message.Type.Simple, "Please Select Level");
             return;
         }
-
-        if(DataManager.Instance.userData.UseHeart())
+        PlayerPrefs.SetInt("LastLevel", levelList.GetDatas().IndexOf(currentLevel));
+        if (DataManager.Instance.userData.UseHeart())
         {
             GameManager.Instance.GoScene(GameManager.Scene.Puzzle, currentLevel);
             Close();

@@ -165,14 +165,35 @@ public class HUD : Singleton<HUD>
 
     public void StartSearchCool(DateTime coolFinish, float max)
     {
-        StartCoroutine(CheckShearchCool(coolFinish, max));
+        StartCoroutine(CheckSearchCool(coolFinish, max));
     }
 
-    private IEnumerator CheckShearchCool(DateTime coolFinish, float max)
+    private IEnumerator CheckSearchCool(DateTime coolFinish, float max)
     {
         while(coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
         {
             searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
+            yield return Yielders.EndOfFrame;
+        }
+    }
+
+    [SerializeField]
+    private Image explodeCoolImage;
+    public void ClickExplode()
+    {
+        PuzzleManager.Instance.Explode();
+    }
+
+    public void StartExplodeCool(DateTime coolFinish, float max)
+    {
+        StartCoroutine(CheckExplodeCool(coolFinish, max));
+    }
+
+    private IEnumerator CheckExplodeCool(DateTime coolFinish, float max)
+    {
+        while (coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
+        {
+            explodeCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
             yield return Yielders.EndOfFrame;
         }
     }
@@ -196,7 +217,7 @@ public class HUD : Singleton<HUD>
 
     public void ShowAddSeconds(float sec)
     {
-        ObjectPooler.Instance.GetObject<Effect>("add_seconds", timeBar.transform.parent, timeBar.transform.localPosition, autoReturnTime: 1f).SetText($"+{sec}s");
+        ObjectPooler.Instance.Get<Effect>("add_seconds", timeBar.transform.parent, timeBar.transform.localPosition, autoReturnTime: 1f).SetText($"+{sec}s");
     }
 
     [SerializeField]

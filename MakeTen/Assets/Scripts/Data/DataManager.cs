@@ -30,6 +30,7 @@ public class DataManager : Singleton<DataManager>
     public int MaxHeart;
     public int HeartChargeTime;
     public int SearchTerm;
+    public int ExplodeTerm;
 
     public UserData userData;
 
@@ -69,11 +70,8 @@ public class DataManager : Singleton<DataManager>
 
         MaxHeart = GetConfig("maxHeart");
         HeartChargeTime = GetConfig("heartChargeTime");
-#if UNITY_EDITOR
-        SearchTerm = 0;
-#else
         SearchTerm = GetConfig("searchTerm");
-#endif
+        ExplodeTerm = GetConfig("explodeTerm");
 
         FirebaseManager.Instance.GetUserData((UserData userData) =>
         {
@@ -82,9 +80,6 @@ public class DataManager : Singleton<DataManager>
         });
 
         yield return new WaitUntil(() => userData != null);
-
-        
-
     }
 
     public void UpdateUserData(UserData data)
@@ -92,63 +87,4 @@ public class DataManager : Singleton<DataManager>
         this.userData = data;
         HUD.Instance.UpdateUserData(userData);
     }
-
-    //private IEnumerator GetGameDatas()
-    //{
-    //    Debug.Log("GetGameDatas");
-    //    yield return GetGameData<GameData.Config>(result =>
-    //    {
-    //        config = result;
-    //        MaxHeart = config.SingleOrDefault(x => x.key == "maxHeart").val;
-    //        HeartChargeTime = config.SingleOrDefault(x => x.key == "heartChargeTime").val;
-    //    });
-    //    yield return GetGameData<GameData.Language>(result =>
-    //    {
-    //        language = result;
-    //    });
-    //    yield return GetGameData<GameData.GameLevel>(result =>
-    //    {
-    //        gameLevel = result;
-    //    });
-        
-    //    yield return GetGameData<GameData.UserLevel>(result =>
-    //    {
-    //        userLevel = result;
-    //    });
-
-    //    yield return GetGameData<GameData.ForbiddenWord>(result =>
-    //    {
-    //        forbiddenWord = result;
-    //    });
-
-    //    FirebaseManager.Instance.GetUserData((UserData userData) =>
-    //    {
-    //        this.userData = userData;
-    //    });
-
-    //    yield return new WaitUntil(() => userData != null);
-    //    TextManager.LoadDatas(userData.countryCode, language);
-    //}
-
-    //private IEnumerator GetGameData<T>(Action<T[]> callback) where T : GameData.Data
-    //{
-    //    GameData.Data[] wait = null;
-    //    FirebaseManager.Instance.GetGameData<T>(typeof(T).Name, result =>
-    //    {
-    //        wait = result;
-    //        callback.Invoke(result);
-    //    });
-
-    //    yield return new WaitUntil(() => wait != null);
-    //}
-
-    //public void RefreshUserData()
-    //{
-    //    UIManager.Instance.Loading("Load User Data");
-    //    FirebaseManager.Instance.GetUserData((UserData userData) =>
-    //    {
-    //        this.userData = userData;
-    //        UIManager.Instance.CloseLoading();
-    //    });
-    //}
 }

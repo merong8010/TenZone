@@ -24,8 +24,9 @@ public class UserData
 
     //cheater is not empty
     public string banMessage;
-
     public string lastPlayDate;
+    public int attendanceCount;
+    public string attendanceRewardDate;
 
     public class Record : IComparable<Record>
     {
@@ -143,12 +144,19 @@ public class UserData
         heart = DataManager.Instance.MaxHeart;
         lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
         goods.Add(GameData.GoodsType.Gold, DataManager.Instance.GetConfig("defaultGold"));
-        goods.Add(GameData.GoodsType.Gem, DataManager.Instance.GetConfig("defaultGem"));
         goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.GetConfig("defaultShuffle"));
         goods.Add(GameData.GoodsType.Search, DataManager.Instance.GetConfig("defaultSearch"));
         goods.Add(GameData.GoodsType.Time_10s, DataManager.Instance.GetConfig("defaultTime_10s"));
         level = 1;
+        attendanceCount = 0;
+        attendanceRewardDate = GameManager.Instance.dateTime.Value.AddDays(-1).ToDateText();
         FirebaseManager.Instance.SaveUserData(this);
+    }
+
+    public void RewardAttendacne()
+    {
+        attendanceCount += 1;
+        attendanceRewardDate = GameManager.Instance.dateTime.Value.ToDateText();
     }
 
 
@@ -211,6 +219,19 @@ public class UserData
         FirebaseManager.Instance.SaveUserData(this);
     }
 
+    public void Charge(GoodsList.Data[] datas)
+    {
+        for(int i = 0; i < datas.Length; i++)
+        {
+            if (!goods.TryAdd(datas[i].type, datas[i].amount))
+            {
+                goods[datas[i].type] += datas[i].amount;
+            }
+        }
+        
+        FirebaseManager.Instance.SaveUserData(this);
+    }
+
     public void Charge(GoodsList.Data data)
     {
         if (!goods.TryAdd(data.type, data.amount))
@@ -242,7 +263,6 @@ public class UserData
 
     public bool Use(GameData.GoodsType type, int amount)
     {
-        Debug.Log($"Use {type} | {amount}");
         if (!goods.ContainsKey(type)) return false;
         if (goods[type] < amount) return false;
         goods[type] -= amount;
@@ -255,5 +275,91 @@ public class UserData
         if (!goods.ContainsKey(type)) return false;
         if (goods[type] < amount) return false;
         return true;
+    }
+
+    public class PurchaseData
+    {
+        public long lastPurchaseTick;
+        public int count;
+        public string id;
+    }
+
+    public PurchaseData[] purchaseDatas;
+
+    public int GetPurchaseCount(string shopId)
+    {
+        return GetPurchaseCount(DataManager.Instance.Get<GameData.ShopData>().SingleOrDefault(x => x.id == shopId));
+    }
+
+    public int GetPurchaseCount(GameData.ShopData data)
+    {
+        PurchaseData myData = purchaseDatas.SingleOrDefault(x => x.id == data.id);
+        if (myData == null) return 0;
+        switch(data.buyPeriod)
+        {
+            case GameData.TimePeriod.Daily:
+                if(myData.lastPurchaseTick.LongToDateTime().IsSameDate(GameManager.Instance.dateTime.Value))
+                {
+                    return myData.count;
+                }
+                break;
+            case GameData.TimePeriod.Weekly:
+                if (myData.lastPurchaseTick.LongToDateTime().IsSameWeek(GameManager.Instance.dateTime.Value))
+                {
+                    return myData.count;
+                }
+                break;
+            case GameData.TimePeriod.Monthly:
+                if (myData.lastPurchaseTick.LongToDateTime().IsSameMonth(GameManager.Instance.dateTime.Value))
+                {
+                    return myData.count;
+                }
+                break;
+            default:
+                return myData.count;
+
+        }
+
+        return 0;
+    }
+
+    public bool CanPurchase(GameData.ShopData data, int count = 1)
+    {
+        return GetPurchaseCount(data) + count <= data.buyMaxCount;
+    }
+
+    public void AddMailData(string title, string desc, GoodsList.Data[] rewards)
+    {
+        FirebaseManager.Instance.SendMail(title, desc, rewards);
+    }
+    public void AddPurchase(GameData.ShopData data, int count = 1)
+    {
+        if (!CanPurchase(data, count)) return;
+
+        if(data.isRewardMail)
+        {
+            UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("SendMailShopReward"));
+            FirebaseManager.Instance.SendMail(data.name, data.desc, data.rewards);
+        }
+        else
+        {
+            Charge(data.rewards);
+            UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
+        }
+
+        PurchaseData myData = purchaseDatas.SingleOrDefault(x => x.id == data.id);
+        if (myData != null)
+        {
+            myData.count += count;
+            myData.lastPurchaseTick = GameManager.Instance.dateTime.Value.ToTick();
+        }
+        else
+        {
+            myData = new PurchaseData();
+            myData.id = data.id;
+            myData.count = count;
+            myData.lastPurchaseTick = GameManager.Instance.dateTime.Value.ToTick();
+            purchaseDatas = purchaseDatas.Append(myData).ToArray();
+        }
     }
 }

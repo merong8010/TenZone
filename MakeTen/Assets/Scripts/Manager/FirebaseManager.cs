@@ -14,6 +14,9 @@ using GooglePlayGames;
 using Google;
 using GooglePlayGames.BasicApi;
 using UnityEngine.SocialPlatforms;
+using UnityEngine.Networking;
+using System.Collections;
+using UnityEngine.Purchasing;
 
 public class FirebaseManager : Singleton<FirebaseManager>
 {
@@ -753,7 +756,69 @@ public class FirebaseManager : Singleton<FirebaseManager>
 //            callback?.Invoke(resultData);
 //        });
     }
+    private class PurchaseData
+    {
+        public string productId;
+        public string receipt;
+    }
+    public void ValidatePurchase(PurchaseEventArgs args, Action<bool> onResult)
+    {
+        string url = "";
+        var json = JsonConvert.SerializeObject(new PurchaseData()
+        {
+            productId = args.purchasedProduct.definition.id,
+            receipt = args.purchasedProduct.receipt
+        });
+        StartCoroutine(PostValidate(url, json, onResult));
+    }
+    private IEnumerator PostValidate(string url, string json, Action<bool> onResult)
+    {
+        using (UnityWebRequest www = new UnityWebRequest(url, "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+            www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
 
+            yield return www.SendWebRequest();
 
-    
+#if UNITY_2020_1_OR_NEWER
+            if (www.result == UnityWebRequest.Result.Success)
+#else
+            if (!www.isHttpError && !www.isNetworkError)
+#endif
+            {
+                onResult?.Invoke(true);
+            }
+            else
+            {
+                Debug.LogError($"[FirebaseValidator] 요청 실패: {www.error}");
+                onResult?.Invoke(false);
+            }
+        }
+    }
+
+    public void SendMail(string title, string desc, GoodsList.Data[] rewards)
+    {
+        string mailId = myDB.Child("mailDatas").Push().Key;
+
+        var mailData = new Dictionary<string, object>
+        {
+            { "id", mailId },
+            { "title", title },
+            { "desc", desc },
+            { "rewards", rewards },
+            { "receiveDate", GameManager.Instance.dateTime.Value.ToTimeText() }
+        };
+
+        myDB.Child("mailDatas")
+            .SetValueAsync(mailData)
+            .ContinueWith(task =>
+            {
+                if (task.IsCompleted)
+                    Debug.Log($"메일 전송 완료: {mailId}");
+                else
+                    Debug.LogError($"메일 전송 실패: {task.Exception}");
+            });
+    }
 }
