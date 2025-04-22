@@ -35,7 +35,7 @@ public static class TextManager
 
     public static string Get(string key)
     {
-        //Debug.Log(dic.ContainsKey(key))
+        if (string.IsNullOrEmpty(key)) return key;
         if (!dic.ContainsKey(key) || string.IsNullOrEmpty(dic[key])) return key;
         return dic[key];
     }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AttendanceList : CustomList<GameData.AttendanceData>
+public class AttendanceList : CustomList<GameData.Attendance>
 {
     
 }

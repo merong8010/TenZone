@@ -133,7 +133,7 @@ namespace GameData
     {
         public string word;
     }
-    public class ShopData : RewardData
+    public class Shop : RewardData
     {
         public string id;
         public ShopCategory category;
@@ -150,7 +150,7 @@ namespace GameData
         public string resource;
     }
 
-    public class AttendanceData : RewardData
+    public class Attendance : RewardData
     {
         public int id;
         public int date;

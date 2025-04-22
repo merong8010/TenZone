@@ -288,11 +288,12 @@ public class UserData
 
     public int GetPurchaseCount(string shopId)
     {
-        return GetPurchaseCount(DataManager.Instance.Get<GameData.ShopData>().SingleOrDefault(x => x.id == shopId));
+        return GetPurchaseCount(DataManager.Instance.Get<GameData.Shop>().SingleOrDefault(x => x.id == shopId));
     }
 
-    public int GetPurchaseCount(GameData.ShopData data)
+    public int GetPurchaseCount(GameData.Shop data)
     {
+        if (purchaseDatas == null) return 0;
         PurchaseData myData = purchaseDatas.SingleOrDefault(x => x.id == data.id);
         if (myData == null) return 0;
         switch(data.buyPeriod)
@@ -323,7 +324,7 @@ public class UserData
         return 0;
     }
 
-    public bool CanPurchase(GameData.ShopData data, int count = 1)
+    public bool CanPurchase(GameData.Shop data, int count = 1)
     {
         return GetPurchaseCount(data) + count <= data.buyMaxCount;
     }
@@ -332,7 +333,7 @@ public class UserData
     {
         FirebaseManager.Instance.SendMail(title, desc, rewards);
     }
-    public void AddPurchase(GameData.ShopData data, int count = 1)
+    public void AddPurchase(GameData.Shop data, int count = 1)
     {
         if (!CanPurchase(data, count)) return;
 
@@ -346,7 +347,7 @@ public class UserData
             Charge(data.rewards);
             UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
         }
-
+        if (purchaseDatas == null) purchaseDatas = new PurchaseData[] { };
         PurchaseData myData = purchaseDatas.SingleOrDefault(x => x.id == data.id);
         if (myData != null)
         {

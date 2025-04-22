@@ -4,7 +4,7 @@ using TMPro;
 using GameData;
 using System.Linq;
 
-public class AttendanceListItem : ListItem<GameData.AttendanceData>
+public class AttendanceListItem : ListItem<GameData.Attendance>
 {
     [SerializeField]
     private TextMeshProUGUI dateText;
@@ -13,10 +13,10 @@ public class AttendanceListItem : ListItem<GameData.AttendanceData>
     [SerializeField]
     private GameObject rewardedObj;
 
-    public override void SetData(AttendanceData data)
+    public override void SetData(Attendance data)
     {
         base.SetData(data);
-        int dateMax = DataManager.Instance.Get<AttendanceData>().Max(x => x.date);
+        int dateMax = DataManager.Instance.Get<Attendance>().Max(x => x.date);
         int currentIdx = DataManager.Instance.userData.attendanceCount % dateMax;
         if(data.date-1 == currentIdx)
         {

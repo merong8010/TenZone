@@ -4,7 +4,7 @@ using TMPro;
 using GameData;
 using UnityEngine.U2D;
 
-public class ShopListItem : ListItem<GameData.ShopData>
+public class ShopListItem : ListItem<GameData.Shop>
 {
     [SerializeField]
     private Text nameText;
@@ -26,7 +26,7 @@ public class ShopListItem : ListItem<GameData.ShopData>
     [SerializeField]
     private Text unlockConditionText;
 
-    public override void SetData(ShopData data)
+    public override void SetData(Shop data)
     {
         base.SetData(data);
 

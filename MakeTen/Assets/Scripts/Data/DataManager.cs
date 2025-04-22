@@ -56,10 +56,12 @@ public class DataManager : Singleton<DataManager>
         FirebaseManager.Instance.LoadAllGameDatas(result =>
         {
             dataTotalCount = (int)result.ChildrenCount;
-            
+            Debug.Log("dataTotalCount : "+dataTotalCount);
             foreach (var data in result.Children)
             {
+                Debug.Log(data.Key);
                 Type type = Type.GetType($"GameData.{data.Key}").MakeArrayType();
+                Debug.Log(data.Key + " | " + data.GetRawJsonValue()+" | "+type);
                 gameDatas.Add(data.Key, (GameData.Data[])JsonConvert.DeserializeObject(data.GetRawJsonValue(),type));
             }
         });

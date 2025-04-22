@@ -135,6 +135,15 @@ public class HUD : Singleton<HUD>
         UIManager.Instance.Open<PopupRanking>();
     }
 
+    public void ClickShop()
+    {
+        UIManager.Instance.Open<PopupShop>();
+    }
+    public void ClickAttendance()
+    {
+        UIManager.Instance.Open<PopupAttendance>();
+    }
+
     public void ClickCheat()
     {
         UIManager.Instance.Open<PopupCheat>();

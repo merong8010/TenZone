@@ -65,7 +65,7 @@ public class PopupShop : Popup
         base.Refresh();
 
         GameData.ShopCategory category = (GameData.ShopCategory)currentTabIdx;
-        shopList.UpdateList(DataManager.Instance.Get<GameData.ShopData>().Where(x => x.category == category).ToArray());
+        shopList.UpdateList(DataManager.Instance.Get<GameData.Shop>().Where(x => x.category == category).ToArray());
     }
 
 }

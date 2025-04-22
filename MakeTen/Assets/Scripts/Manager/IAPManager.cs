@@ -31,7 +31,7 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 
         var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
 
-        string[] shopIds = DataManager.Instance.Get<GameData.ShopData>().Where(x => x.costType == GameData.ShopCostType.Cash).Select(x => x.id).ToArray();
+        string[] shopIds = DataManager.Instance.Get<GameData.Shop>().Where(x => x.costType == GameData.ShopCostType.Cash).Select(x => x.id).ToArray();
         for(int i = 0; i < shopIds.Length; i++)
         {
             builder.AddProduct(shopIds[i], ProductType.Consumable);

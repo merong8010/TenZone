@@ -14,9 +14,9 @@ public class PopupAttendance : Popup
         list.SetEvent(ClickAttendanceListItem);
     }
 
-    public void ClickAttendanceListItem(GameData.AttendanceData data)
+    public void ClickAttendanceListItem(GameData.Attendance data)
     {
-        int dateMax = DataManager.Instance.Get<GameData.AttendanceData>().Max(x => x.date);
+        int dateMax = DataManager.Instance.Get<GameData.Attendance>().Max(x => x.date);
         int currentIdx = DataManager.Instance.userData.attendanceCount % dateMax;
 
         if(data.date-1 == currentIdx)
@@ -57,6 +57,6 @@ public class PopupAttendance : Popup
     public override void Refresh()
     {
         base.Refresh();
-        list.UpdateList(DataManager.Instance.Get<GameData.AttendanceData>());
+        list.UpdateList(DataManager.Instance.Get<GameData.Attendance>());
     }
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ShopList : CustomList<GameData.ShopData>
+public class ShopList : CustomList<GameData.Shop>
 {
     
 }

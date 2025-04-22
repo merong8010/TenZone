@@ -34,7 +34,6 @@ public class UIManager : Singleton<UIManager>
     {
         yield return new WaitUntil(() => ObjectPooler.Instance.isReady);
         Vector2 blockStartPos = blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (blockCounts.x - 1) * 0.5f, -(blockSize.y + blockGap.y) * (blockCounts.y - 1) * 0.5f);
-        Debug.Log("blockStartPos " + blockStartPos);
         for (int x = 0; x < blockCounts.x; x++)
         {
             for (int y = 0; y < blockCounts.y; y++)
