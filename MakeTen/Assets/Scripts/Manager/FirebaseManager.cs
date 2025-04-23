@@ -232,15 +232,36 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     void InitializePlayGamesLogin()
     {
-        var config = new PlayGamesClientConfiguration.Builder()
-        .RequestIdToken()
-        .Build();
+        //var config = new PlayGamesClientConfiguration.Builder()
+        //.RequestIdToken()
+        //.Build();
 
-        PlayGamesPlatform.InitializeInstance(config);
-        PlayGamesPlatform.DebugLogEnabled = true;
-        PlayGamesPlatform.Activate();
+        //PlayGamesPlatform.InitializeInstance(config);
+        //PlayGamesPlatform.DebugLogEnabled = true;
+        //PlayGamesPlatform.Activate();
+        PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
     }
+    internal void ProcessAuthentication(SignInStatus status)
+    {
+        if (status == SignInStatus.Success)
+        {
+            Debug.Log("GPGS 로그인 성공!");
+            PlayGamesPlatform.Instance.RequestServerSideAccess(false, code =>
+            {
+                GoogleLoginCallback(code);
+            });
 
+
+            //string idToken = PlayGamesPlatform.Instance.GetIdToken();
+            //Debug.Log("ID Token: " + idToken);
+            //GoogleLoginCallback(idToken);
+            // 이 토큰을 Unity Authentication에 전달할 수 있음
+        }
+        else
+        {
+            Debug.LogError("GPGS 로그인 실패: " + status);
+        }
+    }
     //void LoginGoogle()
     //{
     //    Social.localUser.Authenticate(OnGoogleLogin);
@@ -261,21 +282,22 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void StartGoogleLogin()
     {
-        PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptOnce, (result) =>
-        {
-            if (result == SignInStatus.Success)
-            {
-                Debug.Log("GPGS 로그인 성공!");
-                string idToken = PlayGamesPlatform.Instance.GetIdToken();
-                Debug.Log("ID Token: " + idToken);
-                GoogleLoginCallback(idToken);
-                // 이 토큰을 Unity Authentication에 전달할 수 있음
-            }
-            else
-            {
-                Debug.LogError("GPGS 로그인 실패: " + result);
-            }
-        });
+        PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
+        //PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptOnce, (result) =>
+        //{
+        //    if (result == SignInStatus.Success)
+        //    {
+        //        Debug.Log("GPGS 로그인 성공!");
+        //        string idToken = PlayGamesPlatform.Instance.GetIdToken();
+        //        Debug.Log("ID Token: " + idToken);
+        //        GoogleLoginCallback(idToken);
+        //        // 이 토큰을 Unity Authentication에 전달할 수 있음
+        //    }
+        //    else
+        //    {
+        //        Debug.LogError("GPGS 로그인 실패: " + result);
+        //    }
+        //});
     }
 
     private void GoogleLoginCallback(string token)

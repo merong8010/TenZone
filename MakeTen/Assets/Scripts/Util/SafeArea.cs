@@ -41,7 +41,7 @@ public class SafeArea : MonoBehaviour
         {
             ApplySafeArea(new Rect(0, 0, Screen.width, Screen.height), Util.GetScreenSize());
         }
-        if(!DataManager.Instance.userData.isVIP)
+        if(DataManager.Instance.userData != null && !DataManager.Instance.userData.isVIP)
         {
             AdjustUI();
         }

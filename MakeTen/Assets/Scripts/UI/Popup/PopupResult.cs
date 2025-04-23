@@ -56,18 +56,27 @@ public class PopupResult : Popup
 
     public void ClckAdReward()
     {
-        ADManager.Instance.ShowReward(delegate()
+        base.Close();
+        ADManager.Instance.ShowReward(delegate(bool success)
         {
-            GoodsList.Data[] rewards = new GoodsList.Data[2];
-            rewards[0] = new GoodsList.Data();
-            rewards[0].type = GameData.GoodsType.EXP;
-            rewards[0].amount = expAd.amount;
-            rewards[1] = new GoodsList.Data();
-            rewards[1].type = GameData.GoodsType.Gold;
-            rewards[1].amount = goldAd.amount;
+            if (success)
+            {
+                GoodsList.Data[] rewards = new GoodsList.Data[2];
+                rewards[0] = new GoodsList.Data();
+                rewards[0].type = GameData.GoodsType.EXP;
+                rewards[0].amount = expAd.amount;
+                rewards[1] = new GoodsList.Data();
+                rewards[1].type = GameData.GoodsType.Gold;
+                rewards[1].amount = goldAd.amount;
 
-            UIManager.Instance.Open<PopupReward>().SetData(rewards);
-            DataManager.Instance.userData.Charge(rewards);
+                UIManager.Instance.Open<PopupReward>(delegate () { GameManager.Instance.GoScene(GameManager.Scene.Main); }).SetData(rewards);
+                DataManager.Instance.userData.Charge(rewards);
+            }
+            else
+            {
+                GameManager.Instance.GoScene(GameManager.Scene.Main);
+            }
+                
         });
     }
 }

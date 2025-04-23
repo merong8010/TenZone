@@ -47,7 +47,8 @@ public class UIManager : Singleton<UIManager>
 
     private const string PopupPath = "Prefabs/UI/Popups/";
 
-    public T Open<T>() where T : Popup
+    private Dictionary<Popup, Action> closeCallback = new Dictionary<Popup, Action>();
+    public T Open<T>(Action callback = null) where T : Popup
     {
         Popup popup = null;
         if(popups.Exists(x => x.GetType() == typeof(T)))
@@ -66,7 +67,7 @@ public class UIManager : Singleton<UIManager>
         popup.Open();
 
         popupStack.Add(popup);
-
+        if(callback != null) closeCallback.Add(popup, callback);
         return (T)popup;
     }
 
@@ -88,29 +89,14 @@ public class UIManager : Singleton<UIManager>
                 foreach (Popup item in popupStack.Where(x => x.GetType() == typeof(T)))
                 {
                     item.gameObject.SetActive(false);
+                    if (closeCallback.ContainsKey(item) && closeCallback[item] != null)
+                    {
+                        closeCallback[item].Invoke();
+                        closeCallback.Remove(item);
+                    }
                 }
                 popupStack.RemoveAll(x => x.GetType() == typeof(T));
             }
-            //List<Popup> popupList = new List<Popup>();
-            //while(popupStack.TryPop(out Popup popup))
-            //{
-            //    if(popup.GetType() != typeof(T))
-            //    {
-            //        popupList.Add(popup);
-            //    }
-            //    else
-            //    {
-            //        if (popupList.Count > 0)
-            //        {
-            //            for (int i = 0; i < popupList.Count; i++)
-            //            {
-            //                popupStack.Push(popupList[i]);
-            //            }
-            //        }
-            //        popup.gameObject.SetActive(false);
-            //        break;
-            //    }
-            //}
         }
     }
 
@@ -120,6 +106,11 @@ public class UIManager : Singleton<UIManager>
         {
             close.gameObject.SetActive(false);
             popupStack.Remove(close);
+            if (closeCallback.ContainsKey(close) && closeCallback[close] != null)
+            {
+                closeCallback[close].Invoke();
+                closeCallback.Remove(close);
+            }
             //List<Popup> popupList = new List<Popup>();
             //while (popupStack.TryPop(out Popup popup))
             //{
