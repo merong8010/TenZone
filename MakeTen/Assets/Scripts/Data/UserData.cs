@@ -8,7 +8,14 @@ using Newtonsoft.Json;
 
 public class UserData
 {
-    public bool isVIP = false;
+    public const string VIP_ID = "tenzone.vip";
+    public bool isVIP
+    {
+        get
+        {
+            return GetPurchaseCount(VIP_ID) > 0;
+        }
+    }
     public FirebaseManager.AuthenticatedType authType;
     public string id;
     public string nickname;
@@ -45,6 +52,16 @@ public class UserData
             return (int)(other.timeStamp - timeStamp);
         }
     }
+    [JsonIgnore]
+    public bool IsTutorial
+    {
+        get
+        {
+            return recordAll.Count == 0;
+        }
+        
+    }
+
     public Dictionary<PuzzleManager.Level, Record> recordAll = new Dictionary<PuzzleManager.Level, Record>();
     public Dictionary<PuzzleManager.Level, Record> recordToday = new Dictionary<PuzzleManager.Level, Record>();
 
@@ -361,6 +378,13 @@ public class UserData
             myData.count = count;
             myData.lastPurchaseTick = GameManager.Instance.dateTime.Value.ToTick();
             purchaseDatas = purchaseDatas.Append(myData).ToArray();
+        }
+
+        if(data.id == VIP_ID)
+        {
+            ADManager.Instance.HideBanner(true);
+            UIManager.Instance.Refresh();
+            //SafeArea
         }
     }
 }

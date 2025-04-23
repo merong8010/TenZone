@@ -229,10 +229,21 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value);
         }
-        int exp = Mathf.FloorToInt(currentLevel.exp * ((float)currentPoint.Value / (currentLevel.row * currentLevel.column)));
-        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, exp);
+        int total = currentLevel.row * currentLevel.column;
+        int maxPoint = total + (total / 2) * bonusMaxPoint;
+        float pointRate = (float)currentPoint.Value / (currentLevel.row * currentLevel.column);
+
+        int exp = Mathf.FloorToInt(currentLevel.exp * pointRate);
+        int gold = Mathf.FloorToInt(currentLevel.gold * pointRate);
+        if(DataManager.Instance.userData.isVIP)
+        {
+            exp *= 2;
+            gold *= 2;
+        }
+        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, exp, gold);
 
         DataManager.Instance.userData.ChargeExp(exp);
+        DataManager.Instance.userData.Charge(GameData.GoodsType.Gold, gold);
     }
 
 
@@ -295,6 +306,10 @@ public class PuzzleManager : Singleton<PuzzleManager>
 //                if (OptionManager.Instance.Get(OptionManager.Type.HAPTIC))
 //                    Haptic.Execute();
 //#endif
+                if(tutorialRT.gameObject.activeSelf)
+                {
+                    tutorialRT.gameObject.SetActive(false);
+                }
             }
             focus = null;
         }
@@ -332,11 +347,6 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             finishTime = finishTime.AddSeconds(Time.deltaTime);
         }
-        //if (lastOrientation != Util.GetDeviceOrientation())
-        //{
-        //    RefreshPosition();
-        //    lastOrientation = Util.GetDeviceOrientation();
-        //}
     }
 
     private void CheckHint()
@@ -362,6 +372,12 @@ public class PuzzleManager : Singleton<PuzzleManager>
                     hint.Add(new Vector2Int(blocks[i].column, blocks[i].row), resultRow);
                 }
             }
+        }
+
+        if(DataManager.Instance.userData.IsTutorial)
+        {
+            if(hint.Count > 0)
+                StartCoroutine(ShowHint());
         }
     }
 
@@ -489,7 +505,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
             HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
         }
     }
-
+    [SerializeField]
+    private RectTransform tutorialRT;
     private IEnumerator ShowHint()
     {
         yield return Yielders.Get(hintWaitTime);
@@ -500,6 +517,23 @@ public class PuzzleManager : Singleton<PuzzleManager>
         {
             focusBlocks[i].Focus(true);
         }
+        if(DataManager.Instance.userData.IsTutorial && currentPoint.Value == 0)
+        {
+            Block startBlock = blocks.SingleOrDefault(x => x.column == show.Key.x && x.row == show.Key.y);
+            Block finishBlock = blocks.SingleOrDefault(x => x.column == show.Value.x && x.row == show.Value.y);
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, RectTransformUtility.WorldToScreenPoint(cam, startBlock.StartPos()), cam, out Vector2 tutoStartPos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, RectTransformUtility.WorldToScreenPoint(cam, finishBlock.FinishPos()), cam, out Vector2 tutoFinishPos);
+
+            tutorialRT.gameObject.SetActive(true);
+            Vector2 size = tutoStartPos - tutoFinishPos;
+            tutorialRT.sizeDelta = new Vector2(Mathf.Abs(size.x), Mathf.Abs(size.y));
+            // 위치 조정 (좌상단 기준)
+            //tutorialRT.anchoredPosition = tutoStartPos + size / 2;
+            //tutorialRT.anchoredPosition = tutoStartPos + size;
+            tutorialRT.anchoredPosition = tutoStartPos - size/2;
+        }
+        
         yield return Yielders.Get(hintShowTime);
         for (int i = 0; i < focusBlocks.Length; i++)
         {

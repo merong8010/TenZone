@@ -53,6 +53,10 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
     public void BuyProduct(string productId, Action<string> successCallback)
     {
         UIManager.Instance.Loading("Purchasing", 0.5f, 0f, 0f);
+#if UNITY_EDITOR
+        PurchaseSuccess(productId);
+        return;
+#endif
         if (IsInitialized())
         {
             Product product = storeController.products.WithID(productId);
@@ -114,8 +118,7 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
             if (isValid)
             {
                 Debug.Log($"서버 검증 성공: {productId}");
-                successCallback?.Invoke(productId);
-                successCallback = null;
+                PurchaseSuccess(productId);
             }
             else
             {
@@ -132,6 +135,18 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
         storeController = controller;
         storeExtensionProvider = extensions;
         Debug.Log("IAP 초기화 성공");
+    }
+
+    public void PurchaseSuccess(string productId)
+    {
+        if(successCallback != null)
+        {
+            successCallback.Invoke(productId);
+            successCallback = null;
+        }
+        
+        UIManager.Instance.CloseLoading();
+        UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format(TextManager.Get("PurchaseSuccess"), TextManager.Get(DataManager.Instance.Get<GameData.Shop>().SingleOrDefault(x => x.id == productId).name)));
     }
 
     public void PurchaseFail(string productId, PurchaseFailureReason reason)

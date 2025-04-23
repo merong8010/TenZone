@@ -167,7 +167,12 @@ public class UIManager : Singleton<UIManager>
     //        Debug.LogWarning($"[PopupManager] {popupName} 팝업이 등록되지 않았습니다.");
     //    }
     //}
-
+    [SerializeField]
+    private CanvasScalerAutoAdjuster scalerAuto;
+    public void Refresh()
+    {
+        scalerAuto.Refresh();
+    }
     // 📌 팝업 닫기
     public void ClosePopup()
     {

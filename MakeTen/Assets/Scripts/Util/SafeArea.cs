@@ -41,7 +41,14 @@ public class SafeArea : MonoBehaviour
         {
             ApplySafeArea(new Rect(0, 0, Screen.width, Screen.height), Util.GetScreenSize());
         }
-
+        if(!DataManager.Instance.userData.isVIP)
+        {
+            AdjustUI();
+        }
+        else
+        {
+            Panel.offsetMin = Vector2.zero;
+        }
         refreshAction?.Invoke();
     }
 
@@ -56,5 +63,18 @@ public class SafeArea : MonoBehaviour
         anchorMax.y /= size.y;
         Panel.anchorMin = anchorMin;
         Panel.anchorMax = anchorMax;
+    }
+
+    void AdjustUI()
+    {
+        float bannerHeightPx = ADManager.Instance.GetEstimatedBannerHeight();
+        float canvasHeightPx = Screen.height;
+
+        float offsetRatio = bannerHeightPx / canvasHeightPx;
+
+        float canvasHeightWorld = Panel.rect.height;
+        float offsetY = offsetRatio * canvasHeightWorld;
+
+        Panel.offsetMin = new Vector2(0, offsetY); // 하단에서 위로 밀기
     }
 }

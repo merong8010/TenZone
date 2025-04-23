@@ -35,6 +35,20 @@ public class Block : MonoBehaviour
     [SerializeField]
     private RectTransform rectTransform;
 
+    public Vector3 StartPos()
+    {
+        Vector3[] worldCorners = new Vector3[4];
+        rectTransform.GetWorldCorners(worldCorners);
+        return worldCorners[0];
+    }
+
+    public Vector3 FinishPos()
+    {
+        Vector3[] worldCorners = new Vector3[4];
+        rectTransform.GetWorldCorners(worldCorners);
+        return worldCorners[2];
+    }
+
     [SerializeField]
     private GameObject defaultObj;
     [SerializeField]

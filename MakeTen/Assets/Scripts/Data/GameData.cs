@@ -117,6 +117,7 @@ namespace GameData
         public float stdDev;
         public int time;
         public int exp;
+        public int gold;
         public int unlockLevel;
         public int bonusTimeMin;
         public int bonusTimeMax;

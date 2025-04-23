@@ -6,6 +6,8 @@ using TMPro;
 using UnityEngine.U2D;
 public class GoodsDisplay : MonoBehaviour
 {
+    public GameData.GoodsType goodsType => type;
+    public int amount;
     [SerializeField]
     private GameData.GoodsType type;
     [SerializeField]
@@ -79,6 +81,8 @@ public class GoodsDisplay : MonoBehaviour
     {
         if (adsObj != null) adsObj.SetActive(false);
         if (priceText != null) priceText.gameObject.SetActive(false);
+        this.type = type;
+        this.amount = amount;
         isSubscribe = false;
         icon.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(type.ToString());
         text.text = amount.ToString("n0");
@@ -102,6 +106,11 @@ public class GoodsDisplay : MonoBehaviour
     {
         disposable?.Dispose();
         if (!isSubscribe || type == GameData.GoodsType.None || DataManager.Instance.userData == null) return;
+        if (!DataManager.Instance.userData.goods.ContainsKey(type))
+        {
+            text.text = "0";
+            return;
+        }
         text.text = DataManager.Instance.userData.goods[type].ToString("n0");
         disposable = DataManager.Instance.userData.goods.ObserveReplace().Where(x => x.Key == type).Subscribe(x => text.text = x.NewValue.ToString("n0"));
     }

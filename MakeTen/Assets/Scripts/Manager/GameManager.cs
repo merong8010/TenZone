@@ -170,10 +170,12 @@ public class GameManager : Singleton<GameManager>
                     break;
                 case Scene.Main:
                     HUD.Instance.ShowMain(true);
+                    ADManager.Instance.ShowBanner();
                     break;
                 case Scene.Puzzle:
                     HUD.Instance.ShowPuzzle(true);
                     PuzzleManager.Instance.GameStart(level);
+                    ADManager.Instance.ShowBanner();
                     break;
             }
 

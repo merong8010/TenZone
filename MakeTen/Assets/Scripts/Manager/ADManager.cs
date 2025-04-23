@@ -85,7 +85,8 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
 #else
             Advertisement.Initialize(gameId, true, this);
 #endif
-            isWaitShowBanner = true;
+            //isWaitShowBanner = true;
+            Advertisement.Banner.SetPosition(BannerPosition.BOTTOM_CENTER);
         }
     }
 
@@ -125,6 +126,11 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
         Advertisement.Show(bannerId, this);
     }
 
+    public void HideBanner(bool isDestroy = true)
+    {
+        Advertisement.Banner.Hide(isDestroy);
+    }
+
     public void OnInitializationComplete()
     {
         Debug.Log("OnInitializationComplete");
@@ -146,7 +152,7 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
     {
         if(placementId == bannerId)
         {
-            isLoadedReward = true;
+            isLoadedBanner = true;
             if (isWaitShowBanner)
             {
                 Advertisement.Show(bannerId, this);
@@ -211,6 +217,17 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
             Advertisement.Load(bannerId, this);
         }
         //throw new NotImplementedException();
+    }
+
+    public float GetEstimatedBannerHeight()
+    {
+        float dpi = Screen.dpi;
+        if (dpi == 0) dpi = 160; // dpi 정보가 없는 경우 기본값
+
+        float bannerDp = 50; // 일반적 배너 높이
+        float bannerPx = bannerDp * (dpi / 160f);
+
+        return bannerPx;
     }
 }
 
