@@ -10,13 +10,12 @@ using Firebase.Auth;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
-using GooglePlayGames;
 using Google;
-using GooglePlayGames.BasicApi;
 using UnityEngine.SocialPlatforms;
 using UnityEngine.Networking;
 using System.Collections;
 using UnityEngine.Purchasing;
+using System.Threading.Tasks;
 
 public class FirebaseManager : Singleton<FirebaseManager>
 {
@@ -54,8 +53,18 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 functions = FirebaseFunctions.GetInstance("asia-southeast1");
                 user = auth.CurrentUser;
 
+                GoogleSignIn.Configuration = new GoogleSignInConfiguration
+                {
+                    //8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com
+                    //WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
+                    WebClientId = "8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com",
+                    UseGameSignIn = false,
+                    RequestEmail = true,
+                    RequestIdToken = true
+                };
+
 #if UNITY_ANDROID
-                InitializePlayGamesLogin();
+                //InitializePlayGamesLogin();
 #endif
             }
             else
@@ -230,59 +239,14 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    void InitializePlayGamesLogin()
-    {
-        //var config = new PlayGamesClientConfiguration.Builder()
-        //.RequestIdToken()
-        //.Build();
-
-        //PlayGamesPlatform.InitializeInstance(config);
-        //PlayGamesPlatform.DebugLogEnabled = true;
-        //PlayGamesPlatform.Activate();
-        PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
-    }
-    internal void ProcessAuthentication(SignInStatus status)
-    {
-        if (status == SignInStatus.Success)
-        {
-            Debug.Log("GPGS 로그인 성공!");
-            PlayGamesPlatform.Instance.RequestServerSideAccess(false, code =>
-            {
-                GoogleLoginCallback(code);
-            });
-
-
-            //string idToken = PlayGamesPlatform.Instance.GetIdToken();
-            //Debug.Log("ID Token: " + idToken);
-            //GoogleLoginCallback(idToken);
-            // 이 토큰을 Unity Authentication에 전달할 수 있음
-        }
-        else
-        {
-            Debug.LogError("GPGS 로그인 실패: " + status);
-        }
-    }
-    //void LoginGoogle()
-    //{
-    //    Social.localUser.Authenticate(OnGoogleLogin);
-    //}
-
-    //void OnGoogleLogin(bool success)
-    //{
-    //    if (success)
-    //    {
-    //        // Call Unity Authentication SDK to sign in or link with Google.
-    //        Debug.Log("Login with Google done. IdToken: " + ((PlayGamesLocalUser)Social.localUser).GetIdToken());
-    //    }
-    //    else
-    //    {
-    //        Debug.Log("Unsuccessful login");
-    //    }
-    //}
-
     public void StartGoogleLogin()
     {
-        PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
+        GoogleSignIn.DefaultInstance.SignIn().ContinueWith(
+        OnAuthenticationFinished);
+    
+        //TheBackend.ToolKit.GoogleLogin.Android.GoogleLogin(true, GoogleLoginCallback);
+        //GoogleSignIn
+        //PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
         //PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptOnce, (result) =>
         //{
         //    if (result == SignInStatus.Success)
@@ -300,8 +264,64 @@ public class FirebaseManager : Singleton<FirebaseManager>
         //});
     }
 
-    private void GoogleLoginCallback(string token)
+    internal void OnAuthenticationFinished(Task<GoogleSignInUser> task)
     {
+        Debug.Log("Authentication finished, processing on main thread");
+        MainThreadDispatcher.Instance.Enqueue(() => ProcessAuthResult(task));
+    }
+
+    private void ProcessAuthResult(Task<GoogleSignInUser> task)
+    {
+        Debug.Log($"ProcessAuthResult task : {task.IsCompletedSuccessfully}");
+        if (task.IsFaulted)
+        {
+            Debug.LogError($"{task.Status} | {task.Exception} | {task.Exception?.Message} | {task.Exception?.StackTrace}");
+            return;
+        }
+        auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(task.Result.IdToken, null)).ContinueWith(authTask =>
+        {
+            if (authTask.IsCompleted)
+            {
+                IsUserData(user.UserId, isUser =>
+                {
+                    if (isUser)
+                    {
+                        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: result =>
+                        {
+                            if (result)
+                            {
+                                user = authTask.Result;
+                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
+                            }
+                            else
+                            {
+                                auth.SignOut();
+                            }
+                            UIManager.Instance.Get<PopupSettings>().Refresh();
+                            //UIManager.Instance.Main.Refresh();
+                        });
+                    }
+                    else
+                    {
+                        user = authTask.Result;
+                        UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
+                        DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
+                        RemoveUserId(SystemInfo.deviceUniqueIdentifier);
+                        UIManager.Instance.Get<PopupSettings>().Refresh();
+                        //UIManager.Instance.Main.Refresh();
+                    }
+                });
+            }
+        });
+    }
+
+    private void GoogleLoginCallback(bool isSuccess, string errorMessage, string token)
+    {
+        if (isSuccess == false)
+        {
+            Debug.LogError(errorMessage);
+            return;
+        }
         auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(token, null)).ContinueWith(authTask =>
         {
             if (authTask.IsCompleted)
