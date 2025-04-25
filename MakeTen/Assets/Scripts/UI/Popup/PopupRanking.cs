@@ -48,9 +48,8 @@ public class PopupRanking : Popup
 
     public override void Open()
     {
-        base.Open();
         Initialize();
-        Refresh();
+        base.Open();
     }
 
     public override void Refresh()

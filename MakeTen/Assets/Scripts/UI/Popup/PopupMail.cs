@@ -18,9 +18,8 @@ public class PopupMail : Popup
     }
     public override void Open()
     {
-        base.Open();
         Init();
-        Refresh();
+        base.Open();
     }
 
     public override void Refresh()

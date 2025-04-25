@@ -6,6 +6,7 @@ Obj/
 UnityGenerated/
 Library/
 Build/
+_Build/
 .utmp/
 Logs/
 .vs/

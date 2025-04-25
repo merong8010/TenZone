@@ -18,8 +18,6 @@ public class PopupNickname : Popup
         base.Open();
         nicknameInput.text = DataManager.Instance.userData.nickname;
         resultText.text = string.Empty;
-
-        Refresh();
     }
 
     public override void Refresh()

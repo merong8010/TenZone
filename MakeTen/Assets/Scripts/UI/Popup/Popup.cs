@@ -24,12 +24,9 @@ public class Popup : MonoBehaviour
         if(rt != null)
         {
             rt.localScale = Vector3.zero;
-            rt.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+            rt.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack);
         }
-        
-        //Vector2 origin = rt.anchoredPosition;
-        //rt.anchoredPosition = new Vector2(origin.x, origin.y - 1000);
-        //rt.DOAnchorPosY(origin.y, 0.5f).SetEase(Ease.InOutElastic);
+        Refresh();
     }
 
     public virtual void Close()

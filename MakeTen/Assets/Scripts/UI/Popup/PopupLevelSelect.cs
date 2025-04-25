@@ -4,17 +4,21 @@ using System.Linq;
 public class PopupLevelSelect : Popup
 {
     [SerializeField]
-    private LevelList levelList;
-
+    private LevelList[] levelList;
+    
 
     public override void Open()
     {
         int lastLevelIdx = PlayerPrefs.GetInt("LastLevel", 0);
         base.Open();
         Initialize();
-        levelList.UpdateList(DataManager.Instance.Get<GameData.GameLevel>().ToList());
-        currentLevel = levelList.GetDatas()[lastLevelIdx];
-        levelList.Focus(lastLevelIdx);
+        for(int i = 0; i < levelList.Length; i++)
+        {
+            levelList[i].UpdateList(DataManager.Instance.Get<GameData.GameLevel>().ToList());
+            levelList[i].Focus(lastLevelIdx);
+        }
+        
+        currentLevel = levelList.FirstOrDefault().GetDatas()[lastLevelIdx];
     }
 
     private bool isInit = false;
@@ -23,13 +27,20 @@ public class PopupLevelSelect : Popup
     {
         if (isInit) return;
         isInit = true;
-
-        levelList.SetEvent(ClickItem);
+        for (int i = 0; i < levelList.Length; i++)
+        {
+            levelList[i].SetEvent(ClickItem);
+        }
     }
 
     private void ClickItem(GameData.GameLevel data)
     {
         currentLevel = data;
+        int levelIdx = levelList.FirstOrDefault().GetDatas().IndexOf(currentLevel);
+        for (int i = 0; i < levelList.Length; i++)
+        {
+            levelList[i].Focus(levelIdx);
+        }
     }
 
     public void ClickStart()
@@ -39,7 +50,7 @@ public class PopupLevelSelect : Popup
             UIManager.Instance.Message.Show(Message.Type.Simple, "Please Select Level");
             return;
         }
-        PlayerPrefs.SetInt("LastLevel", levelList.GetDatas().IndexOf(currentLevel));
+        PlayerPrefs.SetInt("LastLevel", levelList.FirstOrDefault().GetDatas().IndexOf(currentLevel));
         if (DataManager.Instance.userData.UseHeart())
         {
             GameManager.Instance.GoScene(GameManager.Scene.Puzzle, currentLevel);

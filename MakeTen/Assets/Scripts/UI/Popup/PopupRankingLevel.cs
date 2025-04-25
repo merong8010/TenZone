@@ -45,8 +45,9 @@ public class PopupRankingLevel : Popup
 
     public override void Open()
     {
-        base.Open();
         Initialize();
+        base.Open();
+        
         //FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
         //{
         //    rankingList.UpdateList(result.topRanks);

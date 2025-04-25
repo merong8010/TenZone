@@ -33,6 +33,7 @@ public class UserData
     public string banMessage;
     public string lastPlayDate;
     public int attendanceCount;
+    public bool IsRewardAttendanceAd;
     public string attendanceRewardDate;
 
     public class Record : IComparable<Record>
@@ -170,12 +171,34 @@ public class UserData
         FirebaseManager.Instance.SaveUserData(this);
     }
 
+    public void CheckDate()
+    {
+        //attendanceRewardDate != GameManager.Instance.dateTime.Value.ToDateText()
+    }
+
+    public bool IsAttendanceRewardable
+    {
+        get
+        {
+            if (attendanceRewardDate != GameManager.Instance.dateTime.Value.ToDateText())
+            {
+                IsRewardAttendanceAd = false;
+                return true;
+            }
+            return false;
+        }
+    }
+
     public void RewardAttendacne()
     {
         attendanceCount += 1;
         attendanceRewardDate = GameManager.Instance.dateTime.Value.ToDateText();
     }
 
+    public void RewardAttendanceAd()
+    {
+        IsRewardAttendanceAd = true;
+    }
 
     public bool UseHeart()
     {

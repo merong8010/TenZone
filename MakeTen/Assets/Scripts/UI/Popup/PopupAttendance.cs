@@ -18,23 +18,40 @@ public class PopupAttendance : Popup
     {
         int dateMax = DataManager.Instance.Get<GameData.Attendance>().Max(x => x.date);
         int currentIdx = DataManager.Instance.userData.attendanceCount % dateMax;
-
-        if(data.date-1 == currentIdx)
+        if (DataManager.Instance.userData.attendanceRewardDate == GameManager.Instance.dateTime.Value.ToDateText())
         {
-            if(DataManager.Instance.userData.attendanceRewardDate == GameManager.Instance.dateTime.Value.ToDateText())
-            {
-                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AlreadyRewarded"));
-            }
-            else
+            currentIdx -= 1;
+        }
+        if (data.date-1 == currentIdx)
+        {
+            if(DataManager.Instance.userData.IsAttendanceRewardable)
             {
                 DataManager.Instance.userData.RewardAttendacne();
-                for(int i = 0; i < data.rewards.Length; i++)
+                for (int i = 0; i < data.rewards.Length; i++)
                 {
                     DataManager.Instance.userData.Charge(data.rewards[i].type, data.rewards[i].amount);
                 }
 
                 UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
                 Refresh();
+            }
+            else if(!DataManager.Instance.userData.IsRewardAttendanceAd)
+            {
+                ADManager.Instance.ShowReward(result =>
+                {
+                    DataManager.Instance.userData.RewardAttendanceAd();
+                    for (int i = 0; i < data.rewards.Length; i++)
+                    {
+                        DataManager.Instance.userData.Charge(data.rewards[i].type, data.rewards[i].amount);
+                    }
+
+                    UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
+                    Refresh();
+                });
+            }
+            else
+            {
+                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AlreadyRewarded"));
             }
         }
         else if(data.date-1 < currentIdx)
@@ -49,9 +66,8 @@ public class PopupAttendance : Popup
 
     public override void Open()
     {
-        base.Open();
         Init();
-        Refresh();
+        base.Open();
     }
 
     public override void Refresh()

@@ -162,7 +162,8 @@ public class UIManager : Singleton<UIManager>
     private CanvasScalerAutoAdjuster scalerAuto;
     public void Refresh()
     {
-        scalerAuto.Refresh();
+        //scalerAuto.Refresh();
+        popupStack.LastOrDefault()?.Refresh();
     }
     // 📌 팝업 닫기
     public void ClosePopup()
@@ -192,6 +193,9 @@ public class UIManager : Singleton<UIManager>
     [SerializeField]
     private GameObject loadingObj;
     [SerializeField]
+    private CanvasGroup loadingGroup;
+
+    [SerializeField]
     private UnityEngine.UI.Image loadingBG;
     [SerializeField]
     private UnityEngine.UI.Text loadingText;
@@ -208,12 +212,12 @@ public class UIManager : Singleton<UIManager>
     {
         loadingObj.SetActive(true);
         loadingTweener?.Kill();
-        loadingTweener = DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, bgAlpha, fadeDuration).OnComplete(() =>
+        loadingTweener = DOTween.To(() => loadingGroup.alpha, x => loadingGroup.alpha = x, bgAlpha, fadeDuration).OnComplete(() =>
         {
             callback?.Invoke();
             if(fadeDelay > 0f)
             {
-                loadingTweener = DOTween.ToAlpha(() => loadingBG.color, x => loadingBG.color = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
+                loadingTweener = DOTween.To(() => loadingGroup.alpha, x => loadingGroup.alpha = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
                 {
                     completeCallback?.Invoke();
                     loadingObj.SetActive(false);

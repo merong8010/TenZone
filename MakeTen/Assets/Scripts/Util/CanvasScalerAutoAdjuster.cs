@@ -53,5 +53,6 @@ public class CanvasScalerAutoAdjuster : MonoBehaviour
         {
             safeAreas[i].Refresh();
         }
+        UIManager.Instance.Refresh();
     }
 }
