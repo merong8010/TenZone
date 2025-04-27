@@ -41,14 +41,14 @@ public class SafeArea : MonoBehaviour
         {
             ApplySafeArea(new Rect(0, 0, Screen.width, Screen.height), Util.GetScreenSize());
         }
-        if(DataManager.Instance.userData != null && !DataManager.Instance.userData.isVIP)
-        {
-            AdjustUI();
-        }
-        else
-        {
-            Panel.offsetMin = Vector2.zero;
-        }
+        //if(DataManager.Instance.userData != null && !DataManager.Instance.userData.isVIP)
+        //{
+        //    AdjustUI();
+        //}
+        //else
+        //{
+        //    Panel.offsetMin = Vector2.zero;
+        //}
         refreshAction?.Invoke();
     }
 

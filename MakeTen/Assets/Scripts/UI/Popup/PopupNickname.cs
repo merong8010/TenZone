@@ -10,30 +10,25 @@ public class PopupNickname : Popup
 
     [SerializeField]
     private GoodsDisplay cost;
-    [SerializeField]
-    private GameObject free;
-
     public override void Open()
     {
         base.Open();
-        nicknameInput.text = DataManager.Instance.userData.nickname;
         resultText.text = string.Empty;
     }
 
     public override void Refresh()
     {
         base.Refresh();
-
+        Debug.Log($"PopupNickname.Refresh | {DataManager.Instance.userData.nickname} | {DataManager.Instance.userData.nicknameChangeCount}");
+        nicknameInput.text = DataManager.Instance.userData.nickname;
+        
         if (DataManager.Instance.userData.nicknameChangeCount == 0)
         {
-            cost.gameObject.SetActive(false);
-            free.SetActive(true);
+            cost.Set(GameData.ShopCostType.Free, GameData.GoodsType.None, 0);
         }
         else
         {
-            cost.gameObject.SetActive(true);
             cost.Set(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
-            free.SetActive(false);
         }
     }
 
@@ -57,6 +52,7 @@ public class PopupNickname : Popup
                         {
                             DataManager.Instance.userData.Use(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
                         }
+                        //DataManager.Instance.userData.Save
                     }
                     resultText.text = result.message;
                     resultText.color = result.success ? Color.green : Color.red;

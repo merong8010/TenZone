@@ -301,10 +301,15 @@ public class UserData
         FirebaseManager.Instance.SaveUserData(this);
     }
 
-    public bool Use(GameData.GoodsType type, int amount)
+    public bool Use(GameData.GoodsType type, int amount, bool showMessage = false)
     {
-        if (!goods.ContainsKey(type)) return false;
-        if (goods[type] < amount) return false;
+        if (!goods.ContainsKey(type) || goods[type] < amount)
+        {
+
+            //
+            if (showMessage) UIManager.Instance.Message.Show(Message.Type.Simple, string.Format(TextManager.Get("NotEnoughGoods"), TextManager.Get(type.ToString())));
+            return false;
+        }
         goods[type] -= amount;
         FirebaseManager.Instance.SaveUserData(this);
         return true;
@@ -409,5 +414,7 @@ public class UserData
             UIManager.Instance.Refresh();
             //SafeArea
         }
+
+        UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format(TextManager.Get("PurchaseSuccess"), TextManager.Get(data.name)));
     }
 }

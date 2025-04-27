@@ -94,7 +94,6 @@ public static class Util
             //return Touchscreen.current.primaryTouch.position.ReadValue();
         }
         //#endif
-        Debug.Log(inputPosition);
         return inputPosition;
     }
 }

@@ -13,10 +13,10 @@ public class RankingListItem : ListItem<RankingList.Data>
     private Text nameText;
     [SerializeField]
     private TextMeshProUGUI pointText;
-    [SerializeField]
-    private TextMeshProUGUI remainTimeText;
-    [SerializeField]
-    private TextMeshProUGUI timeStampText;
+    //[SerializeField]
+    //private TextMeshProUGUI remainTimeText;
+    //[SerializeField]
+    //private TextMeshProUGUI timeStampText;
     [SerializeField]
     private Image countryImage;
     public override void SetData(RankingList.Data data)
@@ -43,7 +43,7 @@ public class RankingListItem : ListItem<RankingList.Data>
         
         //countryImage.sprite = Resources.Load<SpriteAtlas>("Graphics/Flags").GetSprite(data.countryCode.ToLower());
         countryImage.sprite = flag;
-        timeStampText.text = data.timeStamp.ToTimeText();
+        //timeStampText.text = data.timeStamp.ToTimeText();
         //DataManager.Instance.GetFlags(data.countryCode, flagSprite => countryImage.sprite = flagSprite);
     }
 

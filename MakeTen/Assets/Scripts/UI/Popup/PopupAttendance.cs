@@ -39,14 +39,17 @@ public class PopupAttendance : Popup
             {
                 ADManager.Instance.ShowReward(result =>
                 {
-                    DataManager.Instance.userData.RewardAttendanceAd();
-                    for (int i = 0; i < data.rewards.Length; i++)
+                    if(result)
                     {
-                        DataManager.Instance.userData.Charge(data.rewards[i].type, data.rewards[i].amount);
-                    }
+                        DataManager.Instance.userData.RewardAttendanceAd();
+                        for (int i = 0; i < data.rewards.Length; i++)
+                        {
+                            DataManager.Instance.userData.Charge(data.rewards[i].type, data.rewards[i].amount);
+                        }
 
-                    UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
-                    Refresh();
+                        UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
+                        Refresh();
+                    }
                 });
             }
             else

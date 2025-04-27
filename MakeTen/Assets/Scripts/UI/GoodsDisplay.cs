@@ -62,6 +62,8 @@ public class GoodsDisplay : MonoBehaviour
                 }
                 break;
             case GameData.ShopCostType.Goods:
+                icon.gameObject.SetActive(true);
+                text.gameObject.SetActive(true);
                 Set(goodsType, amount);
                 break;
         }
@@ -92,6 +94,8 @@ public class GoodsDisplay : MonoBehaviour
     {
         if(isSubscribe)
         {
+            if (priceText != null) priceText.gameObject.SetActive(false);
+            if (adsObj != null) adsObj.SetActive(false);
             icon.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(type.ToString());
             Subscribe();
         }

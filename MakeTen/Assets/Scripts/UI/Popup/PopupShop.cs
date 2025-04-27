@@ -29,24 +29,39 @@ public class PopupShop : Popup
             {
                 case GameData.ShopCostType.Free:
                     DataManager.Instance.userData.AddPurchase(data);
+                    Refresh();
                     break;
                 case GameData.ShopCostType.Ads:
-                    ADManager.Instance.ShowReward(delegate
+                    ADManager.Instance.ShowReward(delegate(bool success)
                     {
-                        DataManager.Instance.userData.AddPurchase(data);
+                        if(success)
+                        {
+                            DataManager.Instance.userData.AddPurchase(data);
+                            Refresh();
+                        }
+                        
                     });
                     break;
                 case GameData.ShopCostType.Cash:
                     IAPManager.Instance.BuyProduct(data.id, successId =>
                     {
                         DataManager.Instance.userData.AddPurchase(data);
+                        Refresh();
                     });
                     break;
                 case GameData.ShopCostType.Goods:
-                    if(DataManager.Instance.userData.Use(data.goodsType, data.costAmount))
+                    UIManager.Instance.Message.Show(Message.Type.Ask, string.Format(TextManager.Get("Shop_Ask_Buy"), TextManager.Get(data.name)), callback: confirm =>
                     {
-                        DataManager.Instance.userData.AddPurchase(data);
-                    }
+                        if(confirm)
+                        {
+                            if (DataManager.Instance.userData.Use(data.goodsType, data.costAmount))
+                            {
+                                DataManager.Instance.userData.AddPurchase(data);
+                                Refresh();
+                            }
+                        }
+                    });
+                    
                     break;
             }
         });

@@ -11,20 +11,30 @@ public class PopupRanking : Popup
         public RankingList.PointData myRank;
     }
     [SerializeField]
-    private TabGroup levelTabs;
+    private TabGroup levelTabsPortrait;
     [SerializeField]
-    private TabGroup typeTabs;
+    private TabGroup levelTabsLandscape;
 
     [SerializeField]
-    private RankingList rankingList;
+    private TabGroup typeTabsPortrait;
     [SerializeField]
-    private RankingListItem myRankItem;
+    private TabGroup typeTabsLandscape;
+
+    [SerializeField]
+    private RankingList rankingListPortrait;
+    [SerializeField]
+    private RankingList rankingListLandscape;
+    [SerializeField]
+    private RankingListItem myRankItemPortrait;
+    [SerializeField]
+    private RankingListItem myRankItemLandscape;
 
     private bool isInit = false;
 
     private int currentLevelIdx;
     private int currentTypeIdx;
-
+    [SerializeField]
+    private GameObject loadingObj;
     [SerializeField]
     private Text stateText;
 
@@ -33,13 +43,24 @@ public class PopupRanking : Popup
         if (isInit) return;
         isInit = true;
 
-        levelTabs.Init(0, idx =>
+        levelTabsPortrait.Init(0, idx =>
         {
             currentLevelIdx = idx;
             Refresh();
         });
 
-        typeTabs.Init(0, idx =>
+        levelTabsLandscape.Init(0, idx =>
+        {
+            currentLevelIdx = idx;
+            Refresh();
+        });
+
+        typeTabsPortrait.Init(0, idx =>
+        {
+            currentTypeIdx = idx;
+            Refresh();
+        });
+        typeTabsLandscape.Init(0, idx =>
         {
             currentTypeIdx = idx;
             Refresh();
@@ -55,15 +76,18 @@ public class PopupRanking : Popup
     public override void Refresh()
     {
         base.Refresh();
-
+        loadingObj.SetActive(true);
         stateText.text = "Loading";
-        rankingList.gameObject.SetActive(false);
-        myRankItem.gameObject.SetActive(false);
+        rankingListPortrait.gameObject.SetActive(false);
+        rankingListLandscape.gameObject.SetActive(false);
+        myRankItemPortrait.gameObject.SetActive(false);
+        myRankItemLandscape.gameObject.SetActive(false);
 
         string date = currentTypeIdx == 0 ? GameManager.Instance.dateTime.Value.ToDateText() : "ALL";
 
         FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
         {
+            loadingObj.SetActive(false);
             if (result == null)
             {
                 stateText.text = TextManager.Get("FailLoadRank");
@@ -73,14 +97,19 @@ public class PopupRanking : Popup
 
             if (result.topRanks != null)
             {
-                rankingList.gameObject.SetActive(true);
-                rankingList.UpdateList(result.topRanks.Select(x=> (RankingList.Data)x).ToList());
+                rankingListPortrait.gameObject.SetActive(true);
+                rankingListPortrait.UpdateList(result.topRanks.Select(x=> (RankingList.Data)x).ToList());
+
+                rankingListLandscape.gameObject.SetActive(true);
+                rankingListLandscape.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
             }
 
             if(result.myRank != null)
             {
-                myRankItem.gameObject.SetActive(true);
-                myRankItem.SetData(result.myRank);
+                myRankItemPortrait.gameObject.SetActive(true);
+                myRankItemPortrait.SetData(result.myRank);
+                myRankItemLandscape.gameObject.SetActive(true);
+                myRankItemLandscape.SetData(result.myRank);
             }
         }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));
     }

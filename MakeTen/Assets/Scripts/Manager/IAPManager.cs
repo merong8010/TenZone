@@ -4,12 +4,13 @@ using UnityEngine.Purchasing.Extension;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Services.Core;
+using Unity.Services.Core.Environments;
 
 public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 {
     private static IStoreController storeController;
     private static IExtensionProvider storeExtensionProvider;
-
     // === 이벤트 콜백 ===
     //public static event Action<string> OnPurchaseSuccess;
     //public static event Action<string, PurchaseFailureReason> OnPurchaseFailed;
@@ -25,14 +26,29 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
         base.Awake();
     }
 
+    async void Start()
+    {
+        try
+        {
+            var options = new InitializationOptions()
+                .SetEnvironmentName("development");
+
+            await UnityServices.InitializeAsync(options);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("UnityService.InitializactionAsync : " + exception);
+            // An error occurred during initialization.
+        }
+    }
+
     public void InitializePurchasing()
     {
         if (IsInitialized()) return;
-
         var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
 
         string[] shopIds = DataManager.Instance.Get<GameData.Shop>().Where(x => x.costType == GameData.ShopCostType.Cash).Select(x => x.id).ToArray();
-        for(int i = 0; i < shopIds.Length; i++)
+        for (int i = 0; i < shopIds.Length; i++)
         {
             builder.AddProduct(shopIds[i], ProductType.Consumable);
         }
@@ -46,15 +62,23 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 
     public string GetPrice(string shopId)
     {
+#if UNITY_EDITOR
+        return $"$ {DataManager.Instance.Get<GameData.Shop>().SingleOrDefault(x => x.id == shopId).costAmount.ToString("n0")}";
+#else
         return storeController.products.WithID(shopId)?.metadata.localizedPriceString;
+#endif
     }
 
     private Action<string> successCallback = null;
     public void BuyProduct(string productId, Action<string> successCallback)
     {
-        UIManager.Instance.Loading("Purchasing", 0.5f, 0f, 0f);
+        //UIManager.Instance.Loading("Purchasing", 0.5f, 0f, 0f);
 #if UNITY_EDITOR
-        PurchaseSuccess(productId);
+        UIManager.Instance.Message.Show(Message.Type.Ask, $"Buy productId : {productId}", callback: confirm =>
+        {
+            if(confirm) PurchaseSuccess(productId);
+        });
+        //PurchaseSuccess(productId);
         return;
 #endif
         if (IsInitialized())

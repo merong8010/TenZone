@@ -72,7 +72,7 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
             Advertisement.Initialize(gameId, true, this);
 #endif
             //isWaitShowBanner = true;
-            Advertisement.Banner.SetPosition(BannerPosition.BOTTOM_CENTER);
+            //Advertisement.Banner.SetPosition(BannerPosition.BOTTOM_CENTER);
         }
     }
 
@@ -97,20 +97,19 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
 
     public void ShowBanner()
     {
-        if (DataManager.Instance.userData.isVIP)
-        {
-            return;
-        }
-        isWaitShowBanner = true;
-        if (!isLoadedBanner)
-        {
-            //Advertisement.Banner.Load(bannerId, this);
-            //Advertisement.Banner.Load(bannerId);
-            MainThreadDispatcher.Instance.Enqueue(() => { Advertisement.Banner.Load(bannerId); });
-            return;
-        }
-        MainThreadDispatcher.Instance.Enqueue(() => { Advertisement.Banner.Show(bannerId); });
-        //Advertisement.Banner.Show(bannerId);
+        //if (DataManager.Instance.userData.isVIP)
+        //{
+        //    return;
+        //}
+        //isWaitShowBanner = true;
+        //if (!isLoadedBanner)
+        //{
+        //    //Advertisement.Banner.Load(bannerId, this);
+        //    //Advertisement.Banner.Load(bannerId);
+        //    MainThreadDispatcher.Instance.Enqueue(() => { Advertisement.Banner.Load(bannerId); });
+        //    return;
+        //}
+        //MainThreadDispatcher.Instance.Enqueue(() => { Advertisement.Banner.Show(bannerId); });
     }
 
     public void HideBanner(bool isDestroy = true)
@@ -123,19 +122,12 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
         Debug.Log("OnInitializationComplete");
         isInit = true;
         StartCoroutine(DelayedAdLoad());
-        //MainThreadDispatcher.Instance.Enqueue(() =>
-        //{
-        //    Advertisement.Banner.Load(bannerId);
-        //    Advertisement.Load(rewardedId, this);
-        //});
-        //Advertisement.Banner.Load(bannerId);
-        //Advertisement.Load(rewardedId, this);
     }
 
     IEnumerator DelayedAdLoad()
     {
         yield return null; // 한 프레임 대기 (메인 루프 완전 준비)
-        Advertisement.Banner.Load(bannerId);
+        //Advertisement.Banner.Load(bannerId);
         Advertisement.Load(rewardedId, this);
     }
 

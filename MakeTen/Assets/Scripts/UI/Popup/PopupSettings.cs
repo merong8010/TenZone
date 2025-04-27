@@ -93,25 +93,58 @@ public class PopupSettings : Popup
 
 
     [SerializeField]
-    private TextMeshProUGUI idText;
+    private Text idText;
 
-    [SerializeField]
-    private TextMeshProUGUI loginStatus;
     [SerializeField]
     private GameObject loginObjs;
     [SerializeField]
     private GameObject logoutObj;
+    [SerializeField]
+    private GameObject loginedGoogle;
+    [SerializeField]
+    private GameObject loginedApple;
 
     public override void Refresh()
     {
         base.Refresh();
-        loginStatus.text = DataManager.Instance.userData.authType.ToString();
+        idText.text = DataManager.Instance.userData.id.ToString();
+        if(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None)
+        {
+            loginObjs.SetActive(true);
+            logoutObj.SetActive(false);
+            loginedGoogle.SetActive(false);
+            loginedApple.SetActive(false);
+        }
+        else
+        {
+            loginObjs.SetActive(false);
+            logoutObj.SetActive(true);
+            loginedGoogle.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.Google);
+            loginedGoogle.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.Apple);
+        }
+        //loginStatus.text = DataManager.Instance.userData.authType.ToString();
         //loginObjs.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
         //logoutObj.SetActive(DataManager.Instance.userData.authType != FirebaseManager.AuthenticatedType.None);
+    }
+
+    public void ClickCopy()
+    {
+        UniClipboard.SetText(idText.text);
+        UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("Copied_ID"));
     }
 
     public void ClickGoogleLogin()
     {
         FirebaseManager.Instance.StartGoogleLogin();
+    }
+
+    public void ClickAppleLogin()
+    {
+        //FirebaseManager.Instance.StartGoogleLogin();
+    }
+
+    public void ClickLogout()
+    {
+
     }
 }

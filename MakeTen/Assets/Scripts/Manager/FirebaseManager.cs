@@ -55,9 +55,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
                 GoogleSignIn.Configuration = new GoogleSignInConfiguration
                 {
+                    //8377165168-vo1mlgvteg95clbfad5gm25hk50vo8ke.apps.googleusercontent.com
                     //8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com
-                    //WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
-                    WebClientId = "8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com",
+                    WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
+                    //WebClientId = "8377165168-vo1mlgvteg95clbfad5gm25hk50vo8ke.apps.googleusercontent.com",
                     UseGameSignIn = false,
                     RequestEmail = true,
                     RequestIdToken = true
@@ -278,20 +279,31 @@ public class FirebaseManager : Singleton<FirebaseManager>
             Debug.LogError($"{task.Status} | {task.Exception} | {task.Exception?.Message} | {task.Exception?.StackTrace}");
             return;
         }
+        
         auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(task.Result.IdToken, null)).ContinueWith(authTask =>
         {
             if (authTask.IsCompleted)
             {
+                user = authTask.Result;
                 IsUserData(user.UserId, isUser =>
                 {
+                    Debug.Log($"IsUserData | {isUser}");
                     if (isUser)
                     {
                         UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: result =>
                         {
                             if (result)
                             {
-                                user = authTask.Result;
-                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
+                                //DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
+                                myDB = null;
+                                GetUserData(user.UserId, userResult =>
+                                {
+                                    DataManager.Instance.userData = userResult;
+                                    RemoveUserId(SystemInfo.deviceUniqueIdentifier);
+                                    UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
+                                    HUD.Instance.UpdateUserData(DataManager.Instance.userData);
+                                });
+                                
                             }
                             else
                             {
@@ -303,15 +315,23 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     }
                     else
                     {
-                        user = authTask.Result;
+                        myDB = null;
                         UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
                         DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
                         RemoveUserId(SystemInfo.deviceUniqueIdentifier);
                         UIManager.Instance.Get<PopupSettings>().Refresh();
-                        //UIManager.Instance.Main.Refresh();
+                        HUD.Instance.UpdateUserData(DataManager.Instance.userData);
                     }
                 });
             }
+            //else
+            //{
+            //    user = authTask.Result;
+            //    UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
+            //    DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
+            //    RemoveUserId(SystemInfo.deviceUniqueIdentifier);
+            //    UIManager.Instance.Get<PopupSettings>().Refresh();
+            //}
         });
     }
 
@@ -548,7 +568,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
         };
         updates[$"{KEY.NICKNAME}/{DataManager.Instance.userData.nickname}"] = null;
 
-        db.UpdateChildrenAsync(updates).ContinueWith(updateTask =>
+        db.UpdateChildrenAsync(updates).ContinueWithOnMainThread(updateTask =>
         {
             ResultCheckNickname result = default;
             if (updateTask.IsFaulted)
@@ -612,7 +632,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, Action<int> callback = null)
     {
+        Debug.Log($"SubmitScore  {gameLevel} | {date} | {score}");
+        Debug.Log($"userData : {DataManager.Instance.userData}");
         RankingList.PointData entry = new RankingList.PointData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, DataManager.Instance.userData.countryCode);
+        Debug.Log($"entry : {entry}");
         db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
         callback?.Invoke(0);
 //#if UNITY_EDITOR

@@ -22,6 +22,11 @@ public class Tab : MonoBehaviour, IPointerClickHandler
         tabGroup.OnTabSelected(this);
     }
 
+    public void ClickItem()
+    {
+        tabGroup.OnTabSelected(this);
+    }
+
     public void Select()
     {
         if (focus != null)
