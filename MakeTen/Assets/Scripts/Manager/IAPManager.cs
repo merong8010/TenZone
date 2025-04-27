@@ -31,9 +31,10 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
         try
         {
             var options = new InitializationOptions()
-                .SetEnvironmentName("development");
+                .SetEnvironmentName("product");
 
             await UnityServices.InitializeAsync(options);
+            InitializePurchasing();
         }
         catch (Exception exception)
         {
@@ -44,15 +45,24 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 
     public void InitializePurchasing()
     {
-        if (IsInitialized()) return;
-        var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
-
-        string[] shopIds = DataManager.Instance.Get<GameData.Shop>().Where(x => x.costType == GameData.ShopCostType.Cash).Select(x => x.id).ToArray();
-        for (int i = 0; i < shopIds.Length; i++)
+        Debug.Log($"InitializePurchasing : {IsInitialized()} || {UnityServices.State} || {DataManager.Instance.IsLoadComplete}");
+        if (IsInitialized() || UnityServices.State != ServicesInitializationState.Initialized || !DataManager.Instance.IsLoadComplete) return;
+        try
         {
-            builder.AddProduct(shopIds[i], ProductType.Consumable);
+            var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
+
+            string[] shopIds = DataManager.Instance.Get<GameData.Shop>().Where(x => x.costType == GameData.ShopCostType.Cash).Select(x => x.id).ToArray();
+            for (int i = 0; i < shopIds.Length; i++)
+            {
+                builder.AddProduct(shopIds[i], ProductType.Consumable);
+            }
+        
+            UnityPurchasing.Initialize(this, builder);
         }
-        UnityPurchasing.Initialize(this, builder);
+        catch(System.Exception exception)
+        {
+            Debug.Log("InitializePurchasing Exception : " + exception.Message + " | " + exception.StackTrace);
+        }
     }
 
     private bool IsInitialized()

@@ -3,7 +3,7 @@
     "m_SelectedProcess": {
         "deviceId": "R5CT51F03LT",
         "name": "studio.jjm.maketen",
-        "processId": 31669,
+        "processId": 3124,
         "exited": false
     },
     "m_SelectedPriority": 0,
@@ -106,164 +106,32 @@
         },
         {
             "deviceId": "R5CT51F03LT",
-            "name": "com.sec.android.app.launcher",
-            "processId": 2214,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 25658,
+            "processId": 18453,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 3550,
+            "processId": 19171,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 4293,
+            "processId": 20335,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 4756,
+            "processId": 1881,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 6196,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 17521,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 1434,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 7366,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 9230,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 10734,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 11455,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 20512,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 26083,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 29892,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 4335,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 6517,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 9496,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 12207,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 14014,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 15581,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 26042,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 27091,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 28163,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 29623,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 30568,
-            "exited": false
-        },
-        {
-            "deviceId": "R5CT51F03LT",
-            "name": "studio.jjm.maketen",
-            "processId": 31669,
+            "processId": 3124,
             "exited": false
         }
     ],

@@ -58,7 +58,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     //8377165168-vo1mlgvteg95clbfad5gm25hk50vo8ke.apps.googleusercontent.com
                     //8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com
                     WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
-                    //WebClientId = "8377165168-vo1mlgvteg95clbfad5gm25hk50vo8ke.apps.googleusercontent.com",
+                    //WebClientId = "8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com",
                     UseGameSignIn = false,
                     RequestEmail = true,
                     RequestIdToken = true
@@ -828,7 +828,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     }
     public void ValidatePurchase(PurchaseEventArgs args, Action<bool> onResult)
     {
-        string url = "";
+        string url = "https://us-central1-maketen-2631f.cloudfunctions.net/validatePurchase";
         var json = JsonConvert.SerializeObject(new PurchaseData()
         {
             productId = args.purchasedProduct.definition.id,

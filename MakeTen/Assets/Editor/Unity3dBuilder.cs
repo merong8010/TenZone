@@ -61,7 +61,7 @@ public static class Unity3dBuilder
 
         PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
-        PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android, "DOTWEEN;DEV");
+        PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android, "DOTWEEN;DEV;ENABLE_UNITY_SERVICES_CORE_VERBOSE_LOGGING");
 
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
         EditorUserBuildSettings.buildAppBundle = false;
@@ -88,7 +88,7 @@ public static class Unity3dBuilder
 
         PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
-        PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android, "DOTWEEN;DEV");
+        PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android, "DOTWEEN;DEV;ENABLE_UNITY_SERVICES_CORE_VERBOSE_LOGGING");
 
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
         EditorUserBuildSettings.buildAppBundle = false;
