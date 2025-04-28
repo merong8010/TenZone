@@ -155,10 +155,8 @@ public class UserData
     public UserData(string userId)
     {
         id = userId;
-        CultureInfo ci = CultureInfo.InstalledUICulture; // ???? new CultureInfo(Application.systemLanguage.ToString())
-        RegionInfo region = new RegionInfo(ci.Name);
-        //string country = RegionInfo.CurrentRegion.EnglishName; // ???? ????
-        countryCode = region.TwoLetterISORegionName;
+        countryCode = Util.GetCountryCode();
+
         heart = DataManager.Instance.MaxHeart;
         lastHeartTime = GameManager.Instance.dateTime.Value.ToTick();
         goods.Add(GameData.GoodsType.Gold, DataManager.Instance.GetConfig("defaultGold"));
