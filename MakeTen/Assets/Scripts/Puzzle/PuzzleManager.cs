@@ -82,10 +82,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
     [SerializeField]
     private RectTransform blocksRT;
 
-    public void GameStart(GameData.GameLevel level)
+    public void GameStart(GameData.GameLevel level, bool use10Seconds)
     {
         currentLevel = level;
-        InitBlocks();
+
+        InitBlocks(use10Seconds);
     }
 
     public void ClearBlocks()
@@ -100,7 +101,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         blocks = new Block[] { };
     }
 
-    public void InitBlocks()
+    public void InitBlocks(bool bonus10Seconds)
     {
         blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * currentLevel.column)) / currentLevel.column, (blocksRT.rect.height - (blockGap.y * currentLevel.row)) / currentLevel.row);
         blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
@@ -140,6 +141,13 @@ public class PuzzleManager : Singleton<PuzzleManager>
         }
 
         finishTime = GameManager.Instance.dateTime.Value.AddSeconds(currentLevel.time);
+        if(bonus10Seconds)
+        {
+            if(DataManager.Instance.userData.Use(GameData.GoodsType.Time_10s, 1))
+            {
+                finishTime = finishTime.AddSeconds(10);
+            }
+        }
         if (finishCoroutine != null) StopCoroutine(finishCoroutine);
         finishCoroutine = StartCoroutine(CheckFinish());
 
@@ -399,9 +407,13 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 {
                     if (confirm)
                     {
-                        if (DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
+                        if (DataManager.Instance.userData.IsTutorial || DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
                         {
                             Shuffle();
+                        }
+                        else
+                        {
+                            GameResult();
                         }
                     }
                     else

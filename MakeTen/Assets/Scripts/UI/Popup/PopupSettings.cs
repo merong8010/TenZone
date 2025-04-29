@@ -201,4 +201,38 @@ public class PopupSettings : Popup
     {
         languageObj.SetActive(false);
     }
+
+    [SerializeField]
+    private GameObject emailLoginObj;
+    [SerializeField]
+    private InputField emailInput;
+    [SerializeField]
+    private InputField passwordInput;
+
+    public void ClickMailLogin()
+    {
+        emailLoginObj.SetActive(true);
+    }
+
+    public void StartMailLogin()
+    {
+        if(!emailInput.text.IsValidEmail())
+        {
+            UIManager.Instance.Message.Show(Message.Type.Simple, "invalid email");
+            return;
+        }
+        if(passwordInput.text.Length < 6)
+        {
+            UIManager.Instance.Message.Show(Message.Type.Simple, "need password length 6 or more");
+            return;
+        }
+
+        FirebaseManager.Instance.SignInWithEmail(emailInput.text, passwordInput.text);
+        CloseMailLogin();
+    }
+
+    public void CloseMailLogin()
+    {
+        emailLoginObj.SetActive(false);
+    }
 }

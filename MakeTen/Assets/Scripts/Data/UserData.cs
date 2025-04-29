@@ -163,6 +163,7 @@ public class UserData
         goods.Add(GameData.GoodsType.Shuffle, DataManager.Instance.GetConfig("defaultShuffle"));
         goods.Add(GameData.GoodsType.Search, DataManager.Instance.GetConfig("defaultSearch"));
         goods.Add(GameData.GoodsType.Time_10s, DataManager.Instance.GetConfig("defaultTime_10s"));
+        goods.Add(GameData.GoodsType.Explode, DataManager.Instance.GetConfig("defaultExplode"));
         level = 1;
         attendanceCount = 0;
         attendanceRewardDate = GameManager.Instance.dateTime.Value.AddDays(-1).ToDateText();
@@ -250,7 +251,7 @@ public class UserData
                 Charge(rewards[i].type, rewards[i].amount);
             }
 
-            UIManager.Instance.Open<PopupReward>().SetData(rewards);
+            UIManager.Instance.Open<PopupReward>().SetData(rewards, "LevelupReward");
         }
 
         FirebaseManager.Instance.SubmitScoreLevel(DataManager.Instance.Get<GameData.UserLevel>().Where(x => x.level < level).Sum(x => x.exp) + exp);

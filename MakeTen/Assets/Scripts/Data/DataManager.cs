@@ -56,12 +56,10 @@ public class DataManager : Singleton<DataManager>
         FirebaseManager.Instance.LoadAllGameDatas(result =>
         {
             dataTotalCount = (int)result.ChildrenCount;
-            Debug.Log("dataTotalCount : "+dataTotalCount);
             foreach (var data in result.Children)
             {
-                Debug.Log(data.Key);
                 Type type = Type.GetType($"GameData.{data.Key}").MakeArrayType();
-                Debug.Log(data.Key + " | " + data.GetRawJsonValue()+" | "+type);
+                //Debug.Log(data.Key + " | " + data.GetRawJsonValue()+" | "+type);
                 gameDatas.Add(data.Key, (GameData.Data[])JsonConvert.DeserializeObject(data.GetRawJsonValue(),type));
             }
         });
@@ -75,11 +73,7 @@ public class DataManager : Singleton<DataManager>
         SearchTerm = GetConfig("searchTerm");
         ExplodeTerm = GetConfig("explodeTerm");
 
-        FirebaseManager.Instance.GetUserData((UserData userData) =>
-        {
-            this.userData = userData;
-            HUD.Instance.UpdateUserData(userData);
-        });
+        RefreshUserData();
 
         yield return new WaitUntil(() => userData != null);
     }
@@ -88,5 +82,13 @@ public class DataManager : Singleton<DataManager>
     {
         this.userData = data;
         HUD.Instance.UpdateUserData(userData);
+    }
+
+    public void RefreshUserData()
+    {
+        FirebaseManager.Instance.GetUserData(userData =>
+        {
+            UpdateUserData(userData);
+        });
     }
 }

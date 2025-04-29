@@ -30,6 +30,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
         None,
         Google,
         Apple,
+        Email,
     }
 
     public static class KEY
@@ -40,7 +41,26 @@ public class FirebaseManager : Singleton<FirebaseManager>
         public static string RANKING_ALL = "ALL";
     }
 
-    public bool IsReady => db != null;
+    public bool IsReady => db != null && user != null;
+    public AuthenticatedType authType
+    {
+        get
+        {
+            if(user != null)
+            {
+                string providerId = user.ProviderData.FirstOrDefault()?.ProviderId;
+                if (providerId == "google.com")
+                {
+                    return AuthenticatedType.Google;
+                }
+                else if (providerId == "apple.com")
+                {
+                    return AuthenticatedType.Apple;
+                }
+            }
+            return AuthenticatedType.None;
+        }
+    }
     private DatabaseReference db;
     private FirebaseAuth auth;
     private FirebaseUser user;
@@ -58,18 +78,15 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 auth = FirebaseAuth.DefaultInstance;
                 functions = FirebaseFunctions.GetInstance("asia-southeast1");
                 user = auth.CurrentUser;
-
+                
                 GoogleSignIn.Configuration = new GoogleSignInConfiguration
                 {
-                    //8377165168-vo1mlgvteg95clbfad5gm25hk50vo8ke.apps.googleusercontent.com
-                    //8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com
                     WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
-                    //WebClientId = "8377165168-0uskm7n18l5fbeueqpla74soog96k0g3.apps.googleusercontent.com",
                     UseGameSignIn = false,
                     RequestEmail = true,
                     RequestIdToken = true
                 };
-
+                if (user == null) SignInAnonymously();
 #if UNITY_ANDROID
                 //InitializePlayGamesLogin();
 #endif
@@ -87,6 +104,23 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
+    private void SignInAnonymously()
+    {
+        auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCanceled || task.IsFaulted)
+            {
+                UIManager.Instance.Message.Show(Message.Type.Confirm, "Retry Connect", callback: confirm =>
+                {
+                    SignInAnonymously();
+                });
+                return;
+            }
+
+            user = task.Result.User;
+        });
+    }
+
     public void LoadAllGameDatas(Action<DataSnapshot> callback)
     {
         db.Child("GameData").GetValueAsync().ContinueWithOnMainThread(task =>
@@ -101,7 +135,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 Debug.LogError("Fail Load GameData");
             }
         });
-        //db.Child("GameData").
     }
 
     private DatabaseReference myDB;
@@ -113,7 +146,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
             myDB.ValueChanged += HandleMyDBChanged;
         }
         string json = JsonConvert.SerializeObject(data);
-        Debug.Log("SaveUserData " + json);
         myDB.SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
@@ -128,27 +160,40 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetUserData(Action<UserData> callback)
     {
-        if(user != null)
+        if (myDB == null)
         {
-            GetUserData(user.UserId, callback);
+            myDB = db.Child(KEY.USER).Child(user.UserId);
+            myDB.ValueChanged += HandleMyDBChanged;
         }
-        else
-        {
-            DeviceIDManager.deviceIDHandler += OnDeviceID;
-            DeviceIDManager.GetDeviceID();
 
-            void OnDeviceID(string deviceID)
+        myDB.GetValueAsync().ContinueWithOnMainThread(task => {
+            if (task.IsCompleted)
             {
-                Debug.Log($"::: CustomLogin {deviceID}");
-                if (!string.IsNullOrEmpty(deviceID))
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists)
                 {
-                    GetUserData(deviceID, callback);
+                    UserData myData = JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue());
+                    if (!string.IsNullOrEmpty(myData.banMessage))
+                    {
+                        UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
+                        {
+                            Application.Quit();
+                        });
+                        return;
+                    }
+                    callback.Invoke(myData);
                 }
-
-                DeviceIDManager.deviceIDHandler -= OnDeviceID;
+                else
+                {
+                    Debug.Log("No user found.");
+                    callback.Invoke(new UserData(user.UserId));
+                }
             }
-            
-        }
+            else
+            {
+                Debug.LogError("Failed to get user data: " + task.Exception);
+            }
+        });
     }
 
     private void HandleMyDBChanged(object sender, ValueChangedEventArgs args)
@@ -176,163 +221,137 @@ public class FirebaseManager : Singleton<FirebaseManager>
         }
     }
 
-    public void GetUserData(string userId, Action<UserData> callback)
-    {
-        if (myDB == null)
-        {
-            myDB = db.Child(KEY.USER).Child(userId);
-            myDB.ValueChanged += HandleMyDBChanged;
-        }
+    private AuthenticatedType currentAuthType;
 
-        myDB.GetValueAsync().ContinueWithOnMainThread(task => {
-            if (task.IsCompleted)
+    public void SignInWithEmail(string email, string password)
+    {
+        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCanceled || task.IsFaulted)
             {
-                DataSnapshot snapshot = task.Result;
-                if (snapshot.Exists)
+                var exception = task.Exception?.GetBaseException();
+                if (exception is FirebaseException firebaseEx && firebaseEx.ErrorCode == (int)AuthError.UserNotFound)
                 {
-                    Debug.Log("User Info: " + snapshot.GetRawJsonValue());
-                    UserData myData = JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue());
-                    if (!string.IsNullOrEmpty(myData.banMessage))
+                    auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(createTask =>
                     {
-                        UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
+                        if (createTask.IsCanceled || createTask.IsFaulted)
                         {
-                            Application.Quit();
-                        });
-                        return;
-                    }
-                    callback.Invoke(myData);
+                            UIManager.Instance.Message.Show(Message.Type.Confirm, new StringBuilder().Append(TextManager.Get("Login_Fail")).AppendLine().Append(createTask.Exception.Message).ToString());
+                            return;
+                        }
+                        currentAuthType = AuthenticatedType.Email;
+                        AuthCompleteCallback(createTask.Result.User, password);
+                    });
                 }
-                else
-                {
-                    Debug.Log("No user found.");
-                    callback.Invoke(new UserData(userId));
-                }
+                UIManager.Instance.Message.Show(Message.Type.Confirm, new StringBuilder().Append(TextManager.Get("Login_Fail")).AppendLine().Append(task.Exception.Message).ToString());
+                return;
             }
-            else
-            {
-                Debug.LogError("Failed to get user data: " + task.Exception);
-            }
+            currentAuthType = AuthenticatedType.Email;
+            AuthCompleteCallback(task.Result.User, password);
         });
     }
 
-    public void IsUserData(string userId, Action<bool> callback)
-    {
-        db.Child(KEY.USER).Child(userId).GetValueAsync().ContinueWithOnMainThread(task => {
-            if (task.IsCompleted)
-            {
-                DataSnapshot snapshot = task.Result;
-                if (snapshot.Exists)
-                {
-                    callback.Invoke(true);
-                }
-                else
-                {
-                    callback.Invoke(false);
-                }
-            }
-            else
-            {
-                Debug.LogError("Failed to get user data: " + task.Exception);
-            }
-        });
-    }
-
-    public void RemoveUserId(string userKey)
-    {
-        db.Child(KEY.USER).Child(userKey).RemoveValueAsync().ContinueWithOnMainThread(task =>
-        {
-            if (task.IsCompleted && task.IsCompleted)
-            {
-                
-            }
-            else
-            {
-                Debug.LogWarning("기존 키에 데이터가 없습니다.");
-            }
-        });
-    }
 
     public void StartGoogleLogin()
     {
-        GoogleSignIn.DefaultInstance.SignIn().ContinueWith(
-        OnAuthenticationFinished);
-    }
-
-    internal void OnAuthenticationFinished(Task<GoogleSignInUser> task)
-    {
-        Debug.Log("Authentication finished, processing on main thread");
-        MainThreadDispatcher.Instance.Enqueue(() => ProcessAuthResult(task));
-    }
-
-    private void ProcessAuthResult(Task<GoogleSignInUser> task)
-    {
-        Debug.Log($"ProcessAuthResult task : {task.IsCompletedSuccessfully}");
-        if (task.IsFaulted)
+        GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(task =>
         {
-            Debug.LogError($"{task.Status} | {task.Exception} | {task.Exception?.Message} | {task.Exception?.StackTrace}");
-            return;
-        }
-        
-        auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(task.Result.IdToken, null)).ContinueWithOnMainThread(authTask =>
-        {
-            if (authTask.IsCompleted)
+            if (task.IsFaulted)
             {
-                user = authTask.Result;
-                AuthCompleteCallback();
-                //MainThreadDispatcher.Instance.Enqueue(AuthCompleteCallback);
+                Debug.LogError($"{task.Status} | {task.Exception} | {task.Exception?.Message} | {task.Exception?.StackTrace}");
+                return;
             }
+
+            Credential credential = GoogleAuthProvider.GetCredential(task.Result.IdToken, null);
+            auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread(authTask =>
+            {
+                if (authTask.IsCompleted)
+                {
+                    currentAuthType = AuthenticatedType.Google;
+                    AuthCompleteCallback(authTask.Result, task.Result.IdToken);
+                }
+            });
         });
     }
 
-    private void AuthCompleteCallback()
+    private void AuthCompleteCallback(FirebaseUser authUser, string authToken = "")
     {
-        IsUserData(user.UserId, isUser =>
+        db.Child(KEY.USER).Child(authUser.UserId).GetValueAsync().ContinueWithOnMainThread(userDataTask =>
         {
-            if (isUser)
+            DataSnapshot userData = userDataTask.Result;
+            if (userData.Exists)
             {
-                UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: result =>
+                UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: change =>
                 {
-                    if (result)
+                    if (change)
                     {
-                        //DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
-                        myDB = null;
-                        GetUserData(user.UserId, userResult =>
+                        //DataManager.Instance.RefreshUserData();
+                        var data = new Dictionary<string, object>
                         {
-                            DataManager.Instance.userData = userResult;
-                            RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
-                            HUD.Instance.UpdateUserData(DataManager.Instance.userData);
+                            {"anonymousUid", user.UserId }
+                        };
+                        functions.GetHttpsCallable("deleteUserData").CallAsync(data).ContinueWithOnMainThread(task =>
+                        {
+                            if (task.IsCompletedSuccessfully)
+                            {
+                                user = authUser;
+                                myDB = null;
+                                DataManager.Instance.RefreshUserData();
+                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
+                                UIManager.Instance.Get<PopupSettings>().Refresh();
+                            }
+                            else
+                            {
+                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+                            }
                         });
-
                     }
-                    else
-                    {
-                        user = null;
-                        auth.SignOut();
-                    }
-                    UIManager.Instance.Get<PopupSettings>().Refresh();
-                    //UIManager.Instance.Main.Refresh();
                 });
             }
             else
             {
-                myDB = null;
-                string providerId = user.ProviderData.FirstOrDefault()?.ProviderId;
-                AuthenticatedType authType = AuthenticatedType.None;
-                if (providerId == "google.com")
+                Credential credential = null;
+                switch(currentAuthType)
                 {
-                    authType = AuthenticatedType.Google;
+                    case AuthenticatedType.Google:
+                        credential = GoogleAuthProvider.GetCredential(authToken, null);
+                        break;
+                    case AuthenticatedType.Apple:
+                        //credential = OAuthProvider.GetCredential(authToken,)
+                        break;
+                    case AuthenticatedType.Email:
+                        credential = EmailAuthProvider.GetCredential(authUser.Email, authToken);
+                        break;
                 }
-                else if (providerId == "apple.com")
+                user.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(linkTask =>
                 {
-                    authType = AuthenticatedType.Apple;
-                }
-                
-                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-                DataManager.Instance.userData.UpdateData(user.UserId, authType);
-                RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-                UIManager.Instance.Get<PopupSettings>().Refresh();
-                HUD.Instance.UpdateUserData(DataManager.Instance.userData);
+                    if(linkTask.IsCompletedSuccessfully)
+                    {
+                        myDB = null;
+                        var data = new Dictionary<string, object>
+                        {
+                            {"anonymousUid", user.UserId },
+                            {"authUid", authUser.UserId }
+                        };
+                        functions.GetHttpsCallable("migrateUserData").CallAsync(data).ContinueWithOnMainThread(task =>
+                        {
+                            if(task.IsCompletedSuccessfully)
+                            {
+                                DataManager.Instance.RefreshUserData();
+                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
+                                UIManager.Instance.Get<PopupSettings>().Refresh();
+                            }
+                            else
+                            {
+                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+                            }
+                        });
+                    }
+                    else
+                    {
+                        UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+                    }
+                });
             }
         });
     }
@@ -553,21 +572,41 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void UpdateNickName(string nickname, Action<ResultCheckNickname> callback)
     {
-        var updates = new Dictionary<string, object>
-        {
-            [$"{KEY.NICKNAME}/{nickname}"] = DataManager.Instance.userData.id,
-            [$"{KEY.USER}/{DataManager.Instance.userData.id}/nickname"] = nickname
-        };
-        updates[$"{KEY.NICKNAME}/{DataManager.Instance.userData.nickname}"] = null;
+        //var updates = new Dictionary<string, object>
+        //{
+        //    [$"{KEY.NICKNAME}/{nickname}"] = DataManager.Instance.userData.id,
+        //    [$"{KEY.USER}/{DataManager.Instance.userData.id}/nickname"] = nickname
+        //};
+        //updates[$"{KEY.NICKNAME}/{DataManager.Instance.userData.nickname}"] = null;
 
-        db.UpdateChildrenAsync(updates).ContinueWithOnMainThread(updateTask =>
+        //db.UpdateChildrenAsync(updates).ContinueWithOnMainThread(updateTask =>
+        //{
+        //    ResultCheckNickname result = default;
+        //    if (updateTask.IsFaulted)
+        //    {
+        //        Debug.LogError("닉네임 변경 실패: " + updateTask.Exception);
+        //        result.success = false;
+        //        result.message = updateTask.Exception.Message;
+        //        callback?.Invoke(result);
+        //    }
+        //    else
+        //    {
+        //        Debug.Log("닉네임 변경 성공!");
+        //        result.success = true;
+        //        result.message = TextManager.Get("nickname_ok");
+        //        DataManager.Instance.userData.nickname = nickname;
+        //        callback?.Invoke(result);
+        //    }
+        //});
+
+        functions.GetHttpsCallable("changeNickname").CallAsync(new Dictionary<string, object> { { "nickname", nickname } }).ContinueWithOnMainThread(task =>
         {
             ResultCheckNickname result = default;
-            if (updateTask.IsFaulted)
+            if (task.IsFaulted)
             {
-                Debug.LogError("닉네임 변경 실패: " + updateTask.Exception);
+                Debug.LogError("닉네임 변경 실패: " + task.Exception);
                 result.success = false;
-                result.message = updateTask.Exception.Message;
+                result.message = task.Exception.Message;
                 callback?.Invoke(result);
             }
             else

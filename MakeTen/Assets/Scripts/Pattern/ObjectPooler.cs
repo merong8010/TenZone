@@ -102,6 +102,7 @@ public class ObjectPooler : Singleton<ObjectPooler>
     /// </summary>
     public T Get<T>(string tagOrPath, Transform parent = null, Vector3 position = default(Vector3), Vector3 scale = default(Vector3), Quaternion rotation = default(Quaternion), float autoReturnTime = 0f) where T : MonoBehaviour
     {
+        if (!pools.Exists(x => x.tag == tagOrPath)) return null;
         string tag = tagOrPath;
         if (!poolDictionary.ContainsKey(tag))
         {

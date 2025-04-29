@@ -138,7 +138,7 @@ public class GameManager : Singleton<GameManager>
         Main,
         Puzzle,
     }
-    public void GoScene(Scene scene, GameData.GameLevel level = null)
+    public void GoScene(Scene scene, GameData.GameLevel level = null, bool use10Seconds = false)
     {
         UIManager.Instance.Loading(callback: () =>
         {
@@ -175,7 +175,7 @@ public class GameManager : Singleton<GameManager>
                     break;
                 case Scene.Puzzle:
                     HUD.Instance.ShowPuzzle(true);
-                    PuzzleManager.Instance.GameStart(level);
+                    PuzzleManager.Instance.GameStart(level, use10Seconds);
                     ADManager.Instance.ShowBanner();
                     break;
             }

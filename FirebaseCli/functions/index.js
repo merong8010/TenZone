@@ -38,6 +38,12 @@ import {SendMail} from "./SendMail.js";
 export {SendMail};
 import {validatePurchase} from "./validatePurchase.js";
 export {validatePurchase};
+import {migrateUserData} from "./migrateUserData.js";
+export {migrateUserData};
+import {deleteUserData} from "./deleteUserData.js";
+export {deleteUserData};
+import {changeNickname} from "./changeNickname.js";
+export {changeNickname};
 
 export const GetRanking = region("asia-southeast1").https.onCall(async (data, context) => {
   const gameLevel = data.gameLevel;

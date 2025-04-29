@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
+using System.Text.RegularExpressions;
 
 public static class ExtensionMethods
 {
@@ -121,6 +122,17 @@ public static class ExtensionMethods
     public static int RemainTimeNextMonth(this DateTime date)
     {
         return (int)(new DateTime(date.Year, date.Month, 0, 0, 0, 0).AddMonths(1) - date).TotalSeconds;
+    }
+
+    private static readonly Regex emailRegex = new Regex(
+        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase
+    );
+
+    public static bool IsValidEmail(this string email)
+    {
+        if (string.IsNullOrEmpty(email)) return false;
+        return emailRegex.IsMatch(email);
     }
 
     const int rateRange = 1000000;

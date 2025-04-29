@@ -153,7 +153,7 @@ public class HUD : Singleton<HUD>
     public void ClickPause()
     {
         PuzzleManager.Instance.IsPause = true;
-        UIManager.Instance.Message.Show(Message.Type.Ask, "Quit?", callback : (yes) =>
+        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback : (yes) =>
         {
             if (yes) GameManager.Instance.GoScene(GameManager.Scene.Main);
             else PuzzleManager.Instance.IsPause = false;
@@ -162,7 +162,13 @@ public class HUD : Singleton<HUD>
 
     public void ClickShuffle()
     {
-        PuzzleManager.Instance.Shuffle();
+        //PuzzleManager.Instance.IsPause = true;
+        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback: (yes) =>
+        {
+            if (yes) PuzzleManager.Instance.Shuffle();
+            //PuzzleManager.Instance.IsPause = false;
+        });
+        
     }
 
     [SerializeField]

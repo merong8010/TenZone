@@ -131,7 +131,7 @@ public class Block : MonoBehaviour
         if (data.bonus > 0)
         {
             PuzzleManager.Instance.AddSeconds(data.bonus);
-            //ObjectPooler.Instance.GetObject<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f);
+            ObjectPooler.Instance.Get<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f)?.SetText($"+{data.bonus}sec");
         }
     }
     public void InitRandom()
