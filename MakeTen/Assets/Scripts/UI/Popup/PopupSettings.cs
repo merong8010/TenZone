@@ -109,24 +109,28 @@ public class PopupSettings : Popup
     private GameObject loginedGoogle;
     [SerializeField]
     private GameObject loginedApple;
+    [SerializeField]
+    private GameObject loginedEmail;
 
     public override void Refresh()
     {
         base.Refresh();
         idText.text = DataManager.Instance.userData.id.ToString();
-        if(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None)
+        if(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.None)
         {
             loginObjs.SetActive(true);
             logoutObj.SetActive(false);
             loginedGoogle.SetActive(false);
             loginedApple.SetActive(false);
+            loginedEmail.SetActive(false);
         }
         else
         {
             loginObjs.SetActive(false);
             logoutObj.SetActive(true);
-            loginedGoogle.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.Google);
-            loginedApple.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.Apple);
+            loginedGoogle.SetActive(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.Google);
+            loginedApple.SetActive(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.Apple);
+            loginedEmail.SetActive(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.Email);
         }
         //loginStatus.text = DataManager.Instance.userData.authType.ToString();
         //loginObjs.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);

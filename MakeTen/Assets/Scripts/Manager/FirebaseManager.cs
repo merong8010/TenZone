@@ -49,6 +49,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             if(user != null)
             {
                 string providerId = user.ProviderData.FirstOrDefault()?.ProviderId;
+                Debug.Log("providerId : " + providerId);
                 if (providerId == "google.com")
                 {
                     return AuthenticatedType.Google;
@@ -56,6 +57,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 else if (providerId == "apple.com")
                 {
                     return AuthenticatedType.Apple;
+                }
+                else if(!string.IsNullOrEmpty(user.Email))
+                {
+                    return AuthenticatedType.Email;
                 }
             }
             return AuthenticatedType.None;
@@ -76,9 +81,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 FirebaseApp app = FirebaseApp.DefaultInstance;
                 db = FirebaseDatabase.DefaultInstance.RootReference;
                 auth = FirebaseAuth.DefaultInstance;
-                functions = FirebaseFunctions.GetInstance("asia-southeast1");
-                user = auth.CurrentUser;
-                
+                functions = FirebaseFunctions.GetInstance("us-central1");
+                //user = auth.CurrentUser;
                 GoogleSignIn.Configuration = new GoogleSignInConfiguration
                 {
                     WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
@@ -125,10 +129,17 @@ public class FirebaseManager : Singleton<FirebaseManager>
     {
         db.Child("GameData").GetValueAsync().ContinueWithOnMainThread(task =>
         {
-            if(task.IsCompleted)
+            if(task.IsCompletedSuccessfully)
             {
-                DataSnapshot snapshot = task.Result;
-                callback.Invoke(snapshot);
+                callback.Invoke(task.Result);
+            }
+            else if (task.IsFaulted)
+            {
+                Debug.LogError("❌ GameData Load Failed (Exception): " + task.Exception);
+            }
+            else if (task.IsCanceled)
+            {
+                Debug.LogWarning("⚠️ GameData Load was canceled.");
             }
             else
             {
@@ -186,7 +197,14 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 else
                 {
                     Debug.Log("No user found.");
-                    callback.Invoke(new UserData(user.UserId));
+                    try
+                    {
+                        callback.Invoke(new UserData(user.UserId));
+                    }
+                    catch(System.Exception exception)
+                    {
+                        Debug.LogError(exception.ToString());
+                    }
                 }
             }
             else
@@ -230,10 +248,12 @@ public class FirebaseManager : Singleton<FirebaseManager>
             if (task.IsCanceled || task.IsFaulted)
             {
                 var exception = task.Exception?.GetBaseException();
-                if (exception is FirebaseException firebaseEx && firebaseEx.ErrorCode == (int)AuthError.UserNotFound)
+                //exception is FirebaseException firebaseEx;
+                if (exception is FirebaseException firebaseEx && (firebaseEx.ErrorCode == (int)AuthError.UserNotFound || firebaseEx.ErrorCode == (int)AuthError.Failure))
                 {
                     auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(createTask =>
                     {
+                        var createException = createTask.Exception?.GetBaseException();
                         if (createTask.IsCanceled || createTask.IsFaulted)
                         {
                             UIManager.Instance.Message.Show(Message.Type.Confirm, new StringBuilder().Append(TextManager.Get("Login_Fail")).AppendLine().Append(createTask.Exception.Message).ToString());
@@ -242,6 +262,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                         currentAuthType = AuthenticatedType.Email;
                         AuthCompleteCallback(createTask.Result.User, password);
                     });
+                    return;
                 }
                 UIManager.Instance.Message.Show(Message.Type.Confirm, new StringBuilder().Append(TextManager.Get("Login_Fail")).AppendLine().Append(task.Exception.Message).ToString());
                 return;
@@ -279,6 +300,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
         db.Child(KEY.USER).Child(authUser.UserId).GetValueAsync().ContinueWithOnMainThread(userDataTask =>
         {
             DataSnapshot userData = userDataTask.Result;
+            Debug.Log($"AuthCompleteCallback : {authUser.UserId}");
+
             if (userData.Exists)
             {
                 UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: change =>
@@ -323,8 +346,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
                         credential = EmailAuthProvider.GetCredential(authUser.Email, authToken);
                         break;
                 }
+                Debug.Log(authUser.Email + " | " + authToken);
                 user.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(linkTask =>
                 {
+                    Debug.Log(linkTask.Exception?.ToString());
                     if(linkTask.IsCompletedSuccessfully)
                     {
                         myDB = null;
@@ -333,9 +358,11 @@ public class FirebaseManager : Singleton<FirebaseManager>
                             {"anonymousUid", user.UserId },
                             {"authUid", authUser.UserId }
                         };
+                        Debug.Log("migrateUserData");
                         functions.GetHttpsCallable("migrateUserData").CallAsync(data).ContinueWithOnMainThread(task =>
                         {
-                            if(task.IsCompletedSuccessfully)
+                            Debug.Log("migrateUserData.task : " + task.IsCompletedSuccessfully);
+                            if (task.IsCompletedSuccessfully)
                             {
                                 DataManager.Instance.RefreshUserData();
                                 UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));

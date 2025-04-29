@@ -404,11 +404,16 @@ public class PuzzleManager : Singleton<PuzzleManager>
             }
             else
             {
+                if(DataManager.Instance.userData.IsTutorial)
+                {
+                    Shuffle();
+                    return;
+                }
                 UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("NeedShuffle"), callback: confirm =>
                 {
                     if (confirm)
                     {
-                        if (DataManager.Instance.userData.IsTutorial || DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
+                        if (DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
                         {
                             Shuffle();
                         }

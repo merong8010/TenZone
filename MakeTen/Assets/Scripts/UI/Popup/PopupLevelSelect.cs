@@ -7,7 +7,7 @@ public class PopupLevelSelect : Popup
     [SerializeField]
     private LevelList[] levelList;
     [SerializeField]
-    private Toggle bonus10Seconds;
+    private Toggle[] bonus10Seconds;
 
     public override void Open()
     {
@@ -22,17 +22,24 @@ public class PopupLevelSelect : Popup
         
         currentLevel = levelList.FirstOrDefault().GetDatas()[lastLevelIdx];
 
-        if (bonus10Seconds.isOn && !DataManager.Instance.userData.Has(GameData.GoodsType.Time_10s, 1))
+        for(int i = 0; i < bonus10Seconds.Length; i++)
         {
-            bonus10Seconds.isOn = false;
+            if (bonus10Seconds[i].isOn && !DataManager.Instance.userData.Has(GameData.GoodsType.Time_10s, 1))
+            {
+                bonus10Seconds[i].isOn = false;
+            }
         }
+        
     }
 
     private void Bonus10SecondsValueChanged(bool on)
     {
         if(on && !DataManager.Instance.userData.Has(GameData.GoodsType.Time_10s, 1))
         {
-            bonus10Seconds.isOn = false;
+            for (int i = 0; i < bonus10Seconds.Length; i++)
+            {
+                bonus10Seconds[i].isOn = false;
+            }
         }
     }
 
@@ -46,7 +53,10 @@ public class PopupLevelSelect : Popup
         {
             levelList[i].SetEvent(ClickItem);
         }
-        bonus10Seconds.onValueChanged.AddListener(Bonus10SecondsValueChanged);
+        for (int i = 0; i < bonus10Seconds.Length; i++)
+        {
+            bonus10Seconds[i].onValueChanged.AddListener(Bonus10SecondsValueChanged);
+        }
     }
 
     private void ClickItem(GameData.GameLevel data)
@@ -69,7 +79,7 @@ public class PopupLevelSelect : Popup
         PlayerPrefs.SetInt("LastLevel", levelList.FirstOrDefault().GetDatas().IndexOf(currentLevel));
         if (DataManager.Instance.userData.UseHeart())
         {
-            GameManager.Instance.GoScene(GameManager.Scene.Puzzle, currentLevel, bonus10Seconds.isOn);
+            GameManager.Instance.GoScene(GameManager.Scene.Puzzle, currentLevel, bonus10Seconds.First().isOn);
             Close();
         }
         
