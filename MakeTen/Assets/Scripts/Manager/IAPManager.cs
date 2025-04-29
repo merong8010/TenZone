@@ -79,8 +79,7 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 #endif
     }
 
-    private Action<string> successCallback = null;
-    public void BuyProduct(string productId, Action<string> successCallback)
+    public void BuyProduct(string productId)
     {
         //UIManager.Instance.Loading("Purchasing", 0.5f, 0f, 0f);
 #if UNITY_EDITOR
@@ -96,7 +95,6 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
             Product product = storeController.products.WithID(productId);
             if (product != null && product.availableToPurchase)
             {
-                this.successCallback = successCallback;
                 storeController.InitiatePurchase(product);
             }
             else
@@ -119,24 +117,24 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
         if (!IsInitialized())
         {
             Debug.LogWarning("복원 실패: 초기화되지 않음");
-            OnRestoreFailed?.Invoke("not_initialized");
+            //OnRestoreFailed?.Invoke("not_initialized");
             return;
         }
 
-        var apple = storeExtensionProvider.GetExtension<IAppleExtensions>();
-        apple.RestoreTransactions((result) =>
-        {
-            if (result)
-            {
-                Debug.Log("복원 성공");
-                OnRestoreSuccess?.Invoke("restore_complete");
-            }
-            else
-            {
-                Debug.LogWarning("복원 실패");
-                OnRestoreFailed?.Invoke("restore_failed");
-            }
-        });
+        //var apple = storeExtensionProvider.GetExtension<IAppleExtensions>();
+        //apple.RestoreTransactions((result) =>
+        //{
+        //    if (result)
+        //    {
+        //        Debug.Log("복원 성공");
+        //        OnRestoreSuccess?.Invoke("restore_complete");
+        //    }
+        //    else
+        //    {
+        //        Debug.LogWarning("복원 실패");
+        //        OnRestoreFailed?.Invoke("restore_failed");
+        //    }
+        //});
 #else
         Debug.Log("복원은 iOS에서만 지원됩니다.");
 #endif
@@ -173,19 +171,15 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 
     public void PurchaseSuccess(string productId)
     {
-        if(successCallback != null)
-        {
-            successCallback.Invoke(productId);
-            successCallback = null;
-        }
-        
+        GameData.Shop shopData = DataManager.Instance.Get<GameData.Shop>().SingleOrDefault(x => x.id == productId);
+        DataManager.Instance.userData.AddPurchase(shopData);
         UIManager.Instance.CloseLoading();
-        UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format(TextManager.Get("PurchaseSuccess"), TextManager.Get(DataManager.Instance.Get<GameData.Shop>().SingleOrDefault(x => x.id == productId).name)));
+        UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format(TextManager.Get("PurchaseSuccess"), TextManager.Get(shopData.name)));
+        UIManager.Instance.Get<PopupShop>()?.Refresh();
     }
 
     public void PurchaseFail(string productId, PurchaseFailureReason reason)
     {
-        successCallback = null;
         UIManager.Instance.CloseLoading();
         UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format(TextManager.Get("PurchaseFail"), reason.ToString()));
     }

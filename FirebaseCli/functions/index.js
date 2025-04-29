@@ -36,6 +36,8 @@ import {RankBackupScheduler} from "./RankBackupScheduler.js";
 export {RankBackupScheduler};
 import {SendMail} from "./SendMail.js";
 export {SendMail};
+import {validatePurchase} from "./validatePurchase.js";
+export {validatePurchase};
 
 export const GetRanking = region("asia-southeast1").https.onCall(async (data, context) => {
   const gameLevel = data.gameLevel;

@@ -43,11 +43,7 @@ public class PopupShop : Popup
                     });
                     break;
                 case GameData.ShopCostType.Cash:
-                    IAPManager.Instance.BuyProduct(data.id, successId =>
-                    {
-                        DataManager.Instance.userData.AddPurchase(data);
-                        Refresh();
-                    });
+                    IAPManager.Instance.BuyProduct(data.id);
                     break;
                 case GameData.ShopCostType.Goods:
                     UIManager.Instance.Message.Show(Message.Type.Ask, string.Format(TextManager.Get("Shop_Ask_Buy"), TextManager.Get(data.name)), callback: confirm =>

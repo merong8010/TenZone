@@ -1,2 +1,4 @@
 MakeTen/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-12_8_0.so filter=lfs diff=lfs merge=lfs -text
 MakeTen/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-12_8_0.bundle filter=lfs diff=lfs merge=lfs -text
+FirebaseCli/google-cloud-sdk/bin/anthoscli filter=lfs diff=lfs merge=lfs -text
+ filter=lfs diff=lfs merge=lfs -text

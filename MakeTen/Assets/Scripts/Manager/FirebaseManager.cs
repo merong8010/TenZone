@@ -16,6 +16,12 @@ using UnityEngine.Networking;
 using System.Collections;
 using UnityEngine.Purchasing;
 using System.Threading.Tasks;
+#if UNITY_IOS
+using AppleAuth;
+using AppleAuth.Enums;
+using AppleAuth.Interfaces;
+using AppleAuth.Native;
+#endif
 
 public class FirebaseManager : Singleton<FirebaseManager>
 {
@@ -66,6 +72,12 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
 #if UNITY_ANDROID
                 //InitializePlayGamesLogin();
+#endif
+#if UNITY_IOS
+                if (AppleAuthManager.IsCurrentPlatformSupported)
+                {
+                    _appleAuthManager = new AppleAuthManager(new PayloadDeserializer());
+                }
 #endif
             }
             else
@@ -244,25 +256,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
     {
         GoogleSignIn.DefaultInstance.SignIn().ContinueWith(
         OnAuthenticationFinished);
-    
-        //TheBackend.ToolKit.GoogleLogin.Android.GoogleLogin(true, GoogleLoginCallback);
-        //GoogleSignIn
-        //PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
-        //PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptOnce, (result) =>
-        //{
-        //    if (result == SignInStatus.Success)
-        //    {
-        //        Debug.Log("GPGS 로그인 성공!");
-        //        string idToken = PlayGamesPlatform.Instance.GetIdToken();
-        //        Debug.Log("ID Token: " + idToken);
-        //        GoogleLoginCallback(idToken);
-        //        // 이 토큰을 Unity Authentication에 전달할 수 있음
-        //    }
-        //    else
-        //    {
-        //        Debug.LogError("GPGS 로그인 실패: " + result);
-        //    }
-        //});
     }
 
     internal void OnAuthenticationFinished(Task<GoogleSignInUser> task)
@@ -280,107 +273,106 @@ public class FirebaseManager : Singleton<FirebaseManager>
             return;
         }
         
-        auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(task.Result.IdToken, null)).ContinueWith(authTask =>
+        auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(task.Result.IdToken, null)).ContinueWithOnMainThread(authTask =>
         {
             if (authTask.IsCompleted)
             {
                 user = authTask.Result;
-                IsUserData(user.UserId, isUser =>
-                {
-                    Debug.Log($"IsUserData | {isUser}");
-                    if (isUser)
-                    {
-                        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: result =>
-                        {
-                            if (result)
-                            {
-                                //DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
-                                myDB = null;
-                                GetUserData(user.UserId, userResult =>
-                                {
-                                    DataManager.Instance.userData = userResult;
-                                    RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-                                    UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
-                                    HUD.Instance.UpdateUserData(DataManager.Instance.userData);
-                                });
-                                
-                            }
-                            else
-                            {
-                                auth.SignOut();
-                            }
-                            UIManager.Instance.Get<PopupSettings>().Refresh();
-                            //UIManager.Instance.Main.Refresh();
-                        });
-                    }
-                    else
-                    {
-                        myDB = null;
-                        UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-                        DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
-                        RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-                        UIManager.Instance.Get<PopupSettings>().Refresh();
-                        HUD.Instance.UpdateUserData(DataManager.Instance.userData);
-                    }
-                });
+                AuthCompleteCallback();
+                //MainThreadDispatcher.Instance.Enqueue(AuthCompleteCallback);
             }
-            //else
-            //{
-            //    user = authTask.Result;
-            //    UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-            //    DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
-            //    RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-            //    UIManager.Instance.Get<PopupSettings>().Refresh();
-            //}
         });
     }
 
-    private void GoogleLoginCallback(bool isSuccess, string errorMessage, string token)
+    private void AuthCompleteCallback()
     {
-        if (isSuccess == false)
+        IsUserData(user.UserId, isUser =>
         {
-            Debug.LogError(errorMessage);
-            return;
-        }
-        auth.SignInWithCredentialAsync(GoogleAuthProvider.GetCredential(token, null)).ContinueWith(authTask =>
-        {
-            if (authTask.IsCompleted)
+            if (isUser)
             {
-                IsUserData(user.UserId, isUser =>
+                UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: result =>
                 {
-                    if(isUser)
+                    if (result)
                     {
-                        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: result =>
+                        //DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
+                        myDB = null;
+                        GetUserData(user.UserId, userResult =>
                         {
-                            if(result)
-                            {
-                                user = authTask.Result;
-                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
-                            }
-                            else
-                            {
-                                auth.SignOut();
-                            }
-                            UIManager.Instance.Get<PopupSettings>().Refresh();
-                            //UIManager.Instance.Main.Refresh();
+                            DataManager.Instance.userData = userResult;
+                            RemoveUserId(SystemInfo.deviceUniqueIdentifier);
+                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
+                            HUD.Instance.UpdateUserData(DataManager.Instance.userData);
                         });
+
                     }
                     else
                     {
-                        user = authTask.Result;
-                        UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-                        DataManager.Instance.userData.UpdateData(user.UserId, AuthenticatedType.Google);
-                        RemoveUserId(SystemInfo.deviceUniqueIdentifier);
-                        UIManager.Instance.Get<PopupSettings>().Refresh();
-                        //UIManager.Instance.Main.Refresh();
+                        user = null;
+                        auth.SignOut();
                     }
+                    UIManager.Instance.Get<PopupSettings>().Refresh();
+                    //UIManager.Instance.Main.Refresh();
                 });
+            }
+            else
+            {
+                myDB = null;
+                string providerId = user.ProviderData.FirstOrDefault()?.ProviderId;
+                AuthenticatedType authType = AuthenticatedType.None;
+                if (providerId == "google.com")
+                {
+                    authType = AuthenticatedType.Google;
+                }
+                else if (providerId == "apple.com")
+                {
+                    authType = AuthenticatedType.Apple;
+                }
+                
+                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
+                DataManager.Instance.userData.UpdateData(user.UserId, authType);
+                RemoveUserId(SystemInfo.deviceUniqueIdentifier);
+                UIManager.Instance.Get<PopupSettings>().Refresh();
+                HUD.Instance.UpdateUserData(DataManager.Instance.userData);
             }
         });
     }
 
+#if UNITY_IOS
+    private IAppleAuthManager _appleAuthManager;
+#endif
     public void StartAppleLogin()
     {
+#if UNITY_IOS
+        if (_appleAuthManager == null)
+        {
+            Debug.LogError("AppleAuthManager not initialized");
+            return;
+        }
+
+        var loginArgs = new AppleAuthLoginArgs(LoginOptions.IncludeEmail | LoginOptions.IncludeFullName);
+
+        _appleAuthManager.LoginWithAppleId(
+            loginArgs,
+            credential =>
+            {
+                if (credential is IAppleIDCredential appleIDCredential)
+                {
+                    var userId = appleIDCredential.User;
+                    var identityToken = System.Text.Encoding.UTF8.GetString(appleIDCredential.IdentityToken);
+                    var authorizationCode = System.Text.Encoding.UTF8.GetString(appleIDCredential.AuthorizationCode);
+
+                    Debug.Log($"Apple SignIn 성공!\nUserId: {userId}\nIdentityToken: {identityToken}");
+
+                    // 👉 서버에 identityToken 전송해서 검증 가능
+                    // 👉 또는 Firebase Auth 연동
+                }
+            },
+            error =>
+            {
+                Debug.LogError($"Apple SignIn 실패: {error}");
+            }
+        );
+#endif
         //TheBackend.ToolKit.AppleLogin.Android.AppleLogin("com.thebackend.testapp.applelogin", out var error, true, token => {
         //    Debug.Log("토큰 : " + token);
         //    Debug.Log("토큰 발급이 완료되었습니다. 로그인이 가능합니다.");
@@ -428,7 +420,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    #region NicknameCheck
+#region NicknameCheck
     public string FreeNick
     {
         get
@@ -588,7 +580,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
         });
     }
-    #endregion
+#endregion
 
 
     public void SubmitScoreLevel(int exp, Action<int> callback = null)
@@ -821,19 +813,147 @@ public class FirebaseManager : Singleton<FirebaseManager>
 //            callback?.Invoke(resultData);
 //        });
     }
+    
+    //[Serializable]
+    //private class GoogleReceipt
+    //{
+    //    public string Store;
+    //    public string TransactionID;
+    //    public string Payload;
+    //}
+
+    //[Serializable]
+    //private class PayloadJson
+    //{
+    //    public string json;
+    //    public string signature;
+    //    public string skuDetails;
+    //}
+
+    //public class PayloadData
+    //{
+    //    public string orderId;
+    //    public string packageName;
+    //    public string productId;
+    //    public long purchaseTime;
+    //    public int purchaseState;
+    //    public string purchaseToken;
+    //}
+
+    public ReceiptData GetReceiptData(PurchaseEventArgs e)
+    {
+        ReceiptData data = new ReceiptData();
+
+        if (e != null)
+        {
+            //Main receipt root
+            string receiptString = e.purchasedProduct.receipt;
+            Debug.Log("receiptString " + receiptString);
+            var receiptDict = (Dictionary<string, object>)MiniJson.JsonDecode(receiptString);
+            Debug.Log("receiptDict COUNT" + receiptDict.Count);
+
+#if UNITY_ANDROID
+            //Next level Paylod dict
+            string payloadString = (string)receiptDict["Payload"];
+            Debug.Log("payloadString " + payloadString);
+            var payloadDict = (Dictionary<string, object>)MiniJson.JsonDecode(payloadString);
+
+            //Stuff from json object
+            string jsonString = (string)payloadDict["json"];
+            Debug.Log("jsonString " + jsonString);
+            var jsonDict = (Dictionary<string, object>)MiniJson.JsonDecode(jsonString);
+            string orderIdString = (string)jsonDict["orderId"];
+            Debug.Log("orderIdString " + orderIdString);
+            string packageNameString = (string)jsonDict["packageName"];
+            Debug.Log("packageNameString " + packageNameString);
+            string productIdString = (string)jsonDict["productId"];
+            Debug.Log("productIdString " + productIdString);
+
+            double orderDateDouble = System.Convert.ToDouble(jsonDict["purchaseTime"]);
+            Debug.Log("orderDateDouble " + orderDateDouble);
+
+            string purchaseTokenString = (string)jsonDict["purchaseToken"];
+            Debug.Log("purchaseTokenString " + purchaseTokenString);
+
+            string signatureString = (string)payloadDict["signature"];
+            Debug.Log("signatureString " + signatureString);
+
+
+            //Creating UTC from Epox
+            System.DateTime orderDateTemp = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+            orderDateTemp = orderDateTemp.AddMilliseconds(orderDateDouble);
+
+            data.orderId = orderIdString;
+            data.packageName = packageNameString;
+            data.productId = productIdString;
+            data.purchaseToken = purchaseTokenString;
+            //data.priceAmountMicros = priceAmountMicrosLong;
+            //data.priceCurrencyCode = priceCurrencyCodeString;
+            data.orderDate = orderDateTemp;
+            data.receipt = receiptString;
+            data.signature = signatureString;
+            data.json = jsonString;
+#endif
+            Debug.Log("GetReceiptData succesfull");
+        }
+        else
+        {
+            Debug.Log("PurchaseEventArgs is NULL");
+        }
+
+        return data;
+    }
+
+    public class ReceiptData
+    {
+        public string orderId;
+        public string packageName;
+        public string productId;
+        public string purchaseToken;
+        //public long priceAmountMicros;
+        //public string priceCurrencyCode;
+        public System.DateTime orderDate;
+        public string receipt;
+        public string signature;
+        public string json;
+        public override string ToString()
+        {
+            //return base.ToString();
+            return "orderId : " + orderId + "\n"
+                + "packageName : " + packageName + "\n"
+                + "productId : " + productId + "\n"
+                + "purchaseToken : " + purchaseToken;
+
+
+        }
+    }
+
     private class PurchaseData
     {
         public string productId;
-        public string receipt;
+        public string purchaseToken;
     }
+
     public void ValidatePurchase(PurchaseEventArgs args, Action<bool> onResult)
     {
+#if UNITY_ANDROID
         string url = "https://us-central1-maketen-2631f.cloudfunctions.net/validatePurchase";
+        ReceiptData receipt = GetReceiptData(args);
         var json = JsonConvert.SerializeObject(new PurchaseData()
         {
             productId = args.purchasedProduct.definition.id,
-            receipt = args.purchasedProduct.receipt
+            purchaseToken = receipt.purchaseToken
         });
+#elif UNITY_IOS
+        string url = "https://us-central1-maketen-2631f.cloudfunctions.net/validatePurchaseiOS";
+        var postData = new
+        {
+            receiptData = args.purchasedProduct.receipt,
+        };
+
+        string json = JsonConvert.SerializeObject(postData);
+#endif
+        Debug.Log($"ValidatePurchase | {json}");
         StartCoroutine(PostValidate(url, json, onResult));
     }
     private IEnumerator PostValidate(string url, string json, Action<bool> onResult)
@@ -885,5 +1005,12 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 else
                     Debug.LogError($"메일 전송 실패: {task.Exception}");
             });
+    }
+
+    private void Update()
+    {
+#if UNITY_IOS
+        _appleAuthManager?.Update();
+#endif
     }
 }
