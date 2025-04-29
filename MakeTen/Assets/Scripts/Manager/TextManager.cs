@@ -4,6 +4,14 @@ using System.Linq;
 
 public static class TextManager
 {
+    public enum Locale
+    {
+        US = 0,
+        KR = 1,
+        JP = 2,
+        TW = 3,
+    }
+
     public static Dictionary<string, string> dic = new Dictionary<string, string>();
 
     public static void LoadDatas(string countryCode, GameData.Language[] data)

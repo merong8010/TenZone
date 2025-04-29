@@ -67,7 +67,7 @@ public class DataManager : Singleton<DataManager>
         });
 
         yield return new WaitUntil(() => gameDatas.Count == dataTotalCount);
-        string countryCode = PlayerPrefs.GetString("Locale", RegionInfo.CurrentRegion.TwoLetterISORegionName);
+        string countryCode = PlayerPrefs.GetString("Locale", Util.GetCountryCode());
         TextManager.LoadDatas(countryCode, Get<GameData.Language>());
 
         MaxHeart = GetConfig("maxHeart");

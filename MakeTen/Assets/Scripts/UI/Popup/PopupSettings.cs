@@ -2,6 +2,12 @@
 using System.Collections;
 using UnityEngine.UI;
 using TMPro;
+using System;
+using System.Net;
+using System.Net.Mail;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using UnityEngine.Purchasing;
 
 public class PopupSettings : Popup
 {
@@ -120,7 +126,7 @@ public class PopupSettings : Popup
             loginObjs.SetActive(false);
             logoutObj.SetActive(true);
             loginedGoogle.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.Google);
-            loginedGoogle.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.Apple);
+            loginedApple.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.Apple);
         }
         //loginStatus.text = DataManager.Instance.userData.authType.ToString();
         //loginObjs.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
@@ -145,6 +151,54 @@ public class PopupSettings : Popup
 
     public void ClickLogout()
     {
+        FirebaseManager.Instance.LogOut();
+    }
 
+    public void ClickQA()
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.Append("mailto:qa.tenzone@gmail.com").Append("?subject=").Append(TextManager.Get("QA")).Append("&body=").Append(TextManager.Get("QA")).AppendLine().AppendLine().Append("ID : ").Append(idText.text).AppendLine().AppendLine().Append(TextManager.Get("QA_Contents"));
+        Application.OpenURL(sb.ToString());
+    }
+
+    [SerializeField]
+    private GameObject languageObj;
+    [SerializeField]
+    private TabGroup languageTab;
+    private int languageIdx;
+    public void ClickLanguage()
+    {
+        languageObj.SetActive(true);
+        string countryCode = PlayerPrefs.GetString("Locale", Util.GetCountryCode());
+        languageIdx = 0;
+        switch(countryCode)
+        {
+            case "KR":
+                languageIdx = 1;
+                break;
+            case "JP":
+                languageIdx = 2;
+                break;
+            case "TW":
+                languageIdx = 3;
+                break;
+        }
+        languageTab.Init(languageIdx, idx =>
+        {
+            languageIdx = idx;
+        });
+    }
+
+    public void ClickLanguageConfirm()
+    {
+        PlayerPrefs.SetString("Locale", ((TextManager.Locale)languageIdx).ToString());
+        TextManager.LoadDatas(((TextManager.Locale)languageIdx).ToString(), DataManager.Instance.Get<GameData.Language>());
+        CloseLanguage();
+        Refresh();
+    }
+
+    public void CloseLanguage()
+    {
+        languageObj.SetActive(false);
     }
 }

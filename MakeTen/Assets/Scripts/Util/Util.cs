@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -95,6 +96,13 @@ public static class Util
         }
         //#endif
         return inputPosition;
+    }
+
+    public static string GetCountryCode()
+    {
+        CultureInfo ci = CultureInfo.InstalledUICulture; // ???? new CultureInfo(Application.systemLanguage.ToString())
+        RegionInfo region = new RegionInfo(ci.Name);
+        return region.TwoLetterISORegionName;
     }
 }
 public enum DeviceOrientation
