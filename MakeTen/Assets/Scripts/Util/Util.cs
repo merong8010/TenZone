@@ -104,6 +104,17 @@ public static class Util
         RegionInfo region = new RegionInfo(ci.Name);
         return region.TwoLetterISORegionName;
     }
+
+    public static string GenerateRandomCode(int length = 6)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        char[] code = new char[length];
+        for (int i = 0; i < length; i++)
+        {
+            code[i] = chars[Random.Range(0, chars.Length)];
+        }
+        return new string(code);
+    }
 }
 public enum DeviceOrientation
 {

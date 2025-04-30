@@ -7,8 +7,8 @@ public class PopupRanking : Popup
 {
     public class RankingListWithMyRank
     {
-        public List<RankingList.PointData> topRanks;
-        public RankingList.PointData myRank;
+        public List<RankingList.Data> topRanks;
+        public RankingList.Data myRank;
     }
     [SerializeField]
     private TabGroup levelTabsPortrait;

@@ -18,73 +18,25 @@
 //   response.send("Hello from Firebase!");
 // });
 
-
 // import {initializeApp, cert} from "firebase-admin/app";
-import {getDatabase} from "firebase-admin/database";
-import admin from "firebase-admin";
-import functions from "firebase-functions";
-const {region, HttpsError} = functions;
-
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-import {generateNicknameOnUserCreate} from "./generateNickname.js";
-export {generateNicknameOnUserCreate};
-import {RankUpdateScheduler} from "./RankUpdateScheduler.js";
-export {RankUpdateScheduler};
-import {RankBackupScheduler} from "./RankBackupScheduler.js";
-export {RankBackupScheduler};
-import {SendMail} from "./SendMail.js";
-export {SendMail};
-import {validatePurchase} from "./validatePurchase.js";
-export {validatePurchase};
-import {migrateUserData} from "./migrateUserData.js";
-export {migrateUserData};
-import {deleteUserData} from "./deleteUserData.js";
-export {deleteUserData};
-import {changeNickname} from "./changeNickname.js";
-export {changeNickname};
-
-export const GetRanking = region("asia-southeast1").https.onCall(async (data, context) => {
-  const gameLevel = data.gameLevel;
-  const date = data.date || "ALL";
-  const userId = data.userId;
-  const limit = data.limit || 10;
-
-  try {
-    const snapshot = await getDatabase().ref(`Leaderboard/${gameLevel}/${date}`).once("value");
-    const rankingList = [];
-    snapshot.forEach((child) => {
-      const entry = child.val();
-      rankingList.push({
-        id: child.key,
-        rank: child.rank || 0,
-        level: child.level || 0,
-        name: entry.name || child.key,
-        point: entry.point || 0,
-        remainMilliSeconds: entry.remainMilliSeconds || 0,
-        countryCode: entry.countryCode || "US",
-        timeStamp: entry.timeStamp || 0,
-      });
-    });
-
-    rankingList.sort((a, b) => {
-      if (b.point !== a.point) return b.point - a.point;
-      if (b.remainMilliSeconds !== a.remainMilliSeconds) return b.remainMilliSeconds - a.remainMilliSeconds;
-      return a.timeStamp - b.timeStamp;
-    });
-
-    const topRankings = rankingList.slice(0, limit);
-    const myRankIndex = rankingList.findIndex((entry) => entry.userId === userId);
-    const myRank = myRankIndex >= 0 ? myRankIndex + 1 : -1;
-    const myEntry = myRankIndex >= 0 ? rankingList[myRankIndex] : null;
-
-    return {topRankings, myRank, myEntry};
-  } catch (error) {
-    console.error("Error fetching ranking:", error);
-    throw new HttpsError("internal", "랭킹 데이터를 가져오는 중 오류가 발생했습니다.");
-  }
-});
+import {SubmitScore} from "./SubmitScore.js";
+export {SubmitScore};
+// import {GetRanking} from "./GetRanking.js";
+// export {GetRanking};
+// import {generateNicknameOnUserCreate} from "./generateNickname.js";
+// export {generateNicknameOnUserCreate};
+// import {RankUpdateScheduler} from "./RankUpdateScheduler.js";
+// export {RankUpdateScheduler};
+// import {RankBackupScheduler} from "./RankBackupScheduler.js";
+// export {RankBackupScheduler};
+// import {SendMail} from "./SendMail.js";
+// export {SendMail};
+// import {validatePurchase} from "./validatePurchase.js";
+// export {validatePurchase};
+// import {deleteUserData} from "./deleteUserData.js";
+// export {deleteUserData};
+// import {changeNickname} from "./changeNickname.js";
+// export {changeNickname};
 
 // const db = admin.database();
 

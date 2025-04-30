@@ -247,17 +247,22 @@ public class HUD : Singleton<HUD>
     {
         for (int i = 0; i < 50; i++)
         {
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Easy, FirebaseManager.KEY.RANKING_ALL, $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Easy, GameManager.Instance.dateTime.Value.ToDateText(), $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
-
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Normal, FirebaseManager.KEY.RANKING_ALL, $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Normal, GameManager.Instance.dateTime.Value.ToDateText(), $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
-
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Hard, FirebaseManager.KEY.RANKING_ALL, $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Hard, GameManager.Instance.dateTime.Value.ToDateText(), $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
-
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Expert, FirebaseManager.KEY.RANKING_ALL, $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
-            FirebaseManager.Instance.TestSubmitScore(PuzzleManager.Level.Expert, GameManager.Instance.dateTime.Value.ToDateText(), $"USER_{i}", $"USER_{i}", UnityEngine.Random.Range(50, 150), countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)]);
+            int pointEasy = UnityEngine.Random.Range(50, 150);
+            int pointNormal = UnityEngine.Random.Range(50, 150);
+            int pointHard = UnityEngine.Random.Range(50, 150);
+            int pointExpert = UnityEngine.Random.Range(50, 150);
+            string id = $"Rank_{i}";
+            string nickname = $"Player_{Util.GenerateRandomCode()}";
+            string countryCode = countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)];
+            string date = GameManager.Instance.dateTime.Value.ToDateText();
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointEasy, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, date, id, nickname, pointEasy, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointNormal, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, date, id, nickname, pointNormal, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointHard, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, date, id, nickname, pointHard, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointExpert, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, date, id, nickname, pointExpert, countryCode);
         }
 
     }

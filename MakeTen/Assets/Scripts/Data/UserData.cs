@@ -254,7 +254,9 @@ public class UserData
             UIManager.Instance.Open<PopupReward>().SetData(rewards, "LevelupReward");
         }
 
-        FirebaseManager.Instance.SubmitScoreLevel(DataManager.Instance.Get<GameData.UserLevel>().Where(x => x.level < level).Sum(x => x.exp) + exp);
+        //FirebaseManager.Instance.SubmitScoreLevel(DataManager.Instance.Get<GameData.UserLevel>().Where(x => x.level < level).Sum(x => x.exp) + exp);
+        int totalExp = DataManager.Instance.Get<GameData.UserLevel>().Where(x => x.level < level).Sum(x => x.exp) + exp;
+        FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.None, "ALL", id, nickname, totalExp, countryCode);
         FirebaseManager.Instance.SaveUserData(this);
     }
 

@@ -57,12 +57,10 @@ public class DataManager : Singleton<DataManager>
         int dataTotalCount = 100;
         FirebaseManager.Instance.LoadAllGameDatas(result =>
         {
-            Debug.Log("result : " + result);
             dataTotalCount = (int)result.ChildrenCount;
             foreach (var data in result.Children)
             {
                 Type type = Type.GetType($"GameData.{data.Key}").MakeArrayType();
-                Debug.Log(data.Key + " | " + data.GetRawJsonValue() + " | " + type);
                 gameDatas.Add(data.Key, (GameData.Data[])JsonConvert.DeserializeObject(data.GetRawJsonValue(), type));
             }
         });
@@ -83,7 +81,6 @@ public class DataManager : Singleton<DataManager>
 
     public void UpdateUserData(UserData data)
     {
-        Debug.Log($"UpdateUserData | {data} | {data?.id}");
         this.userData = data;
         HUD.Instance.UpdateUserData(userData);
     }

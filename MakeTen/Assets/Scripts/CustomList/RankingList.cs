@@ -10,61 +10,36 @@ public class RankingList : InfiniteScroll<RankingList.Data>
         public int rank;
         public string id;
         public int level;
-        public string name;
+        public string nickname;
         public string countryCode;
         public long timeStamp;
+
+        public int point; //level에서는 누적 경험치
+
+
         public Data()
         {
 
         }
-    }
 
-    public class PointData : Data
-    {
-        public int point;
-        
-        public PointData(string id, int level, string name, int point, string countryCode, long timeStamp = 0)
+        public Data(string id, int level, string nickname, int point, string countryCode, long timeStamp = 0)
         {
             this.id = id;
             this.level = level;
-            this.name = name;
+            this.nickname = nickname;
             this.point = point;
             this.countryCode = countryCode;
             this.timeStamp = timeStamp == 0 ? GameManager.Instance.dateTime.Value.ToTick() : timeStamp;
         }
-        public PointData(string id, int rank, int level, string name, int point, string countryCode, long timeStamp = 0)
+        public Data(string id, int rank, int level, string nickname, int point, string countryCode, long timeStamp = 0)
         {
             this.id = id;
             this.rank = rank;
             this.level = level;
-            this.name = name;
+            this.nickname = nickname;
             this.point = point;
             this.countryCode = countryCode;
             this.timeStamp = timeStamp == 0 ? GameManager.Instance.dateTime.Value.ToTick() : timeStamp;
         }
     }
-    public class LevelData : Data
-    {
-        public int exp;
-        public LevelData(string id, int level, string name, int exp, string countryCode, long timeStamp = 0)
-        {
-            this.id = id;
-            this.level = level;
-            this.name = name;
-            this.exp = exp;
-            this.countryCode = countryCode;
-            this.timeStamp = timeStamp == 0 ? GameManager.Instance.dateTime.Value.ToTick() : timeStamp;
-        }
-        public LevelData(string id, int rank, int level, string name, int exp, string countryCode, long timeStamp = 0)
-        {
-            this.id = id;
-            this.rank = rank;
-            this.level = level;
-            this.name = name;
-            this.exp = exp;
-            this.countryCode = countryCode;
-            this.timeStamp = timeStamp == 0 ? GameManager.Instance.dateTime.Value.ToTick() : timeStamp;
-        }
-    }
-
 }

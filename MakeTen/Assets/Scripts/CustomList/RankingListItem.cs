@@ -23,20 +23,20 @@ public class RankingListItem : ListItem<RankingList.Data>
     {
         base.SetData(data);
 
-        if(data.GetType() == typeof(RankingList.PointData))
-        {
-            RankingList.PointData pointData = (RankingList.PointData)data;
-            pointText.text = pointData.point.ToString();
-        }
-        else
-        {
-            RankingList.LevelData levelData = (RankingList.LevelData)data;
-            pointText.text = levelData.exp.ToString();
-        }
-        
+        //if(data.GetType() == typeof(RankingList.PointData))
+        //{
+        //    RankingList.PointData pointData = (RankingList.PointData)data;
+        //    pointText.text = pointData.point.ToString();
+        //}
+        //else
+        //{
+        //    RankingList.LevelData levelData = (RankingList.LevelData)data;
+        //    pointText.text = levelData.exp.ToString();
+        //}
+        pointText.text = data.point.ToString();
         rankText.text = data.rank.ToString();
         levelText.text = data.level.ToLevelText();
-        nameText.text = data.name;
+        nameText.text = data.nickname;
         SpriteAtlas sa = Resources.Load<SpriteAtlas>("Graphics/Flags");
         Sprite flag = sa.GetSprite(data.countryCode.ToLower());
         Debug.Log(sa + " |" + flag + " | " + data.countryCode.ToLower()+" | "+ sa.spriteCount);

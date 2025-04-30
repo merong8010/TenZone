@@ -48,7 +48,7 @@ export const generateNicknameOnUserCreate = functions.database
       await userRef.update({nickname});
 
       // Step 4. 닉네임 전용 노드에 추가 (중복 방지용)
-      await db.ref(`UserNicknames/${userId}`).set(nickname);
+      await db.ref(`UserNicknames/${nickname}`).set(userId);
 
       console.log(`닉네임 생성 완료: ${nickname}`);
       return null;

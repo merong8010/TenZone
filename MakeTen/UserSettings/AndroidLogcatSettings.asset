@@ -3,7 +3,7 @@
     "m_SelectedProcess": {
         "deviceId": "RF9N300TDKD",
         "name": "studio.jjm.maketen",
-        "processId": 31205,
+        "processId": 30866,
         "exited": false
     },
     "m_SelectedPriority": 0,
@@ -42,6 +42,12 @@
             "deviceId": "RF9N300TDKD",
             "name": "studio.jjm.maketen",
             "processId": 31205,
+            "exited": false
+        },
+        {
+            "deviceId": "RF9N300TDKD",
+            "name": "studio.jjm.maketen",
+            "processId": 30866,
             "exited": false
         },
         {

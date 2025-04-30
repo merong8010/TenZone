@@ -49,7 +49,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             if(user != null)
             {
                 string providerId = user.ProviderData.FirstOrDefault()?.ProviderId;
-                Debug.Log("providerId : " + providerId);
+                Debug.Log("providerId : " + providerId+" | "+user.Email);
                 if (providerId == "google.com")
                 {
                     return AuthenticatedType.Google;
@@ -77,12 +77,11 @@ public class FirebaseManager : Singleton<FirebaseManager>
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
             if (task.Result == DependencyStatus.Available)
             {
-                Debug.Log("Firebase Ready");
                 FirebaseApp app = FirebaseApp.DefaultInstance;
                 db = FirebaseDatabase.DefaultInstance.RootReference;
                 auth = FirebaseAuth.DefaultInstance;
                 functions = FirebaseFunctions.GetInstance("us-central1");
-                //user = auth.CurrentUser;
+                user = auth.CurrentUser;
                 GoogleSignIn.Configuration = new GoogleSignInConfiguration
                 {
                     WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
@@ -239,39 +238,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
         }
     }
 
-    private AuthenticatedType currentAuthType;
-
     public void SignInWithEmail(string email, string password)
     {
-        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
-        {
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                var exception = task.Exception?.GetBaseException();
-                //exception is FirebaseException firebaseEx;
-                if (exception is FirebaseException firebaseEx && (firebaseEx.ErrorCode == (int)AuthError.UserNotFound || firebaseEx.ErrorCode == (int)AuthError.Failure))
-                {
-                    auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(createTask =>
-                    {
-                        var createException = createTask.Exception?.GetBaseException();
-                        if (createTask.IsCanceled || createTask.IsFaulted)
-                        {
-                            UIManager.Instance.Message.Show(Message.Type.Confirm, new StringBuilder().Append(TextManager.Get("Login_Fail")).AppendLine().Append(createTask.Exception.Message).ToString());
-                            return;
-                        }
-                        currentAuthType = AuthenticatedType.Email;
-                        AuthCompleteCallback(createTask.Result.User, password);
-                    });
-                    return;
-                }
-                UIManager.Instance.Message.Show(Message.Type.Confirm, new StringBuilder().Append(TextManager.Get("Login_Fail")).AppendLine().Append(task.Exception.Message).ToString());
-                return;
-            }
-            currentAuthType = AuthenticatedType.Email;
-            AuthCompleteCallback(task.Result.User, password);
-        });
+        LinkAnonymousToAuth(EmailAuthProvider.GetCredential(email, password));
     }
-
 
     public void StartGoogleLogin()
     {
@@ -282,97 +252,32 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 Debug.LogError($"{task.Status} | {task.Exception} | {task.Exception?.Message} | {task.Exception?.StackTrace}");
                 return;
             }
-
-            Credential credential = GoogleAuthProvider.GetCredential(task.Result.IdToken, null);
-            auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread(authTask =>
-            {
-                if (authTask.IsCompleted)
-                {
-                    currentAuthType = AuthenticatedType.Google;
-                    AuthCompleteCallback(authTask.Result, task.Result.IdToken);
-                }
-            });
+            LinkAnonymousToAuth(GoogleAuthProvider.GetCredential(task.Result.IdToken, null));
         });
     }
 
-    private void AuthCompleteCallback(FirebaseUser authUser, string authToken = "")
+    private void LinkAnonymousToAuth(Credential credential)
     {
-        db.Child(KEY.USER).Child(authUser.UserId).GetValueAsync().ContinueWithOnMainThread(userDataTask =>
-        {
-            DataSnapshot userData = userDataTask.Result;
-            Debug.Log($"AuthCompleteCallback : {authUser.UserId}");
+        string anonymousUid = user.UserId;
 
-            if (userData.Exists)
+        user.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
+        {
+            Debug.Log("LinkWithCredentialAsync : " + task.IsCompletedSuccessfully+" | "+task.Exception?.ToString());
+            if (task.IsCompletedSuccessfully)
             {
-                UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: change =>
-                {
-                    if (change)
-                    {
-                        //DataManager.Instance.RefreshUserData();
-                        var data = new Dictionary<string, object>
-                        {
-                            {"anonymousUid", user.UserId }
-                        };
-                        functions.GetHttpsCallable("deleteUserData").CallAsync(data).ContinueWithOnMainThread(task =>
-                        {
-                            if (task.IsCompletedSuccessfully)
-                            {
-                                user = authUser;
-                                myDB = null;
-                                DataManager.Instance.RefreshUserData();
-                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
-                                UIManager.Instance.Get<PopupSettings>().Refresh();
-                            }
-                            else
-                            {
-                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
-                            }
-                        });
-                    }
-                });
+                user = task.Result.User;
+                DataManager.Instance.RefreshUserData();
+                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
+                UIManager.Instance.Get<PopupSettings>().Refresh();
             }
             else
             {
-                Credential credential = null;
-                switch(currentAuthType)
+                auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread(signInTask =>
                 {
-                    case AuthenticatedType.Google:
-                        credential = GoogleAuthProvider.GetCredential(authToken, null);
-                        break;
-                    case AuthenticatedType.Apple:
-                        //credential = OAuthProvider.GetCredential(authToken,)
-                        break;
-                    case AuthenticatedType.Email:
-                        credential = EmailAuthProvider.GetCredential(authUser.Email, authToken);
-                        break;
-                }
-                Debug.Log(authUser.Email + " | " + authToken);
-                user.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(linkTask =>
-                {
-                    Debug.Log(linkTask.Exception?.ToString());
-                    if(linkTask.IsCompletedSuccessfully)
+                    if (signInTask.IsCompletedSuccessfully)
                     {
-                        myDB = null;
-                        var data = new Dictionary<string, object>
-                        {
-                            {"anonymousUid", user.UserId },
-                            {"authUid", authUser.UserId }
-                        };
-                        Debug.Log("migrateUserData");
-                        functions.GetHttpsCallable("migrateUserData").CallAsync(data).ContinueWithOnMainThread(task =>
-                        {
-                            Debug.Log("migrateUserData.task : " + task.IsCompletedSuccessfully);
-                            if (task.IsCompletedSuccessfully)
-                            {
-                                DataManager.Instance.RefreshUserData();
-                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-                                UIManager.Instance.Get<PopupSettings>().Refresh();
-                            }
-                            else
-                            {
-                                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
-                            }
-                        });
+                        FirebaseUser signedInUser = signInTask.Result;
+                        DeleteAnonymousUserData(anonymousUid, signedInUser.UserId);
                     }
                     else
                     {
@@ -382,6 +287,141 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
         });
     }
+
+    private void MigrateUserData(string anonymousUid, string authUid)
+    {
+        Debug.Log($"MigrateUserData | anonymousUid : {anonymousUid} | authUid : {authUid}");
+        myDB = null;
+        var data = new Dictionary<string, object>
+        {
+            { "anonymousUid", anonymousUid },
+            { "authUid", authUid }
+        };
+        functions.GetHttpsCallable("migrateUserData").CallAsync(data).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                DataManager.Instance.RefreshUserData();
+                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
+                UIManager.Instance.Get<PopupSettings>().Refresh();
+            }
+            else
+            {
+                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+            }
+        });
+    }
+
+    private void DeleteAnonymousUserData(string anonymousUid, string newUid)
+    {
+        Debug.Log($"DeleteAnonymousUserData | anonymousUid : {anonymousUid} | authUid : {newUid}");
+        var data = new Dictionary<string, object>
+        {
+            { "anonymousUid", anonymousUid }
+        };
+        functions.GetHttpsCallable("deleteUserData").CallAsync(data).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                myDB = null;
+                user = FirebaseAuth.DefaultInstance.CurrentUser;
+                DataManager.Instance.RefreshUserData();
+                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
+                UIManager.Instance.Get<PopupSettings>().Refresh();
+            }
+            else
+            {
+                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+                LogOut();
+            }
+        });
+    }
+
+
+
+    //private void AuthCompleteCallback(FirebaseUser authUser, string authToken = "")
+    //{
+    //    db.Child(KEY.USER).Child(authUser.UserId).GetValueAsync().ContinueWithOnMainThread(userDataTask =>
+    //    {
+    //        DataSnapshot userData = userDataTask.Result;
+    //        if (userData.Exists)
+    //        {
+    //            UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: change =>
+    //            {
+    //                if (change)
+    //                {
+    //                    //DataManager.Instance.RefreshUserData();
+    //                    var data = new Dictionary<string, object>
+    //                    {
+    //                        {"anonymousUid", user.UserId }
+    //                    };
+    //                    functions.GetHttpsCallable("deleteUserData").CallAsync(data).ContinueWithOnMainThread(task =>
+    //                    {
+    //                        if (task.IsCompletedSuccessfully)
+    //                        {
+    //                            user = authUser;
+    //                            myDB = null;
+    //                            DataManager.Instance.RefreshUserData();
+    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
+    //                            UIManager.Instance.Get<PopupSettings>().Refresh();
+    //                        }
+    //                        else
+    //                        {
+    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+    //                        }
+    //                    });
+    //                }
+    //            });
+    //        }
+    //        else
+    //        {
+    //            Credential credential = null;
+    //            switch(currentAuthType)
+    //            {
+    //                case AuthenticatedType.Google:
+    //                    credential = GoogleAuthProvider.GetCredential(authToken, null);
+    //                    break;
+    //                case AuthenticatedType.Apple:
+    //                    //credential = OAuthProvider.GetCredential(authToken,)
+    //                    break;
+    //                case AuthenticatedType.Email:
+    //                    credential = EmailAuthProvider.GetCredential(authUser.Email, authToken);
+    //                    break;
+    //            }
+    //            Debug.Log(authUser.Email + " | " + authToken+" | "+user.Email);
+    //            user.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(linkTask =>
+    //            {
+    //                Debug.Log(linkTask.Exception?.ToString());
+    //                if(linkTask.IsCompletedSuccessfully)
+    //                {
+    //                    myDB = null;
+    //                    var data = new Dictionary<string, object>
+    //                    {
+    //                        {"anonymousUid", user.UserId },
+    //                        {"authUid", authUser.UserId }
+    //                    };
+    //                    functions.GetHttpsCallable("migrateUserData").CallAsync(data).ContinueWithOnMainThread(task =>
+    //                    {
+    //                        if (task.IsCompletedSuccessfully)
+    //                        {
+    //                            DataManager.Instance.RefreshUserData();
+    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
+    //                            UIManager.Instance.Get<PopupSettings>().Refresh();
+    //                        }
+    //                        else
+    //                        {
+    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+    //                        }
+    //                    });
+    //                }
+    //                else
+    //                {
+    //                    UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
+    //                }
+    //            });
+    //        }
+    //    });
+    //}
 
 #if UNITY_IOS
     private IAppleAuthManager _appleAuthManager;
@@ -649,235 +689,189 @@ public class FirebaseManager : Singleton<FirebaseManager>
 #endregion
 
 
-    public void SubmitScoreLevel(int exp, Action<int> callback = null)
-    {
-        RankingList.LevelData entry = new RankingList.LevelData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, exp, DataManager.Instance.userData.countryCode);
+//    public void SubmitScoreLevel(int exp, Action<int> callback = null)
+//    {
+//        RankingList.LevelData entry = new RankingList.LevelData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, exp, DataManager.Instance.userData.countryCode);
 
-        db.Child(KEY.RANKING).Child("Level").Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
-        callback?.Invoke(0);
-//#if UNITY_EDITOR
+//        db.Child(KEY.RANKING).Child("Level").Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
+//        callback?.Invoke(0);
+////#if UNITY_EDITOR
 
-//#else
-//        var data = new Dictionary<string, object>
-//        {
-//            { "gameLevel", gameLevel.ToString() },
-//            { "date", date },
-//            { "id", entry.id },
-//            { "level", entry.level },
-//            { "name", entry.name },
-//            { "point", entry.point },
-//            { "remainMilliSeconds", entry.remainMilliSeconds },
-//            { "timeStamp", entry.timeStamp },
-//            { "countryCode", entry.countryCode }
-//        };
+////#else
+////        var data = new Dictionary<string, object>
+////        {
+////            { "gameLevel", gameLevel.ToString() },
+////            { "date", date },
+////            { "id", entry.id },
+////            { "level", entry.level },
+////            { "name", entry.name },
+////            { "point", entry.point },
+////            { "remainMilliSeconds", entry.remainMilliSeconds },
+////            { "timeStamp", entry.timeStamp },
+////            { "countryCode", entry.countryCode }
+////        };
 
-//        functions.GetHttpsCallable("SubmitScore").CallAsync(data).ContinueWith(task =>
-//        {
-//            if (task.IsFaulted)
-//            {
-//                Debug.LogError("랭킹 등록 실패: " + task.Exception);
-//                return;
-//            }
+////        functions.GetHttpsCallable("SubmitScore").CallAsync(data).ContinueWith(task =>
+////        {
+////            if (task.IsFaulted)
+////            {
+////                Debug.LogError("랭킹 등록 실패: " + task.Exception);
+////                return;
+////            }
 
-//            var result = task.Result.Data as Dictionary<string, object>;
-//            int myRank = Convert.ToInt32(result["myRank"]);
-//            callback?.Invoke(myRank);
-//        });
-//#endif
+////            var result = task.Result.Data as Dictionary<string, object>;
+////            int myRank = Convert.ToInt32(result["myRank"]);
+////            callback?.Invoke(myRank);
+////        });
+////#endif
 
 
-    }
+//    }
 
     public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, Action<int> callback = null)
     {
         Debug.Log($"SubmitScore  {gameLevel} | {date} | {score}");
         Debug.Log($"userData : {DataManager.Instance.userData}");
-        RankingList.PointData entry = new RankingList.PointData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, DataManager.Instance.userData.countryCode);
+        RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, DataManager.Instance.userData.countryCode);
         Debug.Log($"entry : {entry}");
         db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
         callback?.Invoke(0);
-//#if UNITY_EDITOR
-//        //db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).GetValueAsync().ContinueWithOnMainThread(task =>
-//        //{
-//        //    if(task.IsCompletedSuccessfully)
-//        //    {
-//        //        DataSnapshot snapshot = task.Result;
-//        //        List<RankingList.PointData> ranks = new List<RankingList.PointData>();
-//        //        if(snapshot.Exists)
-//        //        {
-//        //            foreach(var child in snapshot.Children)
-//        //            {
-//        //                var data = child.Value as Dictionary<string, object>;
-//        //                RankingList.PointData rankData = new RankingList.PointData(
-//        //                    child.Key,
-//        //                    data.ContainsKey("rank") ? int.Parse(data["rank"].ToString()) : 0,
-//        //                    data.ContainsKey("level") ? int.Parse(data["level"].ToString()) : 1,
-//        //                    data.ContainsKey("name") ? data["name"].ToString() : "NoName",
-//        //                    data.ContainsKey("point") ? int.Parse(data["point"].ToString()) : 0,
-//        //                    data.ContainsKey("remainMilliSeconds") ? int.Parse(data["remainMilliSeconds"].ToString()) : 0,
-//        //                    data.ContainsKey("countryCode") ? data["countryCode"].ToString() : "US",
-//        //                    data.ContainsKey("timeStamp") ? long.Parse(data["timeStamp"].ToString()) : 0);
-//        //                ranks.Add()
-//        //            }
-//        //        }
-//        //    }
-//        //});
-//        //for (int i = 0; i < topRankings.Count; i++)
-//        //{
-//        //    var entry = topRankings[i] as Dictionary<string, object>;
-//        //    RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
-//        //    data.rank = i + 1;
-//        //    resultData.topRanks.Add(data);
-//        //}
-
-//        //// 내 랭킹 파싱
-//        //int myRank = Convert.ToInt32(result["myRank"]);
-//        //if (myRank > 0)
-//        //{
-//        //    var myEntry = result["myEntry"] as Dictionary<string, object>;
-//        //    RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(myEntry));
-//        //    data.rank = myRank;
-//        //    resultData.myRank = data;
-//        //}
-//        //else
-//        //{
-//        //    Debug.Log("내 랭킹 정보가 없습니다.");
-//        //}
-
-
-//#else
-//        var data = new Dictionary<string, object>
-//        {
-//            { "gameLevel", gameLevel.ToString() },
-//            { "date", date },
-//            { "id", entry.id },
-//            { "level", entry.level },
-//            { "name", entry.name },
-//            { "point", entry.point },
-//            { "remainMilliSeconds", entry.remainMilliSeconds },
-//            { "timeStamp", entry.timeStamp },
-//            { "countryCode", entry.countryCode }
-//        };
-
-//        functions.GetHttpsCallable("SubmitScore").CallAsync(data).ContinueWith(task =>
-//        {
-//            if (task.IsFaulted)
-//            {
-//                Debug.LogError("랭킹 등록 실패: " + task.Exception);
-//                return;
-//            }
-
-//            var result = task.Result.Data as Dictionary<string, object>;
-//            int myRank = Convert.ToInt32(result["myRank"]);
-//            callback?.Invoke(myRank);
-//        });
-//#endif
     }
 
-    public void TestSubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int score, string countryCode)
+    public void SubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int point, string countryCode, Action<int> callback = null)
     {
-        RankingList.PointData entry = new RankingList.PointData(userId, UnityEngine.Random.Range(10, 40), nickname, score, countryCode);
-        db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(userId).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
+        var data = new Dictionary<string, object>
+        {
+            { "gameLevel", gameLevel.ToString() },
+            { "date", date },
+            { "userId", userId },
+            { "nickname", nickname },
+            { "point", point },
+            { "countryCode", countryCode }
+        };
+        functions.GetHttpsCallable("SubmitScore").CallAsync(data).ContinueWithOnMainThread(task =>
+        {
+            if(task.IsCompletedSuccessfully)
+            {
+                var result = task.Result.Data as Dictionary<string, object>;
+                callback?.Invoke((int)result["myRank"]);
+            }
+            else
+            {
+                callback?.Invoke(0);
+            }
+        });
     }
 
     public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleManager.Level gameLevel = PuzzleManager.Level.Normal)
     {
-//#if UNITY_EDITOR
-        db.Child("Leaderboard").Child(gameLevel.ToString()).Child(date).GetValueAsync().ContinueWithOnMainThread(task =>
+        //#if UNITY_EDITOR
+        //db.Child("Leaderboard").Child(gameLevel.ToString()).Child(date).GetValueAsync().ContinueWithOnMainThread(task =>
+        //{
+        //    if (task.IsCompletedSuccessfully)
+        //    {
+        //        DataSnapshot dataSnapshot = task.Result;
+        //        if (dataSnapshot.Exists)
+        //        {
+        //            PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
+        //            resultData.topRanks = new List<RankingList.PointData>();
+        //            foreach (var user in dataSnapshot.Children)
+        //            {
+        //                string id = user.Key;
+        //                var json = user.Value as Dictionary<string, object>;
+        //                RankingList.PointData entry = new RankingList.PointData(id,
+        //                    json.ContainsKey("rank") ? Convert.ToInt32(json["rank"].ToString()) : 0,
+        //                    json.ContainsKey("level") ? Convert.ToInt32(json["level"].ToString()) : 0,
+        //                    json.ContainsKey("name") ? json["name"].ToString() : "Unknown",
+        //                    json.ContainsKey("point") ? Convert.ToInt32(json["point"]) : 0,
+        //                    json.ContainsKey("countryCode") ? json["countryCode"].ToString() : "??",
+        //                    json.ContainsKey("timeStamp") ? Convert.ToInt32(json["timeStamp"].ToString()) : 0);
+
+        //                resultData.topRanks.Add(entry);
+        //            }
+        //            resultData.myRank = resultData.topRanks.SingleOrDefault(x => x.id == userId);
+        //            resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
+        //            // 랭킹 포인트 순으로 정렬
+        //            //rankingList.Sort((a, b) => b.point.CompareTo(a.point));
+
+        //            callback?.Invoke(resultData);
+        //        }
+        //        else
+        //        {
+        //            callback?.Invoke(null);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        callback?.Invoke(null);
+        //    }
+        //});
+
+        //return;
+        //#endif
+        var data = new Dictionary<string, object>
         {
+            { "gameLevel", gameLevel.ToString() },
+            { "date", date },
+            { "userId", userId },
+            { "limit", limit }
+        };
+        Debug.Log($"GetRankingFromServer {gameLevel} | {date} | {userId} | {limit}");
+        functions.GetHttpsCallable("GetRanking").CallAsync(data).ContinueWithOnMainThread(task =>
+        {
+            Debug.Log($"GetRanking callback | {task.IsCompletedSuccessfully}");
             if (task.IsCompletedSuccessfully)
             {
-                DataSnapshot dataSnapshot = task.Result;
-                if (dataSnapshot.Exists)
+                try
                 {
+                    var result = task.Result.Data as Dictionary<string, object>;
+
+                    // Top 랭킹 파싱
+                    var topRankings = result["topRankings"] as List<object>;
+                    Debug.Log("=== 전체 랭킹 ===");
                     PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
-                    resultData.topRanks = new List<RankingList.PointData>();
-                    foreach (var user in dataSnapshot.Children)
+                    resultData.topRanks = new List<RankingList.Data>();
+
+                    for (int i = 0; i < topRankings.Count; i++)
                     {
-                        string id = user.Key;
-                        var json = user.Value as Dictionary<string, object>;
-                        RankingList.PointData entry = new RankingList.PointData(id,
-                            json.ContainsKey("rank") ? Convert.ToInt32(json["rank"].ToString()) : 0,
-                            json.ContainsKey("level") ? Convert.ToInt32(json["level"].ToString()) : 0,
-                            json.ContainsKey("name") ? json["name"].ToString() : "Unknown",
-                            json.ContainsKey("point") ? Convert.ToInt32(json["point"]) : 0,
-                            json.ContainsKey("countryCode") ? json["countryCode"].ToString() : "??",
-                            json.ContainsKey("timeStamp") ? Convert.ToInt32(json["timeStamp"].ToString()) : 0);
-
-                        resultData.topRanks.Add(entry);
+                        var entry = topRankings[i] as Dictionary<string, object>;
+                        RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
+                        resultData.topRanks.Add(data);
                     }
-                    resultData.myRank = resultData.topRanks.SingleOrDefault(x => x.id == userId);
-                    resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
-                    // 랭킹 포인트 순으로 정렬
-                    //rankingList.Sort((a, b) => b.point.CompareTo(a.point));
 
+                    resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
+                    // 내 랭킹 파싱
+                    int myRank = Convert.ToInt32(result["myRank"]);
+                    if (myRank > 0)
+                    {
+                        var myEntry = result["myEntry"] as Dictionary<string, object>;
+                        RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(myEntry));
+                        data.rank = myRank;
+                        resultData.myRank = data;
+                    }
+                    else
+                    {
+                        Debug.Log("내 랭킹 정보가 없습니다.");
+                    }
                     callback?.Invoke(resultData);
                 }
-                else
+                catch(Exception e)
                 {
+                    Debug.Log(e);
                     callback?.Invoke(null);
                 }
             }
             else
             {
+                //foreach (var e in task.Exception.Flatten().InnerExceptions)
+                //{
+                //    Debug.LogError($"Function call error: {e.Message}");
+                //}
+                Debug.LogError("랭킹 가져오기 실패: " + task.Exception);
                 callback?.Invoke(null);
             }
+            
         });
-
-        //return;
-//#endif
-//        var data = new Dictionary<string, object>
-//        {
-//            { "gameLevel", gameLevel.ToString() },
-//            { "date", date },
-//            { "userId", userId },
-//            { "limit", limit }
-//        };
-
-//        functions.GetHttpsCallable("GetRanking").CallAsync(data).ContinueWithOnMainThread(task =>
-//        {
-//            if (task.IsFaulted)
-//            {
-//                //foreach (var e in task.Exception.Flatten().InnerExceptions)
-//                //{
-//                //    Debug.LogError($"Function call error: {e.Message}");
-//                //}
-//                Debug.LogError("랭킹 가져오기 실패: " + task.Exception);
-//                callback?.Invoke(null);
-//                return;
-//            }
-
-//            var result = task.Result.Data as Dictionary<string, object>;
-
-//            // Top 랭킹 파싱
-//            var topRankings = result["topRankings"] as List<object>;
-//            Debug.Log("=== 전체 랭킹 ===");
-//            PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
-//            resultData.topRanks = new List<RankingList.PointData>();
-
-//            for (int i = 0; i < topRankings.Count; i++)
-//            {
-//                var entry = topRankings[i] as Dictionary<string, object>;
-//                RankingList.PointData data = JsonConvert.DeserializeObject<RankingList.PointData>(JsonConvert.SerializeObject(entry));
-//                resultData.topRanks.Add(data);
-//            }
-
-//            resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
-//            // 내 랭킹 파싱
-//            int myRank = Convert.ToInt32(result["myRank"]);
-//            if (myRank > 0)
-//            {
-//                var myEntry = result["myEntry"] as Dictionary<string, object>;
-//                RankingList.PointData data = JsonConvert.DeserializeObject<RankingList.PointData>(JsonConvert.SerializeObject(myEntry));
-//                data.rank = myRank;
-//                resultData.myRank = data;
-//            }
-//            else
-//            {
-//                Debug.Log("내 랭킹 정보가 없습니다.");
-//            }
-//            callback?.Invoke(resultData);
-//        });
     }
     
     //[Serializable]
