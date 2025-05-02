@@ -19,10 +19,10 @@
 // });
 
 // import {initializeApp, cert} from "firebase-admin/app";
-import {SubmitScore} from "./SubmitScore.js";
-export {SubmitScore};
-// import {GetRanking} from "./GetRanking.js";
-// export {GetRanking};
+// import {SubmitScore} from "./SubmitScore.js";
+// export {SubmitScore};
+import {GetRanking} from "./GetRanking.js";
+export {GetRanking};
 // import {generateNicknameOnUserCreate} from "./generateNickname.js";
 // export {generateNicknameOnUserCreate};
 // import {RankUpdateScheduler} from "./RankUpdateScheduler.js";

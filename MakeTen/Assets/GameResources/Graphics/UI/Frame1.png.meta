@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 3f5521b67a73be843858b539285a69e1
+guid: 6efd3baec8b5db64b89ccd31601f5902
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7070460204736950755
-    second: Icon_Refesh_0
+      213: 3518720516325624012
+    second: Frame1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,23 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Icon_Refesh_0
+      name: Frame1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 139
-        height: 121
+        width: 177
+        height: 213
       alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 50, y: 60, z: 50, w: 50}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3e1b1e568125f1260800000000000000
-      internalID: 7070460204736950755
+      spriteID: cc8c777aaa105d030800000000000000
+      internalID: 3518720516325624012
       vertices: []
       indices: 
       edges: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 4e58747cac7e53448a717b9fff8ea6fb
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Icon_Refesh_0: 7070460204736950755
+      Frame1_0: 3518720516325624012
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

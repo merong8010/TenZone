@@ -34,19 +34,16 @@ export const GetRanking = functions.https.onCall(async (data, context) => {
   const userId = data.userId;
   const limit = data.limit || 10;
 
-  console.log(`GetRanking : ${gameLevel} | ${date} | ${userId} | ${limit}`);
-
   try {
     const snapshot = await getDatabase().ref(`Leaderboard/${gameLevel}/${date}`).once("value");
     const rankingList = [];
-    console.log(`snapshot : ${snapshot}`);
     snapshot.forEach((child) => {
       const entry = child.val();
       rankingList.push({
         id: child.key,
-        rank: child.rank || 0,
-        level: child.level || 0,
-        name: entry.name || child.key,
+        rank: entry.rank || 0,
+        level: entry.level || 0,
+        nickname: entry.nickname || child.key,
         point: entry.point || 0,
         countryCode: entry.countryCode || "US",
         timeStamp: entry.timeStamp || 0,

@@ -824,8 +824,13 @@ public class FirebaseManager : Singleton<FirebaseManager>
             {
                 try
                 {
-                    var result = task.Result.Data as Dictionary<string, object>;
-
+                    Debug.Log(task.Result.Data.ToString());
+                    var result = task.Result.Data as Dictionary<object, object>;
+                    Debug.Log(result.ContainsKey("topRankings"));
+                    foreach(var item in result)
+                    {
+                        Debug.Log(item.Key + " | " + item.Value);
+                    }
                     // Top 랭킹 파싱
                     var topRankings = result["topRankings"] as List<object>;
                     Debug.Log("=== 전체 랭킹 ===");
@@ -834,7 +839,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
                     for (int i = 0; i < topRankings.Count; i++)
                     {
-                        var entry = topRankings[i] as Dictionary<string, object>;
+                        var entry = topRankings[i] as Dictionary<object, object>;
+                        Debug.Log(i+ " | "+JsonConvert.SerializeObject(entry));
                         RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
                         resultData.topRanks.Add(data);
                     }
@@ -844,7 +850,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     int myRank = Convert.ToInt32(result["myRank"]);
                     if (myRank > 0)
                     {
-                        var myEntry = result["myEntry"] as Dictionary<string, object>;
+                        var myEntry = result["myEntry"] as Dictionary<object, object>;
                         RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(myEntry));
                         data.rank = myRank;
                         resultData.myRank = data;

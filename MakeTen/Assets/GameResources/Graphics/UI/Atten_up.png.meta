@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 3f5521b67a73be843858b539285a69e1
+guid: 567e5d7ce81c18a4988d47eef1c04e7c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7070460204736950755
-    second: Icon_Refesh_0
+      213: -8384034986758940422
+    second: Atten_up_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Icon_Refesh_0
+      name: Atten_up_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 139
-        height: 121
+        width: 64
+        height: 124
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3e1b1e568125f1260800000000000000
-      internalID: 7070460204736950755
+      spriteID: af859cd999ce5ab80800000000000000
+      internalID: -8384034986758940422
       vertices: []
       indices: 
       edges: []
@@ -160,8 +160,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      Icon_Refesh_0: 7070460204736950755
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
