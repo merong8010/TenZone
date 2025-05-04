@@ -39,7 +39,6 @@ public class RankingListItem : ListItem<RankingList.Data>
         nameText.text = data.nickname;
         SpriteAtlas sa = Resources.Load<SpriteAtlas>("Graphics/Flags");
         Sprite flag = sa.GetSprite(data.countryCode.ToLower());
-        Debug.Log(sa + " |" + flag + " | " + data.countryCode.ToLower()+" | "+ sa.spriteCount);
         
         //countryImage.sprite = Resources.Load<SpriteAtlas>("Graphics/Flags").GetSprite(data.countryCode.ToLower());
         countryImage.sprite = flag;

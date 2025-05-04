@@ -730,21 +730,24 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, Action<int> callback = null)
     {
-        Debug.Log($"SubmitScore  {gameLevel} | {date} | {score}");
-        Debug.Log($"userData : {DataManager.Instance.userData}");
-        RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, DataManager.Instance.userData.countryCode);
-        Debug.Log($"entry : {entry}");
-        db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
-        callback?.Invoke(0);
+        //Debug.Log($"SubmitScore  {gameLevel} | {date} | {score}");
+        //Debug.Log($"userData : {DataManager.Instance.userData}");
+        //RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, DataManager.Instance.userData.countryCode);
+        //Debug.Log($"entry : {entry}");
+        //db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
+        //callback?.Invoke(0);
+
+        SubmitScore(gameLevel, date, DataManager.Instance.userData.id, DataManager.Instance.userData.nickname, DataManager.Instance.userData.level, score, DataManager.Instance.userData.countryCode, callback);
     }
 
-    public void SubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int point, string countryCode, Action<int> callback = null)
+    public void SubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int level, int point, string countryCode, Action<int> callback = null)
     {
         var data = new Dictionary<string, object>
         {
             { "gameLevel", gameLevel.ToString() },
             { "date", date },
             { "userId", userId },
+            { "level", level},
             { "nickname", nickname },
             { "point", point },
             { "countryCode", countryCode }
@@ -840,7 +843,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     for (int i = 0; i < topRankings.Count; i++)
                     {
                         var entry = topRankings[i] as Dictionary<object, object>;
-                        Debug.Log(i+ " | "+JsonConvert.SerializeObject(entry));
                         RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
                         resultData.topRanks.Add(data);
                     }

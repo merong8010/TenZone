@@ -56,7 +56,7 @@ export const GetRanking = functions.https.onCall(async (data, context) => {
     });
 
     const topRankings = rankingList.slice(0, limit);
-    const myRankIndex = rankingList.findIndex((entry) => entry.userId === userId);
+    const myRankIndex = rankingList.findIndex((entry) => entry.id === userId);
     const myRank = myRankIndex >= 0 ? myRankIndex + 1 : -1;
     const myEntry = myRankIndex >= 0 ? rankingList[myRankIndex] : null;
 

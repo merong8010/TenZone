@@ -16,6 +16,7 @@ export const SubmitScore = functions.https.onCall(async (data, context) => {
   const userId = data.userId;
   const nickname = data.nickname || "Unknown";
   const gameLevel = data.gameLevel;
+  const level = data.level;
   const point = data.point;
   const date = data.date || "ALL";
   const countryCode = data.countryCode || "US";
@@ -64,35 +65,36 @@ export const SubmitScore = functions.https.onCall(async (data, context) => {
     await userRef.set({
       userId,
       nickname,
+      level,
       point,
       countryCode,
       timeStamp,
     });
 
     // 랭킹 계산
-    const snapshot = await getDatabase().ref(`Leaderboard/${gameLevel}/${date}`).once("value");
-    const rankingList = [];
-    snapshot.forEach((child) => {
-      const val = child.val();
-      rankingList.push({
-        userId: child.key,
-        point: val.point || 0,
-        timeStamp: val.timeStamp || 0,
-      });
-    });
+    // const snapshot = await getDatabase().ref(`Leaderboard/${gameLevel}/${date}`).once("value");
+    // const rankingList = [];
+    // snapshot.forEach((child) => {
+    //   const val = child.val();
+    //   rankingList.push({
+    //     userId: child.key,
+    //     point: val.point || 0,
+    //     timeStamp: val.timeStamp || 0,
+    //   });
+    // });
 
-    rankingList.sort((a, b) => {
-      if (b.point !== a.point) return b.point - a.point;
-      return a.timeStamp - b.timeStamp;
-    });
+    // rankingList.sort((a, b) => {
+    //   if (b.point !== a.point) return b.point - a.point;
+    //   return a.timeStamp - b.timeStamp;
+    // });
 
-    const rank = rankingList.findIndex((entry) => entry.userId === userId) + 1;
-    await userRef.update({rank});
+    // const rank = rankingList.findIndex((entry) => entry.userId === userId) + 1;
+    // await userRef.update({rank});
 
     return {
       status: "success",
       message: "점수 등록 완료",
-      myRank: rank,
+      // myRank: rank,
       point,
     };
   } catch (error) {

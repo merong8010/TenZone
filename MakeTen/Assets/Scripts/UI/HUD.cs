@@ -255,14 +255,15 @@ public class HUD : Singleton<HUD>
             string nickname = $"Player_{Util.GenerateRandomCode()}";
             string countryCode = countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)];
             string date = GameManager.Instance.dateTime.Value.ToDateText();
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointEasy, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, date, id, nickname, pointEasy, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointNormal, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, date, id, nickname, pointNormal, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointHard, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, date, id, nickname, pointHard, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, FirebaseManager.KEY.RANKING_ALL, id, nickname, pointExpert, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, date, id, nickname, pointExpert, countryCode);
+            int level = UnityEngine.Random.Range(10, 90);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointEasy, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, date, id, nickname, level, pointEasy, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointNormal, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, date, id, nickname, level, pointNormal, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointHard, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, date, id, nickname, level, pointHard, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointExpert, countryCode);
+            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, date, id, nickname, level, pointExpert, countryCode);
         }
 
     }

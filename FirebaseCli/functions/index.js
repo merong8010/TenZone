@@ -19,24 +19,24 @@
 // });
 
 // import {initializeApp, cert} from "firebase-admin/app";
-// import {SubmitScore} from "./SubmitScore.js";
-// export {SubmitScore};
+import {SubmitScore} from "./SubmitScore.js";
+export {SubmitScore};
 import {GetRanking} from "./GetRanking.js";
 export {GetRanking};
-// import {generateNicknameOnUserCreate} from "./generateNickname.js";
-// export {generateNicknameOnUserCreate};
-// import {RankUpdateScheduler} from "./RankUpdateScheduler.js";
-// export {RankUpdateScheduler};
-// import {RankBackupScheduler} from "./RankBackupScheduler.js";
-// export {RankBackupScheduler};
-// import {SendMail} from "./SendMail.js";
-// export {SendMail};
-// import {validatePurchase} from "./validatePurchase.js";
-// export {validatePurchase};
-// import {deleteUserData} from "./deleteUserData.js";
-// export {deleteUserData};
-// import {changeNickname} from "./changeNickname.js";
-// export {changeNickname};
+import {generateNicknameOnUserCreate} from "./generateNickname.js";
+export {generateNicknameOnUserCreate};
+import {RankUpdateScheduler} from "./RankUpdateScheduler.js";
+export {RankUpdateScheduler};
+import {RankBackupScheduler} from "./RankBackupScheduler.js";
+export {RankBackupScheduler};
+import {SendMail} from "./SendMail.js";
+export {SendMail};
+import {validatePurchase} from "./validatePurchase.js";
+export {validatePurchase};
+import {deleteUserData} from "./deleteUserData.js";
+export {deleteUserData};
+import {changeNickname} from "./changeNickname.js";
+export {changeNickname};
 
 // const db = admin.database();
 

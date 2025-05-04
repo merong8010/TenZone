@@ -76,6 +76,7 @@ public class GoodsDisplay : MonoBehaviour
         this.type = type;
         isSubscribe = true;
         icon.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(type.ToString());
+        icon.SetNativeSize();
         Subscribe();
     }
 
@@ -87,6 +88,7 @@ public class GoodsDisplay : MonoBehaviour
         this.amount = amount;
         isSubscribe = false;
         icon.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(type.ToString());
+        icon.SetNativeSize();
         text.text = amount.ToString("n0");
     }
 
@@ -97,6 +99,7 @@ public class GoodsDisplay : MonoBehaviour
             if (priceText != null) priceText.gameObject.SetActive(false);
             if (adsObj != null) adsObj.SetActive(false);
             icon.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(type.ToString());
+            icon.SetNativeSize();
             Subscribe();
         }
     }

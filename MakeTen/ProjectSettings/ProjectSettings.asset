@@ -175,7 +175,7 @@ PlayerSettings:
     iPhone: 0
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
-  AndroidBundleVersionCode: 10
+  AndroidBundleVersionCode: 14
   AndroidMinSdkVersion: 24
   AndroidTargetSdkVersion: 34
   AndroidPreferredInstallLocation: 1
@@ -814,7 +814,7 @@ PlayerSettings:
   webGLCloseOnQuit: 0
   webWasm2023: 0
   scriptingDefineSymbols:
-    Android: DOTWEEN;DEV;ENABLE_UNITY_SERVICES_CORE_VERBOSE_LOGGING;UNITY_POST_PROCESSING_STACK_V2;LEVELPLAY_DEPENDENCIES_INSTALLED
+    Android: DOTWEEN;RELEASE
     EmbeddedLinux: DOTWEEN;UNITY_POST_PROCESSING_STACK_V2
     GameCoreScarlett: DOTWEEN
     GameCoreXboxOne: DOTWEEN;UNITY_POST_PROCESSING_STACK_V2
