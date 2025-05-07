@@ -639,33 +639,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void UpdateNickName(string nickname, Action<ResultCheckNickname> callback)
     {
-        //var updates = new Dictionary<string, object>
-        //{
-        //    [$"{KEY.NICKNAME}/{nickname}"] = DataManager.Instance.userData.id,
-        //    [$"{KEY.USER}/{DataManager.Instance.userData.id}/nickname"] = nickname
-        //};
-        //updates[$"{KEY.NICKNAME}/{DataManager.Instance.userData.nickname}"] = null;
-
-        //db.UpdateChildrenAsync(updates).ContinueWithOnMainThread(updateTask =>
-        //{
-        //    ResultCheckNickname result = default;
-        //    if (updateTask.IsFaulted)
-        //    {
-        //        Debug.LogError("닉네임 변경 실패: " + updateTask.Exception);
-        //        result.success = false;
-        //        result.message = updateTask.Exception.Message;
-        //        callback?.Invoke(result);
-        //    }
-        //    else
-        //    {
-        //        Debug.Log("닉네임 변경 성공!");
-        //        result.success = true;
-        //        result.message = TextManager.Get("nickname_ok");
-        //        DataManager.Instance.userData.nickname = nickname;
-        //        callback?.Invoke(result);
-        //    }
-        //});
-
         functions.GetHttpsCallable("changeNickname").CallAsync(new Dictionary<string, object> { { "nickname", nickname } }).ContinueWithOnMainThread(task =>
         {
             ResultCheckNickname result = default;
@@ -687,46 +660,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 #endregion
-
-
-//    public void SubmitScoreLevel(int exp, Action<int> callback = null)
-//    {
-//        RankingList.LevelData entry = new RankingList.LevelData(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, exp, DataManager.Instance.userData.countryCode);
-
-//        db.Child(KEY.RANKING).Child("Level").Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
-//        callback?.Invoke(0);
-////#if UNITY_EDITOR
-
-////#else
-////        var data = new Dictionary<string, object>
-////        {
-////            { "gameLevel", gameLevel.ToString() },
-////            { "date", date },
-////            { "id", entry.id },
-////            { "level", entry.level },
-////            { "name", entry.name },
-////            { "point", entry.point },
-////            { "remainMilliSeconds", entry.remainMilliSeconds },
-////            { "timeStamp", entry.timeStamp },
-////            { "countryCode", entry.countryCode }
-////        };
-
-////        functions.GetHttpsCallable("SubmitScore").CallAsync(data).ContinueWith(task =>
-////        {
-////            if (task.IsFaulted)
-////            {
-////                Debug.LogError("랭킹 등록 실패: " + task.Exception);
-////                return;
-////            }
-
-////            var result = task.Result.Data as Dictionary<string, object>;
-////            int myRank = Convert.ToInt32(result["myRank"]);
-////            callback?.Invoke(myRank);
-////        });
-////#endif
-
-
-//    }
 
     public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, Action<int> callback = null)
     {
@@ -768,50 +701,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleManager.Level gameLevel = PuzzleManager.Level.Normal)
     {
-        //#if UNITY_EDITOR
-        //db.Child("Leaderboard").Child(gameLevel.ToString()).Child(date).GetValueAsync().ContinueWithOnMainThread(task =>
-        //{
-        //    if (task.IsCompletedSuccessfully)
-        //    {
-        //        DataSnapshot dataSnapshot = task.Result;
-        //        if (dataSnapshot.Exists)
-        //        {
-        //            PopupRanking.RankingListWithMyRank resultData = new PopupRanking.RankingListWithMyRank();
-        //            resultData.topRanks = new List<RankingList.PointData>();
-        //            foreach (var user in dataSnapshot.Children)
-        //            {
-        //                string id = user.Key;
-        //                var json = user.Value as Dictionary<string, object>;
-        //                RankingList.PointData entry = new RankingList.PointData(id,
-        //                    json.ContainsKey("rank") ? Convert.ToInt32(json["rank"].ToString()) : 0,
-        //                    json.ContainsKey("level") ? Convert.ToInt32(json["level"].ToString()) : 0,
-        //                    json.ContainsKey("name") ? json["name"].ToString() : "Unknown",
-        //                    json.ContainsKey("point") ? Convert.ToInt32(json["point"]) : 0,
-        //                    json.ContainsKey("countryCode") ? json["countryCode"].ToString() : "??",
-        //                    json.ContainsKey("timeStamp") ? Convert.ToInt32(json["timeStamp"].ToString()) : 0);
-
-        //                resultData.topRanks.Add(entry);
-        //            }
-        //            resultData.myRank = resultData.topRanks.SingleOrDefault(x => x.id == userId);
-        //            resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
-        //            // 랭킹 포인트 순으로 정렬
-        //            //rankingList.Sort((a, b) => b.point.CompareTo(a.point));
-
-        //            callback?.Invoke(resultData);
-        //        }
-        //        else
-        //        {
-        //            callback?.Invoke(null);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        callback?.Invoke(null);
-        //    }
-        //});
-
-        //return;
-        //#endif
         var data = new Dictionary<string, object>
         {
             { "gameLevel", gameLevel.ToString() },
@@ -819,21 +708,19 @@ public class FirebaseManager : Singleton<FirebaseManager>
             { "userId", userId },
             { "limit", limit }
         };
-        Debug.Log($"GetRankingFromServer {gameLevel} | {date} | {userId} | {limit}");
+
         functions.GetHttpsCallable("GetRanking").CallAsync(data).ContinueWithOnMainThread(task =>
         {
-            Debug.Log($"GetRanking callback | {task.IsCompletedSuccessfully}");
             if (task.IsCompletedSuccessfully)
             {
                 try
                 {
-                    Debug.Log(task.Result.Data.ToString());
                     var result = task.Result.Data as Dictionary<object, object>;
-                    Debug.Log(result.ContainsKey("topRankings"));
-                    foreach(var item in result)
-                    {
-                        Debug.Log(item.Key + " | " + item.Value);
-                    }
+
+                    //foreach(var item in result)
+                    //{
+                    //    Debug.Log(item.Key + " | " + item.Value);
+                    //}
                     // Top 랭킹 파싱
                     var topRankings = result["topRankings"] as List<object>;
                     Debug.Log("=== 전체 랭킹 ===");
@@ -845,6 +732,12 @@ public class FirebaseManager : Singleton<FirebaseManager>
                         var entry = topRankings[i] as Dictionary<object, object>;
                         RankingList.Data data = JsonConvert.DeserializeObject<RankingList.Data>(JsonConvert.SerializeObject(entry));
                         resultData.topRanks.Add(data);
+                    }
+
+                    resultData.topRanks.Sort();
+                    for(int i = 0; i < resultData.topRanks.Count; i++)
+                    {
+
                     }
 
                     resultData.topRanks = resultData.topRanks.OrderBy(x => x.rank == 0 ? int.MaxValue : x.rank).ToList();
@@ -871,10 +764,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
             else
             {
-                //foreach (var e in task.Exception.Flatten().InnerExceptions)
-                //{
-                //    Debug.LogError($"Function call error: {e.Message}");
-                //}
                 Debug.LogError("랭킹 가져오기 실패: " + task.Exception);
                 callback?.Invoke(null);
             }

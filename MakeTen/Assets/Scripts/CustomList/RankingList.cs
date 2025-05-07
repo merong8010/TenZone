@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System.Text;
+using System;
 
 public class RankingList : InfiniteScroll<RankingList.Data>
 {
-    public class Data
+    public class Data : IComparable<Data>
     {
         public int rank;
         public string id;
@@ -40,6 +41,12 @@ public class RankingList : InfiniteScroll<RankingList.Data>
             this.point = point;
             this.countryCode = countryCode;
             this.timeStamp = timeStamp == 0 ? GameManager.Instance.dateTime.Value.ToTick() : timeStamp;
+        }
+
+        public int CompareTo(Data other)
+        {
+            if (point != other.point) return point - other.point;
+            return (int)(other.timeStamp - timeStamp);
         }
     }
 }

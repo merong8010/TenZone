@@ -241,10 +241,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
         int maxPoint = total + (total / 2) * bonusMaxPoint;
         //float pointRate = (float)currentPoint.Value / (currentLevel.row * currentLevel.column);
         float pointRate = (float)currentPoint.Value / maxPoint;
-
+        
         int exp = Mathf.FloorToInt(currentLevel.exp * pointRate);
         int gold = Mathf.FloorToInt(currentLevel.gold * pointRate);
-        if(DataManager.Instance.userData.isVIP)
+        Debug.Log($"total : {total} | maxPoint : {maxPoint} | pointRate : {pointRate} | {currentLevel.exp} | {currentLevel.gold}");
+        if (DataManager.Instance.userData.isVIP)
         {
             exp *= 2;
             gold *= 2;

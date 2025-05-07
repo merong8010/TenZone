@@ -87,6 +87,8 @@ public class GoodsDisplay : MonoBehaviour
         this.type = type;
         this.amount = amount;
         isSubscribe = false;
+        disposable?.Dispose();
+
         icon.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(type.ToString());
         icon.SetNativeSize();
         text.text = amount.ToString("n0");
