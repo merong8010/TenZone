@@ -55,9 +55,7 @@ public class GameManager : Singleton<GameManager>
     }
 
     private DateTime? _currentTime = null; // 시간 저장 (정상적으로 가져오지 못하면 null)
-
     public DateTime? dateTime => _currentTime != null ? _currentTime.Value : null;
-
     public ReactiveProperty<DateTime> reactiveTime = new ReactiveProperty<DateTime>();
 
     // ✅ 구글 서버에서 UTC 시간 가져오기
@@ -68,8 +66,27 @@ public class GameManager : Singleton<GameManager>
         StartCoroutine(GetOnlineTime());
     }
 
+    public bool isOffline = false;
+
     private IEnumerator GetOnlineTime()
     {
+        if(Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            UIManager.Instance.CloseLoading();
+            UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("noInternet"), callback: confirm =>
+            {
+                if(confirm)
+                {
+                    _currentTime = DateTime.UtcNow;
+                    isOffline = true;
+                }
+                else
+                {
+                    FetchOnlineTime();
+                }
+            });
+            yield break;
+        }
         using (UnityWebRequest request = UnityWebRequest.Get("https://www.google.com"))
         {
             request.SetRequestHeader("Cache-Control", "no-cache");

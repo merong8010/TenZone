@@ -35,21 +35,28 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
     public static class KEY
     {
-        public static string USER = "Users";
-        public static string NICKNAME = "UserNicknames";
-        public static string RANKING = "Leaderboard";
-        public static string RANKING_ALL = "ALL";
+        public const string GameData = "GameData";
+        public const string USER = "Users";
+        public const string NICKNAME = "UserNicknames";
+        public const string RANKING = "Leaderboard";
+        public const string RANKING_ALL = "ALL";
     }
 
+    /// <summary>
+    /// 준비완료 상태인지 체크 (데이터베이스레퍼런스, 로그인이 완료 됐는지 체크)
+    /// </summary>
     public bool IsReady => db != null && user != null;
+
+    /// <summary>
+    /// 로그인 인증 타입 체크
+    /// </summary>
     public AuthenticatedType authType
     {
         get
         {
-            if(user != null)
+            if (user != null)
             {
                 string providerId = user.ProviderData.FirstOrDefault()?.ProviderId;
-                Debug.Log("providerId : " + providerId+" | "+user.Email);
                 if (providerId == "google.com")
                 {
                     return AuthenticatedType.Google;
@@ -58,7 +65,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 {
                     return AuthenticatedType.Apple;
                 }
-                else if(!string.IsNullOrEmpty(user.Email))
+                else if (!string.IsNullOrEmpty(user.Email))
                 {
                     return AuthenticatedType.Email;
                 }
@@ -66,10 +73,13 @@ public class FirebaseManager : Singleton<FirebaseManager>
             return AuthenticatedType.None;
         }
     }
+
     private DatabaseReference db;
     private FirebaseAuth auth;
     private FirebaseUser user;
     private FirebaseFunctions functions;
+    private DatabaseReference myDB;
+
     /// </summary>
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -77,11 +87,11 @@ public class FirebaseManager : Singleton<FirebaseManager>
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
             if (task.Result == DependencyStatus.Available)
             {
-                FirebaseApp app = FirebaseApp.DefaultInstance;
                 db = FirebaseDatabase.DefaultInstance.RootReference;
                 auth = FirebaseAuth.DefaultInstance;
                 functions = FirebaseFunctions.GetInstance("us-central1");
                 user = auth.CurrentUser;
+
                 GoogleSignIn.Configuration = new GoogleSignInConfiguration
                 {
                     WebClientId = "8377165168-8tlhbou2cf2kq5it7hnedqfeqr8cp7ak.apps.googleusercontent.com",
@@ -89,16 +99,14 @@ public class FirebaseManager : Singleton<FirebaseManager>
                     RequestEmail = true,
                     RequestIdToken = true
                 };
-                if (user == null) SignInAnonymously();
-#if UNITY_ANDROID
-                //InitializePlayGamesLogin();
-#endif
 #if UNITY_IOS
                 if (AppleAuthManager.IsCurrentPlatformSupported)
                 {
                     _appleAuthManager = new AppleAuthManager(new PayloadDeserializer());
                 }
 #endif
+                //인증된 로그인 상태가 아니라면 익명로그인 시도 
+                if (authType == AuthenticatedType.None) SignInAnonymously();
             }
             else
             {
@@ -106,7 +114,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
         });
     }
-
+    
+    /// <summary>
+    /// 익명 로그인
+    /// </summary>
     private void SignInAnonymously()
     {
         auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(task =>
@@ -124,9 +135,14 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
+    /// <summary>
+    /// 모든 게임데이터 불러오기
+    /// 데이터매니저에서 호출 
+    /// </summary>
+    /// <param name="callback"></param>
     public void LoadAllGameDatas(Action<DataSnapshot> callback)
     {
-        db.Child("GameData").GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child(KEY.GameData).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if(task.IsCompletedSuccessfully)
             {
@@ -147,7 +163,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    private DatabaseReference myDB;
+    /// <summary>
+    /// 유저데이터 저장
+    /// </summary>
+    /// <param name="data"></param>
     public void SaveUserData(UserData data)
     {
         if (myDB == null)
@@ -163,11 +182,16 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
             else
             {
-                Debug.LogError("Failed to save user data: " + task.Exception);
+                Debug.LogError($"Failed to save user data: {task.Exception}");
             }
         });
     }
 
+    /// <summary>
+    /// 자신의 유저데이터 가져오기
+    /// 데이터매니저에서 호출
+    /// </summary>
+    /// <param name="callback"></param>
     public void GetUserData(Action<UserData> callback)
     {
         if (myDB == null)
@@ -208,16 +232,23 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
             else
             {
-                Debug.LogError("Failed to get user data: " + task.Exception);
+                Debug.LogError($"Failed to get user data: {task.Exception}");
             }
         });
     }
 
+    /// <summary>
+    /// 자신의 유저데이터가 변경됐을때의 리스너
+    /// 계정생성시 서버에서 닉네임 생성시 호출
+    /// 또는 관리툴에서 밴할시에 호출
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
     private void HandleMyDBChanged(object sender, ValueChangedEventArgs args)
     {
         if (args.DatabaseError != null)
         {
-            Debug.LogError("유저 데이터 변경 중 오류: " + args.DatabaseError.Message);
+            Debug.LogError($"유저 데이터 변경 중 오류: {args.DatabaseError.Message}");
             return;
         }
 
@@ -225,6 +256,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
         {
             string json = args.Snapshot.GetRawJsonValue();
             UserData myData = JsonConvert.DeserializeObject<UserData>(json);
+
+            ///밴 처리
             if (!string.IsNullOrEmpty(myData.banMessage))
             {
                 UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
@@ -238,11 +271,21 @@ public class FirebaseManager : Singleton<FirebaseManager>
         }
     }
 
+    /// <summary>
+    /// 이메일 로그인
+    /// 에디터에서만 기능제공
+    /// </summary>
+    /// <param name="email"></param>
+    /// <param name="password"></param>
     public void SignInWithEmail(string email, string password)
     {
         LinkAnonymousToAuth(EmailAuthProvider.GetCredential(email, password));
     }
 
+
+    /// <summary>
+    /// 구글 로그인
+    /// </summary>
     public void StartGoogleLogin()
     {
         GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(task =>
@@ -256,13 +299,18 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
+    /// <summary>
+    /// 익명 로그인에서 인증 로그인으로 변경
+    /// </summary>
+    /// <param name="credential"></param>
     private void LinkAnonymousToAuth(Credential credential)
     {
         string anonymousUid = user.UserId;
 
+        ///익명에서 인증로그인으로 전환시도
         user.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
         {
-            Debug.Log("LinkWithCredentialAsync : " + task.IsCompletedSuccessfully+" | "+task.Exception?.ToString());
+            ///전환 성공시
             if (task.IsCompletedSuccessfully)
             {
                 user = task.Result.User;
@@ -272,11 +320,13 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
             else
             {
+                ///전환 실패시 로그인시도했던 유저로 로그인
                 auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread(signInTask =>
                 {
                     if (signInTask.IsCompletedSuccessfully)
                     {
                         FirebaseUser signedInUser = signInTask.Result;
+                        /// 기존 익명로그인 계정 유저데이터 삭제
                         DeleteAnonymousUserData(anonymousUid, signedInUser.UserId);
                     }
                     else
@@ -288,30 +338,11 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    private void MigrateUserData(string anonymousUid, string authUid)
-    {
-        Debug.Log($"MigrateUserData | anonymousUid : {anonymousUid} | authUid : {authUid}");
-        myDB = null;
-        var data = new Dictionary<string, object>
-        {
-            { "anonymousUid", anonymousUid },
-            { "authUid", authUid }
-        };
-        functions.GetHttpsCallable("migrateUserData").CallAsync(data).ContinueWithOnMainThread(task =>
-        {
-            if (task.IsCompletedSuccessfully)
-            {
-                DataManager.Instance.RefreshUserData();
-                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-                UIManager.Instance.Get<PopupSettings>().Refresh();
-            }
-            else
-            {
-                UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
-            }
-        });
-    }
-
+    /// <summary>
+    /// 익명 계정 삭제및 로그인 계정으로 새로고침
+    /// </summary>
+    /// <param name="anonymousUid"></param>
+    /// <param name="newUid"></param>
     private void DeleteAnonymousUserData(string anonymousUid, string newUid)
     {
         Debug.Log($"DeleteAnonymousUserData | anonymousUid : {anonymousUid} | authUid : {newUid}");
@@ -321,6 +352,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
         };
         functions.GetHttpsCallable("deleteUserData").CallAsync(data).ContinueWithOnMainThread(task =>
         {
+            /// 익명 계정 삭제 성공시
             if (task.IsCompletedSuccessfully)
             {
                 myDB = null;
@@ -329,7 +361,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
                 UIManager.Instance.Get<PopupSettings>().Refresh();
             }
-            else
+            else /// 실패시 로그아웃 후 게임종료 
             {
                 UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
                 LogOut();
@@ -337,92 +369,9 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-
-
-    //private void AuthCompleteCallback(FirebaseUser authUser, string authToken = "")
-    //{
-    //    db.Child(KEY.USER).Child(authUser.UserId).GetValueAsync().ContinueWithOnMainThread(userDataTask =>
-    //    {
-    //        DataSnapshot userData = userDataTask.Result;
-    //        if (userData.Exists)
-    //        {
-    //            UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("ExistUserData"), callback: change =>
-    //            {
-    //                if (change)
-    //                {
-    //                    //DataManager.Instance.RefreshUserData();
-    //                    var data = new Dictionary<string, object>
-    //                    {
-    //                        {"anonymousUid", user.UserId }
-    //                    };
-    //                    functions.GetHttpsCallable("deleteUserData").CallAsync(data).ContinueWithOnMainThread(task =>
-    //                    {
-    //                        if (task.IsCompletedSuccessfully)
-    //                        {
-    //                            user = authUser;
-    //                            myDB = null;
-    //                            DataManager.Instance.RefreshUserData();
-    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("FederatedSuccess"));
-    //                            UIManager.Instance.Get<PopupSettings>().Refresh();
-    //                        }
-    //                        else
-    //                        {
-    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
-    //                        }
-    //                    });
-    //                }
-    //            });
-    //        }
-    //        else
-    //        {
-    //            Credential credential = null;
-    //            switch(currentAuthType)
-    //            {
-    //                case AuthenticatedType.Google:
-    //                    credential = GoogleAuthProvider.GetCredential(authToken, null);
-    //                    break;
-    //                case AuthenticatedType.Apple:
-    //                    //credential = OAuthProvider.GetCredential(authToken,)
-    //                    break;
-    //                case AuthenticatedType.Email:
-    //                    credential = EmailAuthProvider.GetCredential(authUser.Email, authToken);
-    //                    break;
-    //            }
-    //            Debug.Log(authUser.Email + " | " + authToken+" | "+user.Email);
-    //            user.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(linkTask =>
-    //            {
-    //                Debug.Log(linkTask.Exception?.ToString());
-    //                if(linkTask.IsCompletedSuccessfully)
-    //                {
-    //                    myDB = null;
-    //                    var data = new Dictionary<string, object>
-    //                    {
-    //                        {"anonymousUid", user.UserId },
-    //                        {"authUid", authUser.UserId }
-    //                    };
-    //                    functions.GetHttpsCallable("migrateUserData").CallAsync(data).ContinueWithOnMainThread(task =>
-    //                    {
-    //                        if (task.IsCompletedSuccessfully)
-    //                        {
-    //                            DataManager.Instance.RefreshUserData();
-    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationSuccess"));
-    //                            UIManager.Instance.Get<PopupSettings>().Refresh();
-    //                        }
-    //                        else
-    //                        {
-    //                            UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
-    //                        }
-    //                    });
-    //                }
-    //                else
-    //                {
-    //                    UIManager.Instance.Message.Show(Message.Type.Simple, TextManager.Get("AuthenticationFail"));
-    //                }
-    //            });
-    //        }
-    //    });
-    //}
-
+    /// <summary>
+    /// 애플 서비스 시작시에 작업필요
+    /// </summary>
 #if UNITY_IOS
     private IAppleAuthManager _appleAuthManager;
 #endif
@@ -449,8 +398,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
 
                     Debug.Log($"Apple SignIn 성공!\nUserId: {userId}\nIdentityToken: {identityToken}");
 
-                    // 👉 서버에 identityToken 전송해서 검증 가능
-                    // 👉 또는 Firebase Auth 연동
+                    // 서버에 identityToken 전송해서 검증 가능
+                    // 또는 Firebase Auth 연동
                 }
             },
             error =>
@@ -459,31 +408,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
         );
 #endif
-        //TheBackend.ToolKit.AppleLogin.Android.AppleLogin("com.thebackend.testapp.applelogin", out var error, true, token => {
-        //    Debug.Log("토큰 : " + token);
-        //    Debug.Log("토큰 발급이 완료되었습니다. 로그인이 가능합니다.");
-        //    auth.SignInWithCredentialAsync(OAuthProvider.GetCredential("apple.com", token, null, null)).ContinueWith(authTask =>
-        //    {
-        //        if (authTask.IsCompleted && !authTask.IsFaulted)
-        //        {
-        //            user = authTask.Result;
-        //        }
-        //    });
-
-
-        //    // 경고! : 다음과 같이 동기 함수를 호출하지 마세요
-        //    // var bro = Backend.BMember.AuthorizeFederation(token, FederationType.Apple);
-
-        //    // 아래와 같이 비동기 함수를 호출해주세요,
-        //    //Backend.BMember.AuthorizeFederation(token, FederationType.Apple, callback => {
-        //    //    Debug.Log("애플 로그인 결과 : " + callback);
-        //    //});
-        //});
-
-        //if (string.IsNullOrEmpty(error) == false)
-        //{
-        //    Debug.Log("에러 : " + error);
-        //}
     }
 
     public void LogOut()
@@ -492,6 +416,11 @@ public class FirebaseManager : Singleton<FirebaseManager>
         Application.Quit();
     }
 
+    /// <summary>
+    /// 공용 데이터 삽입
+    /// </summary>
+    /// <param name="refName"></param>
+    /// <param name="rawJson"></param>
     public void InsertData(string refName, string rawJson)
     {
         db.Child(refName).SetRawJsonValueAsync(rawJson).ContinueWithOnMainThread(task => {
@@ -506,66 +435,21 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
+    /// <summary>
+    /// 닉네임
+    /// </summary>
 #region NicknameCheck
-    public string FreeNick
-    {
-        get
-        {
-            string[] strs = DataManager.Instance.userData.id.Split('-');
-            return new StringBuilder().Append("Player").Append(strs.First().Substring(0, 6)).ToString();
-        }
-    }
-
-    public bool IsFreeNick
-    {
-        get
-        {
-            if (FreeNick.Contains(DataManager.Instance.userData.nickname)) return true;
-            return false;
-        }
-    }
-
-    public void CreateAvailableNickname(Action<string> callback)
-    {
-        if (!string.IsNullOrEmpty(DataManager.Instance.userData.nickname))
-            return;
-
-        string freeNick = FreeNick;
-        HasServerNickname(freeNick, has =>
-        {
-            if(has)
-            {
-                NextFreeNick(freeNick, 0, callback);
-            }
-            else
-            {
-                callback.Invoke(freeNick);
-            }
-        });
-    }
-
-    private void NextFreeNick(string nick, int i, Action<string> callback)
-    {
-        string currentNick = string.Format("{0}{1:000}", nick, i);
-        HasServerNickname(currentNick, has =>
-        {
-            if (has)
-            {
-                NextFreeNick(nick, i + 1, callback);
-            }
-            else
-            {
-                callback.Invoke(currentNick);
-            }
-        });
-    }
-
     public struct ResultCheckNickname
     {
         public bool success;
         public string message;
     }
 
+    /// <summary>
+    /// 닉네임이 변경가능한지 체크
+    /// </summary>
+    /// <param name="nickname">체크할 닉네임</param>
+    /// <param name="callback">결과 반환</param>
     public void CheckNickname(string nickname, Action<ResultCheckNickname> callback)
     {
         ResultCheckNickname result = default;
@@ -576,23 +460,19 @@ public class FirebaseManager : Singleton<FirebaseManager>
             result.message = TextManager.Get("nicknameNull");
             callback.Invoke(result);
         }
-        if (nickname.Length < 2)
+
+        if (nickname.Length < 2 || nickname.Length > 10)
         {
             result.success = false;
-            result.message = TextManager.Get("nicknameNull");
+            result.message = TextManager.Get("nicknameLengthError");
             callback.Invoke(result);
         }
-        if (nickname.Length > 10)
-        {
-            result.success = false;
-            result.message = TextManager.Get("nicknameNull");
-            callback.Invoke(result);
-        }
+
         string resultNick = Regex.Replace(nickname, @"[^a-zA-Z0-9가-힇ぁ-ゔァ-ヴー々〆〤一-龥]", "", RegexOptions.Singleline);
         if (resultNick != nickname)
         {
             result.success = false;
-            result.message = TextManager.Get("nicknameNull");
+            result.message = TextManager.Get("nicknameException");
             callback.Invoke(result);
         }
         GameData.ForbiddenWord[] forbiddenWordTable = DataManager.Instance.Get<GameData.ForbiddenWord>();
@@ -611,7 +491,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             if(has)
             {
                 result.success = false;
-                result.message = TextManager.Get("nicknameAlready_Exists");
+                result.message = TextManager.Get("nicknameDuplicate");
                 callback.Invoke(result);
             }
             else
@@ -622,7 +502,11 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
         });
     }
-
+    /// <summary>
+    /// 서버에 중복된 닉네임이 있는지 체크
+    /// </summary>
+    /// <param name="nickName"></param>
+    /// <param name="result"></param>
     public void HasServerNickname(string nickName, Action<bool> result)
     {
         db.Child(KEY.NICKNAME).Child(nickName).GetValueAsync().ContinueWithOnMainThread(task =>
@@ -637,19 +521,17 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
+    /// <summary>
+    /// 닉네임 변경
+    /// </summary>
+    /// <param name="nickname"></param>
+    /// <param name="callback"></param>
     public void UpdateNickName(string nickname, Action<ResultCheckNickname> callback)
     {
         functions.GetHttpsCallable("changeNickname").CallAsync(new Dictionary<string, object> { { "nickname", nickname } }).ContinueWithOnMainThread(task =>
         {
             ResultCheckNickname result = default;
-            if (task.IsFaulted)
-            {
-                Debug.LogError("닉네임 변경 실패: " + task.Exception);
-                result.success = false;
-                result.message = task.Exception.Message;
-                callback?.Invoke(result);
-            }
-            else
+            if (task.IsCompletedSuccessfully)
             {
                 Debug.Log("닉네임 변경 성공!");
                 result.success = true;
@@ -657,22 +539,40 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 DataManager.Instance.userData.nickname = nickname;
                 callback?.Invoke(result);
             }
+            else
+            {
+                Debug.LogError($"닉네임 변경 실패: {task.Exception}");
+                result.success = false;
+                result.message = task.Exception.Message;
+                callback?.Invoke(result);
+            }
         });
     }
 #endregion
 
-    public void SubmitScore(PuzzleManager.Level gameLevel, string date, int score, Action<int> callback = null)
+    /// <summary>
+    /// 랭킹에 점수 등록
+    /// </summary>
+    /// <param name="gameLevel">퍼즐 난이도</param>
+    /// <param name="date">오늘날짜 또는 전체</param>
+    /// <param name="point">점수</param>
+    /// <param name="callback"></param>
+    public void SubmitScore(PuzzleManager.Level gameLevel, string date, int point, Action<int> callback = null)
     {
-        //Debug.Log($"SubmitScore  {gameLevel} | {date} | {score}");
-        //Debug.Log($"userData : {DataManager.Instance.userData}");
-        //RankingList.Data entry = new RankingList.Data(DataManager.Instance.userData.id, DataManager.Instance.userData.level, DataManager.Instance.userData.nickname, score, DataManager.Instance.userData.countryCode);
-        //Debug.Log($"entry : {entry}");
-        //db.Child(KEY.RANKING).Child(gameLevel.ToString()).Child(date).Child(DataManager.Instance.userData.id).SetRawJsonValueAsync(JsonConvert.SerializeObject(entry));
-        //callback?.Invoke(0);
-
-        SubmitScore(gameLevel, date, DataManager.Instance.userData.id, DataManager.Instance.userData.nickname, DataManager.Instance.userData.level, score, DataManager.Instance.userData.countryCode, callback);
+        SubmitScore(gameLevel, date, DataManager.Instance.userData.id, DataManager.Instance.userData.nickname, DataManager.Instance.userData.level, point, DataManager.Instance.userData.countryCode, callback);
     }
 
+    /// <summary>
+    /// 랭킹에 점수 등록
+    /// </summary>
+    /// <param name="gameLevel"></param>
+    /// <param name="date"></param>
+    /// <param name="userId"></param>
+    /// <param name="nickname"></param>
+    /// <param name="level"></param>
+    /// <param name="point"></param>
+    /// <param name="countryCode"></param>
+    /// <param name="callback"></param>
     public void SubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int level, int point, string countryCode, Action<int> callback = null)
     {
         var data = new Dictionary<string, object>
@@ -770,33 +670,13 @@ public class FirebaseManager : Singleton<FirebaseManager>
             
         });
     }
-    
-    //[Serializable]
-    //private class GoogleReceipt
-    //{
-    //    public string Store;
-    //    public string TransactionID;
-    //    public string Payload;
-    //}
 
-    //[Serializable]
-    //private class PayloadJson
-    //{
-    //    public string json;
-    //    public string signature;
-    //    public string skuDetails;
-    //}
-
-    //public class PayloadData
-    //{
-    //    public string orderId;
-    //    public string packageName;
-    //    public string productId;
-    //    public long purchaseTime;
-    //    public int purchaseState;
-    //    public string purchaseToken;
-    //}
-
+    #region IAP
+    /// <summary>
+    /// 영수증 데이터 가져오기
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
     public ReceiptData GetReceiptData(PurchaseEventArgs e)
     {
         ReceiptData data = new ReceiptData();
@@ -808,7 +688,6 @@ public class FirebaseManager : Singleton<FirebaseManager>
             Debug.Log("receiptString " + receiptString);
             var receiptDict = (Dictionary<string, object>)MiniJson.JsonDecode(receiptString);
             Debug.Log("receiptDict COUNT" + receiptDict.Count);
-
 #if UNITY_ANDROID
             //Next level Paylod dict
             string payloadString = (string)receiptDict["Payload"];
@@ -867,20 +746,16 @@ public class FirebaseManager : Singleton<FirebaseManager>
         public string packageName;
         public string productId;
         public string purchaseToken;
-        //public long priceAmountMicros;
-        //public string priceCurrencyCode;
-        public System.DateTime orderDate;
+        public DateTime orderDate;
         public string receipt;
         public string signature;
         public string json;
         public override string ToString()
         {
-            //return base.ToString();
-            return "orderId : " + orderId + "\n"
-                + "packageName : " + packageName + "\n"
-                + "productId : " + productId + "\n"
-                + "purchaseToken : " + purchaseToken;
-
+            return new StringBuilder().Append("orderId : ").Append(orderId).AppendLine()
+                .Append("packageName : ").Append(packageName).AppendLine()
+                .Append("productId : ").Append(productId).AppendLine()
+                .Append("purchaseToken : ").Append(purchaseToken).ToString();
 
         }
     }
@@ -891,6 +766,11 @@ public class FirebaseManager : Singleton<FirebaseManager>
         public string purchaseToken;
     }
 
+    /// <summary>
+    /// 영수증 검증
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="onResult"></param>
     public void ValidatePurchase(PurchaseEventArgs args, Action<bool> onResult)
     {
 #if UNITY_ANDROID
@@ -913,6 +793,13 @@ public class FirebaseManager : Singleton<FirebaseManager>
         Debug.Log($"ValidatePurchase | {json}");
         StartCoroutine(PostValidate(url, json, onResult));
     }
+    /// <summary>
+    /// 실제 영수증 검증 호출
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="json"></param>
+    /// <param name="onResult"></param>
+    /// <returns></returns>
     private IEnumerator PostValidate(string url, string json, Action<bool> onResult)
     {
         using (UnityWebRequest www = new UnityWebRequest(url, "POST"))
@@ -939,7 +826,15 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
         }
     }
+    #endregion
 
+    /// <summary>
+    /// 유저에게 메일 보내기
+    /// 상품 구매후에 보상 보내기
+    /// </summary>
+    /// <param name="title"></param>
+    /// <param name="desc"></param>
+    /// <param name="rewards"></param>
     public void SendMail(string title, string desc, GoodsList.Data[] rewards)
     {
         string mailId = myDB.Child("mailDatas").Push().Key;

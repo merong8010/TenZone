@@ -55,16 +55,30 @@ public class DataManager : Singleton<DataManager>
     private IEnumerator LoadAllGameDatas()
     {
         int dataTotalCount = 100;
-        FirebaseManager.Instance.LoadAllGameDatas(result =>
+
+        if(GameManager.Instance.isOffline)
         {
-            dataTotalCount = (int)result.ChildrenCount;
-            foreach (var data in result.Children)
+            var gameData = JsonConvert.DeserializeObject<Firebase.Database.DataSnapshot>(Resources.Load<TextAsset>("GameData.json").ToString());
+            dataTotalCount = (int)gameData.ChildrenCount;
+            foreach (var data in gameData.Children)
             {
                 Type type = Type.GetType($"GameData.{data.Key}").MakeArrayType();
                 gameDatas.Add(data.Key, (GameData.Data[])JsonConvert.DeserializeObject(data.GetRawJsonValue(), type));
             }
-        });
-
+        }
+        else
+        {
+            FirebaseManager.Instance.LoadAllGameDatas(result =>
+            {
+                dataTotalCount = (int)result.ChildrenCount;
+                foreach (var data in result.Children)
+                {
+                    Type type = Type.GetType($"GameData.{data.Key}").MakeArrayType();
+                    gameDatas.Add(data.Key, (GameData.Data[])JsonConvert.DeserializeObject(data.GetRawJsonValue(), type));
+                }
+            });
+        }
+        
         yield return new WaitUntil(() => gameDatas.Count == dataTotalCount);
         string countryCode = PlayerPrefs.GetString("Locale", Util.GetCountryCode());
         TextManager.LoadDatas(countryCode, Get<GameData.Language>());
