@@ -101,9 +101,16 @@ public class DataManager : Singleton<DataManager>
 
     public void RefreshUserData()
     {
-        FirebaseManager.Instance.GetUserData(userData =>
+        if(GameManager.Instance.isOffline)
         {
-            UpdateUserData(userData);
-        });
+
+        }
+        else
+        {
+            FirebaseManager.Instance.GetUserData(userData =>
+            {
+                UpdateUserData(userData);
+            });
+        }
     }
 }

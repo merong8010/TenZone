@@ -133,13 +133,12 @@ public class GameManager : Singleton<GameManager>
 
     private IEnumerator Initialize()
     {
-        
         GoScene(Scene.Title);
         FetchOnlineTime();
         UIManager.Instance.Title.SetStatus("Check Time");
         yield return new WaitUntil(() => _currentTime != null);
         UIManager.Instance.Title.SetStatus("Check Server State");
-        yield return new WaitUntil(() => FirebaseManager.Instance.IsReady);
+        yield return new WaitUntil(() => FirebaseManager.Instance.IsReady || isOffline);
         UIManager.Instance.Title.SetStatus("Check Game Datas");
         DataManager.Instance.LoadGameDatas();
         yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
