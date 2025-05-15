@@ -26,23 +26,6 @@ public class UIManager : Singleton<UIManager>
     protected override void Awake()
     {
         base.Awake();
-
-        StartCoroutine(InitBG());
-    }
-
-    private IEnumerator InitBG()
-    {
-        yield return new WaitUntil(() => ObjectPooler.Instance.isReady);
-        Vector2 blockStartPos = blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (blockCounts.x - 1) * 0.5f, -(blockSize.y + blockGap.y) * (blockCounts.y - 1) * 0.5f);
-        for (int x = 0; x < blockCounts.x; x++)
-        {
-            for (int y = 0; y < blockCounts.y; y++)
-            {
-                Block blockObj = ObjectPooler.Instance.Get<Block>("block_title", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * x, (blockSize.y + blockGap.y) * y), Vector3.one);
-                blockObj.SetSize(blockSize);
-                blockObj.InitRandom();
-            }
-        }
     }
 
     private const string PopupPath = "Prefabs/UI/Popups/";
@@ -184,12 +167,8 @@ public class UIManager : Singleton<UIManager>
             popup.gameObject.SetActive(false);
         }
         popupStack.Clear();
-        //while (popupStack.Count > 0)
-        //{
-        //    Popup popup = popupStack.Pop();
-        //    popup.gameObject.SetActive(false);
-        //}
     }
+    
     [SerializeField]
     private GameObject loadingObj;
     [SerializeField]
@@ -208,38 +187,36 @@ public class UIManager : Singleton<UIManager>
 
     }
     private Tweener loadingTweener;
-    public void Loading(string message = "Loading", float bgAlpha = 1f, float fadeDuration = 0.5f, float fadeDelay = 1f, Action callback = null, Action completeCallback = null)
+    public void Loading(string message = "Loading", float bgAlpha = 1f, float fadeOutDuration = 0.5f, float fadeDelay = 1f, float fadeInDuration = 0.5f, Action callback = null, Action completeCallback = null)
     {
         loadingObj.SetActive(true);
         loadingTweener?.Kill();
-        loadingTweener = DOTween.To(() => loadingGroup.alpha, x => loadingGroup.alpha = x, bgAlpha, fadeDuration).OnComplete(() =>
+        loadingGroup.alpha = 0f;
+        loadingTweener = DOTween.To(() => loadingGroup.alpha, x => loadingGroup.alpha = x, bgAlpha, fadeOutDuration).OnComplete(() =>
         {
             callback?.Invoke();
-            if(fadeDelay > 0f)
+            if(fadeDelay > 0f || completeCallback != null)
             {
-                loadingTweener = DOTween.To(() => loadingGroup.alpha, x => loadingGroup.alpha = x, 0f, fadeDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
+                loadingTweener = DOTween.To(() => loadingGroup.alpha, x => loadingGroup.alpha = x, 0f, fadeInDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
                 {
                     completeCallback?.Invoke();
                     loadingObj.SetActive(false);
                 });
             }
-            
         });
         
         loadingText.text = message;
     }
 
-    public void CloseLoading()
+    public void CloseLoading(float fadeInDuration = 0.5f, float fadeDelay = 0f, Action completeCallback = null)
     {
-        loadingObj.SetActive(false);
+        loadingTweener = DOTween.To(() => loadingGroup.alpha, x => loadingGroup.alpha = x, 0f, fadeInDuration).SetDelay(fadeDelay).OnComplete(() => loadingObj.SetActive(false)).OnComplete(() =>
+        {
+            completeCallback?.Invoke();
+            loadingObj.SetActive(false);
+        });
     }
 
-    public Main Main;
-
-    //public void ShowMain(bool isShow)
-    //{
-    //    Main.gameObject.SetActive(isShow);
-    //}
 
     public void RefreshMain()
     {
@@ -247,5 +224,4 @@ public class UIManager : Singleton<UIManager>
     }
 
     public Message Message;
-    public Title Title;
 }

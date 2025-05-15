@@ -6,6 +6,7 @@ using System.Text;
 using System;
 using System.Collections;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -57,7 +58,8 @@ public class GameManager : Singleton<GameManager>
     private DateTime? _currentTime = null; // 시간 저장 (정상적으로 가져오지 못하면 null)
     public DateTime? dateTime => _currentTime != null ? _currentTime.Value : null;
     public ReactiveProperty<DateTime> reactiveTime = new ReactiveProperty<DateTime>();
-
+    public GameData.GameLevel currentLevel;
+    public bool isUse10Seconds;
     // ✅ 구글 서버에서 UTC 시간 가져오기
     public void FetchOnlineTime()
     {
@@ -131,19 +133,23 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    public void Init()
+    {
+        StartCoroutine(Initialize());
+    }
+
     private IEnumerator Initialize()
     {
         GoScene(Scene.Title);
         FetchOnlineTime();
-        UIManager.Instance.Title.SetStatus("Check Time");
+        TitleManager.Instance.SetStatus("Check Time");
         yield return new WaitUntil(() => _currentTime != null);
-        UIManager.Instance.Title.SetStatus("Check Server State");
+        TitleManager.Instance.SetStatus("Check Server State");
         yield return new WaitUntil(() => FirebaseManager.Instance.IsReady || isOffline);
-        UIManager.Instance.Title.SetStatus("Check Game Datas");
+        TitleManager.Instance.SetStatus("Check Game Datas");
         DataManager.Instance.LoadGameDatas();
         yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
-        PuzzleManager.Instance.Initialize();
-        UIManager.Instance.Title.SetStatus("", showTap: true);
+        TitleManager.Instance.SetStatus("", showTap: true);
         IAPManager.Instance.InitializePurchasing();
         ADManager.Instance.Initialize();
     }
@@ -156,48 +162,72 @@ public class GameManager : Singleton<GameManager>
     }
     public void GoScene(Scene scene, GameData.GameLevel level = null, bool use10Seconds = false)
     {
+        //UIManager.Instance.Loading(callback: () =>
+        //{
+        //    HUD.Instance.ShowMain(false);
+        //    HUD.Instance.ShowPuzzle(false);
+        //    switch (scene)
+        //    {
+        //        case Scene.Title:
+        //            PuzzleManager.Instance.gameObject.SetActive(false);
+        //            UIManager.Instance.Main.gameObject.SetActive(false);
+        //            break;
+        //        case Scene.Main:
+        //            UIManager.Instance.Title.gameObject.SetActive(false);
+        //            PuzzleManager.Instance.gameObject.SetActive(false);
+        //            UIManager.Instance.Main.gameObject.SetActive(true);
+        //            break;
+        //        case Scene.Puzzle:
+        //            PuzzleManager.Instance.gameObject.SetActive(true);
+        //            PuzzleManager.Instance.ClearBlocks();
+        //            UIManager.Instance.Main.gameObject.SetActive(false);
+        //            break;
+        //    }
+        //}, completeCallback: () =>
+        //{
+        //    switch (scene)
+        //    {
+        //        case Scene.Title:
+        //            //HUD.Instance.UpdateScene(Scene.Title);
+        //            break;
+        //        case Scene.Main:
+        //            HUD.Instance.ShowMain(true);
+        //            UIManager.Instance.Refresh();
+        //            ADManager.Instance.ShowBanner();
+        //            break;
+        //        case Scene.Puzzle:
+        //            HUD.Instance.ShowPuzzle(true);
+        //            PuzzleManager.Instance.GameStart(level, use10Seconds);
+        //            ADManager.Instance.ShowBanner();
+        //            break;
+        //    }
+
+        //});
+        currentLevel = level;
+        isUse10Seconds = use10Seconds;
+
+        //StartCoroutine(GoScene(scene));
         UIManager.Instance.Loading(callback: () =>
         {
-            HUD.Instance.ShowMain(false);
-            HUD.Instance.ShowPuzzle(false);
-            switch (scene)
-            {
-                case Scene.Title:
-                    PuzzleManager.Instance.gameObject.SetActive(false);
-                    UIManager.Instance.Main.gameObject.SetActive(false);
-                    break;
-                case Scene.Main:
-                    UIManager.Instance.Title.gameObject.SetActive(false);
-                    PuzzleManager.Instance.gameObject.SetActive(false);
-                    UIManager.Instance.Main.gameObject.SetActive(true);
-                    break;
-                case Scene.Puzzle:
-                    PuzzleManager.Instance.gameObject.SetActive(true);
-                    PuzzleManager.Instance.ClearBlocks();
-                    UIManager.Instance.Main.gameObject.SetActive(false);
-                    break;
-            }
+            SceneManager.LoadScene((int)scene);
         }, completeCallback: () =>
         {
-            switch (scene)
-            {
-                case Scene.Title:
-                    //HUD.Instance.UpdateScene(Scene.Title);
-                    break;
-                case Scene.Main:
-                    HUD.Instance.ShowMain(true);
-                    UIManager.Instance.Refresh();
-                    ADManager.Instance.ShowBanner();
-                    break;
-                case Scene.Puzzle:
-                    HUD.Instance.ShowPuzzle(true);
-                    PuzzleManager.Instance.GameStart(level, use10Seconds);
-                    ADManager.Instance.ShowBanner();
-                    break;
-            }
 
         });
     }
+
+    //private IEnumerator GoScene(Scene scene)
+    //{
+    //    UIManager.Instance.Loading(callback: () =>
+    //    {
+    //        SceneManager.LoadScene((int)scene);
+    //    }, completeCallback:()=>
+    //    {
+            
+    //    });
+        
+        
+    //}
 
     public void SetScreenRoate(bool isPortrait, bool isRotate)
     {

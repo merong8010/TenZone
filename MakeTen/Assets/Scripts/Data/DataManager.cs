@@ -96,7 +96,11 @@ public class DataManager : Singleton<DataManager>
     public void UpdateUserData(UserData data)
     {
         this.userData = data;
-        HUD.Instance.UpdateUserData(userData);
+        if(MainManager.HasInstance)
+        {
+            MainManager.Instance.UpdateUserData(data);
+        }
+        //HUD.Instance.UpdateUserData(userData);
     }
 
     public void RefreshUserData()

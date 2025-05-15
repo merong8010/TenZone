@@ -175,6 +175,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9cd4ca3feaca48aab245e09e6dcaac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
   audioListener: {fileID: 0}
   bgmSource: {fileID: 7417951650446088168}
   effectSource: {fileID: 1663161138118753074}
@@ -224,6 +225,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24d928da84bf240f59fb2fb1f18cb9e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
 --- !u!1 &3343448673087255867
 GameObject:
   m_ObjectHideFlags: 0
@@ -268,6 +270,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb86ce6e3cee847b79c5d7fccd16ea60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
 --- !u!1 &4042368204409755980
 GameObject:
   m_ObjectHideFlags: 0
@@ -312,6 +315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e11be8b2f0f03f45963014eb9919724, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
 --- !u!1 &4604082983347124242
 GameObject:
   m_ObjectHideFlags: 0
@@ -364,6 +368,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53e2b187a914e47c68fbda7f237f83ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 1
+  isUse10Seconds: 0
   isOffline: 0
 --- !u!1 &6134195873349963298
 GameObject:
@@ -409,6 +415,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c7e2f4fae51441c89aa083ffc2f51db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
   defaultSettings:
   - type: 1
     boolVal: 1
@@ -475,6 +482,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5e140ff64bb54c6385a4396686a8c6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
 --- !u!1 &6869661314810364843
 GameObject:
   m_ObjectHideFlags: 0
@@ -519,6 +527,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 055487ba96da440b09d7406866d11f32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
   pools:
   - tag: block
     prefabPath: 
@@ -730,6 +739,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 725f0f673a72f124890d15fd748fc58d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
   MaxHeart: 0
   HeartChargeTime: 0
   SearchTerm: 0

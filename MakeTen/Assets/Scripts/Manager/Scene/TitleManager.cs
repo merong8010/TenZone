@@ -6,9 +6,6 @@ using System.Collections;
 public class TitleManager : Singleton<TitleManager>
 {
     [SerializeField]
-    private Transform blockParent;
-
-    [SerializeField]
     private GameObject loginObj;
     [SerializeField]
     private GameObject tabPlayObj;

@@ -3321,9 +3321,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scaler: {fileID: 1566088081}
-  safeAreas:
-  - {fileID: 0}
-  - {fileID: 1926368466}
+  safeAreas: []
   refSize: {x: 1920, y: 1080}
 --- !u!114 &1566088085
 MonoBehaviour:
@@ -3337,6 +3335,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30a0d2c8fd2e4474c801ccad32f84d33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
+  mainRect: {fileID: 0}
+  levelText: {fileID: 0}
+  expText: {fileID: 0}
+  expBar: {fileID: 0}
+  nameText: {fileID: 0}
+  heartCount: {fileID: 0}
+  heartChargeRemainTime: {fileID: 0}
+  blockParent: {fileID: 0}
+  blockCounts: {x: 0, y: 0}
+  blockSize: {x: 0, y: 0}
+  blockGap: {x: 0, y: 0}
 --- !u!1 &1658086546
 GameObject:
   m_ObjectHideFlags: 0

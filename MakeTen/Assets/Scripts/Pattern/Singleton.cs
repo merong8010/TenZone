@@ -1,62 +1,60 @@
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
-{
-    private static T _instance;
-    private static readonly object _lock = new object();
-    private static bool _applicationIsQuitting = false;
+public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour {
 
-    public static T Instance
-    {
-        get
-        {
-            if (_applicationIsQuitting)
-            {
-                Debug.LogWarning($"[Singleton] {typeof(T)} 인스턴스가 이미 파괴되었습니다. 새로 생성되지 않습니다.");
-                return null;
-            }
-
-            if (_instance == null)
-            {
-                lock (_lock)
+	private static T _instance;
+	public static T Instance
+	{
+		get {
+			if (_instance == null) {
+				_instance = FindAnyObjectByType(typeof(T)) as T;
+				Debug.Log($"Instance {typeof(T)}");
+				if (_instance == null) {
+					T targetInstance = Resources.Load<T>(new System.Text.StringBuilder().Append("Prefabs/").Append(typeof(T).ToString()).ToString());
+					if (targetInstance != null)
+					{
+						_instance = Instantiate(targetInstance);
+						_instance.gameObject.name = _instance.GetType().FullName;
+					}
+				}
+				if(_instance == null)
                 {
-                    _instance = FindFirstObjectByType<T>();
-
-                    // 🎯 에디터 모드에서도 동작하게 설정
-#if UNITY_EDITOR
-                    if (!Application.isPlaying && _instance == null)
-                    {
-                        _instance = new GameObject(typeof(T).ToString()).AddComponent<T>();
-                    }
-#endif
-
-                    if (_instance == null)
-                    {
-                        GameObject singletonObject = new GameObject(typeof(T).ToString());
-                        _instance = singletonObject.AddComponent<T>();
-                        //DontDestroyOnLoad(singletonObject);
-                    }
+					_instance = new GameObject(typeof(T).FullName).AddComponent<T>();
                 }
-            }
-            return _instance;
-        }
-    }
+			}
+			return _instance;
+		}
+	}
+	public bool DontDestroy;
+	protected virtual void Awake()
+	{
+		if( _instance == null ) _instance = this as T;
+		if (DontDestroy) DontDestroyOnLoad(this.gameObject);
+	}
 
-    protected virtual void Awake()
-    {
-        if (_instance == null)
-        {
-            _instance = this as T;
-            //DontDestroyOnLoad(gameObject);
-        }
-        else if (_instance != this)
-        {
-            Destroy(gameObject);
-        }
-    }
+	public static bool HasInstance {
+		get {
+			return !IsDestroyed;
+		}
+	}
 
-    private void OnApplicationQuit()
-    {
-        _applicationIsQuitting = true;
-    }
+	public static bool IsDestroyed {
+		get {
+			if(_instance == null) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	protected virtual void OnDestroy () {
+		_instance = null;
+	}
+
+	protected virtual void OnApplicationQuit () {
+		_instance = null;
+	}
 }
