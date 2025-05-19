@@ -48,10 +48,19 @@ public class PuzzleManager : Singleton<PuzzleManager>
     [SerializeField]
     private Vector2 blockGap;
 
+    [SerializeField]
+    private TMPro.TextMeshProUGUI pointText;
+    [SerializeField]
+    private TMPro.TextMeshProUGUI timeText;
+    [SerializeField]
+    private Image timeBar;
+    private ReactiveProperty<int> pointProperty = new ReactiveProperty<int>();
+
     protected override void Awake()
     {
         base.Awake();
-        //Initialize();
+        Initialize();
+        GameStart(GameManager.Instance.currentLevel, GameManager.Instance.isUse10Seconds);
     }
 
     private Coroutine finishCoroutine;
@@ -68,10 +77,21 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
         currentPoint = new ReactiveProperty<int>();
         
-        HUD.Instance.Initialize(currentPoint);
+        //HUD.Instance.Initialize(currentPoint);
         blockSafeArea.refreshAction = RefreshPosition;
         //bonusMaxPoint = DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "bonusMaxPoint").val
         bonusMaxPoint = DataManager.Instance.GetConfig("bonusMaxPoint");
+
+        pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
+        GameManager.Instance.reactiveTime.Subscribe(x =>
+        {
+            if (x.Ticks <= finishTime.Ticks)
+            {
+                TimeSpan timeSpan = (finishTime - x);
+                timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
+                timeBar.fillAmount = (float)timeSpan.TotalSeconds / CurrentGameTime;
+            }
+        });
     }
 
     private int bonusMaxPoint;
@@ -153,10 +173,52 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
         searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
         explodeTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
-        HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
-        HUD.Instance.StartExplodeCool(searchTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
+        StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
+        StartExplodeCool(searchTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
         CheckHint();
         IsPause = false;
+    }
+
+    [SerializeField]
+    private Image searchCoolImage;
+    public void ClickSearch()
+    {
+        Search();
+    }
+
+    public void StartSearchCool(DateTime coolFinish, float max)
+    {
+        StartCoroutine(CheckSearchCool(coolFinish, max));
+    }
+
+    private IEnumerator CheckSearchCool(DateTime coolFinish, float max)
+    {
+        while (coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
+        {
+            searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
+            yield return Yielders.EndOfFrame;
+        }
+    }
+
+    [SerializeField]
+    private Image explodeCoolImage;
+    public void ClickExplode()
+    {
+        Explode();
+    }
+
+    public void StartExplodeCool(DateTime coolFinish, float max)
+    {
+        StartCoroutine(CheckExplodeCool(coolFinish, max));
+    }
+
+    private IEnumerator CheckExplodeCool(DateTime coolFinish, float max)
+    {
+        while (coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
+        {
+            explodeCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
+            yield return Yielders.EndOfFrame;
+        }
     }
 
     public void RefreshPosition()
@@ -345,7 +407,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
             // 위치 조정 (좌상단 기준)
             dragTransform.rectTransform.anchoredPosition = startPos + size / 2;
 
-            focus = blocks.Where(x => dragTransform.rectTransform.IsInside(x.transform) && x.num > 0).ToArray();
+            focus = blocks.Where(x => dragTransform.rectTransform.IsInside(x.rectTransform) && x.num > 0).ToArray();
             for (int i = 0; i < blocks.Length; i++)
             {
                 blocks[i].Focus(focus.Contains(blocks[i]));
@@ -500,7 +562,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
             }
 
             explodeTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
-            HUD.Instance.StartExplodeCool(explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
+            StartExplodeCool(explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
         }
     }
 
@@ -520,7 +582,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
             }
 
             searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
-            HUD.Instance.StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
+            StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
         }
     }
     [SerializeField]

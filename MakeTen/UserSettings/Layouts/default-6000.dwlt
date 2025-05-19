@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 3440
     height: 1349
   m_ShowMode: 4
-  m_Title: Hierarchy
+  m_Title: Game
   m_RootView: {fileID: 2}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -121,7 +121,7 @@ MonoBehaviour:
   m_MinSize: {x: 400, y: 100}
   m_MaxSize: {x: 32384, y: 16192}
   vertical: 0
-  controlID: 157
+  controlID: 148
   draggingID: 0
 --- !u!114 &6
 MonoBehaviour:
@@ -147,7 +147,7 @@ MonoBehaviour:
   m_MinSize: {x: 100, y: 100}
   m_MaxSize: {x: 8096, y: 16192}
   vertical: 1
-  controlID: 45
+  controlID: 17
   draggingID: 0
 --- !u!114 &7
 MonoBehaviour:
@@ -195,8 +195,8 @@ MonoBehaviour:
     y: 746
     width: 1469
     height: 547
-  m_MinSize: {x: 100, y: 100}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 101, y: 126}
+  m_MaxSize: {x: 4001, y: 4026}
   m_ActualView: {fileID: 16}
   m_Panes:
   - {fileID: 15}
@@ -936,9 +936,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 0, y: 1, z: -10}
+    m_Target: {x: 960, y: 540, z: 0.41666672}
     speed: 2
-    m_Value: {x: 0, y: 1, z: -10}
+    m_Value: {x: 960, y: 540, z: 0.41666672}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -988,9 +988,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0, y: 0, z: 0, w: 1}
   m_Size:
-    m_Target: 12.124355
+    m_Target: 10.207176
     speed: 2
-    m_Value: 12.124355
+    m_Value: 10.207176
   m_Ortho:
     m_Target: 1
     speed: 2
@@ -1135,20 +1135,20 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: a2410100
-      m_LastClickedID: 82338
-      m_ExpandedIDs: 34b9f4ff365ef5ff245ff5ff8860f5ffac85fcfff625ffff3826ffffa4deffffa6f6fffff4ffffffa20d0100620e0100a2410100
+      m_SelectedIDs: 
+      m_LastClickedID: 0
+      m_ExpandedIDs: aab2f3ff72c6f4ff8cc8f4fff4d0f4ffbce4f5ff98e7f5ff0203f6ffca16f7ff5218f7ffea60f8ff8667f8ff1eb0f9ffeec6faff88c9faffc464fcff5e08fdff9caefdffbeb4fdffa64affffaeefffffbef7ffffdcfafffff4ffffff36fe00007afe00008afe0000bcfe0000e2fe000014ff000032ff000066ff00006cff0000c81c0100301d0100801d0100b01d0100b41d0100ba1d01000e2401003c3801007e380100843801003e3f01007c450100f045010084460100c4460100d046010022470100384701007a47010080470100b2470100de4e0100f24e01001e4f0100304f01007c4f0100924f0100a04f0100b04f0100d44f0100da4f01000a500100
       m_RenameOverlay:
         m_UserAcceptedRename: 0
-        m_Name: Main Camera
-        m_OriginalName: Main Camera
+        m_Name: bg
+        m_OriginalName: bg
         m_EditFieldRect:
           serializedVersion: 2
           x: 0
           y: 0
           width: 0
           height: 0
-        m_UserData: 69100
+        m_UserData: 79778
         m_IsWaitingForDelay: 0
         m_IsRenaming: 0
         m_OriginalEventType: 0
@@ -1227,7 +1227,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 94b30100
     m_LastClickedID: 111508
-    m_ExpandedIDs: 00000000aed30000b0d300005ed40000c2d500002ed8000056040100580401005a0401005c0401005e04010060040100620401006404010066040100680401006a0401006c0401006e04010070040100720401007404010076040100780401007a0401007c0401007e04010080040100820401008404010086040100880401008a0401008c0401008e040100
+    m_ExpandedIDs: 00000000ced30000acd8000062eb0000eafc0000ecfc0000eefc0000f0fc0000f2fc0000f4fc0000f6fc0000f8fc0000fafc0000fcfc0000fefc000000fd000002fd000004fd000006fd000008fd00000afd00000cfd00000efd000010fd000012fd000014fd000016fd0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1253,24 +1253,24 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_AssetTreeState:
-    scrollPos: {x: 0, y: 6931}
+    scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: ffffffff00000000aed30000b0d300005ed40000c2d500002ed8000056040100580401005a0401005c0401005e04010060040100620401006404010066040100680401006c0401006e04010070040100720401007404010076040100780401007a0401007c0401007e04010080040100820401008404010086040100880401008c0401008e0401002c06010036060100
+    m_ExpandedIDs: ffffffff00000000ced30000acd8000062eb0000eafc0000ecfc0000eefc0000f0fc0000f2fc0000f4fc0000f6fc0000f8fc0000fafc0000fcfc0000fefc000000fd000002fd000004fd000006fd000008fd00000afd00000cfd00000efd000010fd000012fd000014fd000016fd00000cfe0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: GameManager
-      m_OriginalName: GameManager
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 55224
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_TrimLeadingAndTrailingWhitespace: 0
       m_ClientGUIView: {fileID: 10}

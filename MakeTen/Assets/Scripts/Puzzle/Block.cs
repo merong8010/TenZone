@@ -32,8 +32,7 @@ public class Block : MonoBehaviour
 
     [SerializeField]
     private GameObject numObj;
-    [SerializeField]
-    private RectTransform rectTransform;
+    public RectTransform rectTransform;
 
     public Vector3 StartPos()
     {

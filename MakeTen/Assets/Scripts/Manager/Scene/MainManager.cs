@@ -39,6 +39,8 @@ public class MainManager : Singleton<MainManager>
     {
         base.Awake();
         StartCoroutine(InitBG());
+        UpdateUserData(DataManager.Instance.userData);
+        UpdateHeart();
     }
 
     private IEnumerator InitBG()

@@ -280,9 +280,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1926368465}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
-        m_MethodName: ClickSearch
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: PuzzleManager, Assembly-CSharp
+        m_MethodName: Search
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -594,7 +594,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 592341859}
+        - m_Target: {fileID: 1566088085}
           m_TargetAssemblyTypeName: PuzzleManager, Assembly-CSharp
           m_MethodName: OnClick
           m_Mode: 1
@@ -610,7 +610,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 592341859}
+        - m_Target: {fileID: 1566088085}
           m_TargetAssemblyTypeName: PuzzleManager, Assembly-CSharp
           m_MethodName: OnRelease
           m_Mode: 1
@@ -626,7 +626,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 592341859}
+        - m_Target: {fileID: 1566088085}
           m_TargetAssemblyTypeName: PuzzleManager, Assembly-CSharp
           m_MethodName: OnRelease
           m_Mode: 1
@@ -887,7 +887,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 592341855}
-  - component: {fileID: 592341859}
   m_Layer: 5
   m_Name: PuzzleManager
   m_TagString: Untagged
@@ -918,29 +917,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &592341859
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 592341854}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a169b96b64b7c466aab7bc8d5d62e4d8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  dragTransform: {fileID: 356182936}
-  blockParent: {fileID: 1198573365}
-  blockObj: {fileID: 1523401749273105945, guid: 8918da469df56c74aafb475090764408, type: 3}
-  blockSize: {x: 75, y: 75}
-  blockGap: {x: 10, y: 10}
-  blockSafeArea: {fileID: 750123076}
-  blocksRT: {fileID: 1198573365}
-  IsPause: 0
-  cam: {fileID: 961739752}
-  canvasRect: {fileID: 592341855}
-  tutorialRT: {fileID: 1247738035}
 --- !u!1 &595716561
 GameObject:
   m_ObjectHideFlags: 0
@@ -1283,9 +1259,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1926368465}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
-        m_MethodName: ClickShuffle
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: PuzzleManager, Assembly-CSharp
+        m_MethodName: Shuffle
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2179,9 +2155,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1926368465}
+      - m_Target: {fileID: 1566088078}
         m_TargetAssemblyTypeName: HUD, Assembly-CSharp
-        m_MethodName: ClickPause
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2363,16 +2339,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a169b96b64b7c466aab7bc8d5d62e4d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DontDestroy: 0
   dragTransform: {fileID: 356182936}
   blockParent: {fileID: 1198573365}
   blockObj: {fileID: 1523401749273105945, guid: 8918da469df56c74aafb475090764408, type: 3}
   blockSize: {x: 75, y: 75}
   blockGap: {x: 10, y: 10}
+  pointText: {fileID: 1887869635}
+  timeText: {fileID: 1123710485}
+  timeBar: {fileID: 768800463}
   blockSafeArea: {fileID: 750123076}
   blocksRT: {fileID: 1198573365}
+  searchCoolImage: {fileID: 1069723126}
+  explodeCoolImage: {fileID: 492282968}
   IsPause: 0
   cam: {fileID: 961739752}
-  canvasRect: {fileID: 592341855}
+  canvasRect: {fileID: 1566088083}
   tutorialRT: {fileID: 1247738035}
 --- !u!1 &1592518071
 GameObject:
@@ -2673,9 +2655,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1926368465}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
-        m_MethodName: ClickExplode
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: PuzzleManager, Assembly-CSharp
+        m_MethodName: Explode
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3167,7 +3149,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1926368464}
-  - component: {fileID: 1926368465}
   - component: {fileID: 1926368466}
   m_Layer: 5
   m_Name: HUD
@@ -3196,46 +3177,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1926368465
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1926368463}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0805bed9d7d20e0468007b2a4e321bb5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mainRect: {fileID: 0}
-  levelText: {fileID: 0}
-  expText: {fileID: 0}
-  expBar: {fileID: 0}
-  nameText: {fileID: 0}
-  heartCount: {fileID: 0}
-  heartChargeRemainTime: {fileID: 0}
-  puzzleRect: {fileID: 1923712707}
-  pointText: {fileID: 1887869635}
-  timeText: {fileID: 1123710485}
-  timeBar: {fileID: 768800463}
-  searchCoolImage: {fileID: 1069723126}
-  explodeCoolImage: {fileID: 492282968}
-  id: 
-  scoreMin: 0
-  scoreMax: 0
-  countryCodes:
-  - KR
-  - US
-  - JP
-  - TW
-  - CN
-  - AU
-  - GB
-  - IT
-  - MX
-  - BR
-  - ID
 --- !u!114 &1926368466
 MonoBehaviour:
   m_ObjectHideFlags: 0

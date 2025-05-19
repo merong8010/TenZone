@@ -400,8 +400,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: MainManager, Assembly-CSharp
         m_MethodName: ClickNickname
         m_Mode: 1
         m_Arguments:
@@ -880,8 +880,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: MainManager, Assembly-CSharp
         m_MethodName: ClickShop
         m_Mode: 1
         m_Arguments:
@@ -1948,8 +1948,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: MainManager, Assembly-CSharp
         m_MethodName: ClickGameStart
         m_Mode: 1
         m_Arguments:
@@ -2172,9 +2172,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
-        m_MethodName: ClickRanking
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: MainManager, Assembly-CSharp
+        m_MethodName: ClickMail
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2654,8 +2654,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: MainManager, Assembly-CSharp
         m_MethodName: ClickMail
         m_Mode: 1
         m_Arguments:
@@ -3336,17 +3336,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DontDestroy: 0
-  mainRect: {fileID: 0}
-  levelText: {fileID: 0}
-  expText: {fileID: 0}
-  expBar: {fileID: 0}
-  nameText: {fileID: 0}
-  heartCount: {fileID: 0}
-  heartChargeRemainTime: {fileID: 0}
-  blockParent: {fileID: 0}
-  blockCounts: {x: 0, y: 0}
-  blockSize: {x: 0, y: 0}
-  blockGap: {x: 0, y: 0}
+  mainRect: {fileID: 373681653}
+  levelText: {fileID: 173836938}
+  expText: {fileID: 1267714024}
+  expBar: {fileID: 389387094}
+  nameText: {fileID: 967330545}
+  heartCount: {fileID: 671676653}
+  heartChargeRemainTime: {fileID: 2136280310}
+  blockParent: {fileID: 1468359108}
+  blockCounts: {x: 15, y: 15}
+  blockSize: {x: 150, y: 150}
+  blockGap: {x: 10, y: 10}
 --- !u!1 &1658086546
 GameObject:
   m_ObjectHideFlags: 0
@@ -3505,8 +3505,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: MainManager, Assembly-CSharp
         m_MethodName: ClickAttendance
         m_Mode: 1
         m_Arguments:
@@ -4105,8 +4105,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
+      - m_Target: {fileID: 1566088085}
+        m_TargetAssemblyTypeName: MainManager, Assembly-CSharp
         m_MethodName: ClickSetting
         m_Mode: 1
         m_Arguments:
