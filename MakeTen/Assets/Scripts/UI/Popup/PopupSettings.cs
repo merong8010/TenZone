@@ -199,6 +199,11 @@ public class PopupSettings : Popup
         TextManager.LoadDatas(((TextManager.Locale)languageIdx).ToString(), DataManager.Instance.Get<GameData.Language>());
         CloseLanguage();
         Refresh();
+        TextSetter[] ts = GetComponentsInChildren<TextSetter>();
+        for(int i = 0; i < ts.Length; i++)
+        {
+            ts[i].Refresh();
+        }
     }
 
     public void CloseLanguage()

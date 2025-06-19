@@ -372,7 +372,8 @@ public class UserData
 
     public bool CanPurchase(GameData.Shop data, int count = 1)
     {
-        return GetPurchaseCount(data) + count <= data.buyMaxCount;
+        
+        return data.buyMaxCount <= 0 || GetPurchaseCount(data) + count <= data.buyMaxCount;
     }
 
     public void AddMailData(string title, string desc, GoodsList.Data[] rewards)
@@ -381,6 +382,7 @@ public class UserData
     }
     public void AddPurchase(GameData.Shop data, int count = 1)
     {
+        Debug.Log($"AddPurchase  {CanPurchase(data, count)} | {data.isRewardMail}");
         if (!CanPurchase(data, count)) return;
 
         if(data.isRewardMail)

@@ -16,6 +16,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using UnityEngine.Purchasing;
 using System.Threading.Tasks;
+using GameData;
 #if UNITY_IOS
 using AppleAuth;
 using AppleAuth.Enums;
@@ -835,9 +836,17 @@ public class FirebaseManager : Singleton<FirebaseManager>
     /// <param name="title"></param>
     /// <param name="desc"></param>
     /// <param name="rewards"></param>
-    public void SendMail(string title, string desc, GoodsList.Data[] rewards)
+    public void SendMail(string title, string desc, GoodsList.Data[] rewardDatas)
     {
         string mailId = myDB.Child("mailDatas").Push().Key;
+        Dictionary<string, object>[] rewards = new Dictionary<string, object>[rewardDatas.Length];
+        for(int i = 0; i < rewardDatas.Length; i++)
+        {
+            rewards[i] = new Dictionary<string, object>(){
+                    { "type", rewardDatas[i].type.ToString() },
+                    { "amount", rewardDatas[i].amount }
+                };
+        }
 
         var mailData = new Dictionary<string, object>
         {
@@ -845,17 +854,39 @@ public class FirebaseManager : Singleton<FirebaseManager>
             { "title", title },
             { "desc", desc },
             { "rewards", rewards },
-            { "receiveDate", GameManager.Instance.dateTime.Value.ToTimeText() }
+            //{ "receiveDate", GameManager.Instance.dateTime.Value.ToTimeText() }
         };
 
-        myDB.Child("mailDatas")
+        //functions
+        //    .GetHttpsCallable("SendMail")
+        //    .CallAsync(mailData)
+        //    .ContinueWith(task => {
+        //        if (task.IsFaulted)
+        //        {
+        //            Debug.LogError("Function 호출 실패: " + task.Exception);
+        //        }
+        //        else
+        //        {
+        //            Debug.Log("우편 전송 완료: " + task.Result.Data);
+        //        }
+        //    });
+        myDB.Child("mailDatas").Child(mailId)
             .SetValueAsync(mailData)
             .ContinueWith(task =>
             {
                 if (task.IsCompleted)
+                {
                     Debug.Log($"메일 전송 완료: {mailId}");
+                    MainThreadDispatcher.Instance.Enqueue(() =>
+                    {
+                        UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("SendMailShopReward"));
+                    });
+                    
+                }
                 else
+                {
                     Debug.LogError($"메일 전송 실패: {task.Exception}");
+                }
             });
     }
 

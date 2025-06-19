@@ -3203,6 +3203,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7426205710622395039, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
   m_PrefabInstance: {fileID: 7137343031596735709}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5346161039259901891 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+  m_PrefabInstance: {fileID: 7137343031596735709}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6530591596920090995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6530591596920090995 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4156186770670382510, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
@@ -3220,7 +3231,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ceb714039850f5346b2a5ca51579140f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  text: {fileID: 7884007356088554753}
+  text: {fileID: 5346161039259901891}
   key: Easy
 --- !u!1001 &7420563908022000212
 PrefabInstance:
@@ -3478,6 +3489,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7426205710622395039, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
   m_PrefabInstance: {fileID: 7530438734558153006}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &4736925539533457968 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+  m_PrefabInstance: {fileID: 7530438734558153006}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5849265491969975424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5849265491969975424 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4156186770670382510, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
@@ -3495,5 +3517,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ceb714039850f5346b2a5ca51579140f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  text: {fileID: 7884007356088554753}
+  text: {fileID: 4736925539533457968}
   key: Easy

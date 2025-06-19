@@ -147,6 +147,7 @@ public class ObjectPooler : Singleton<ObjectPooler>
     /// </summary>
     public void ReturnObject(string tag, GameObject obj)
     {
+        if(obj == null) return;
         if (!poolDictionary.ContainsKey(tag))
         {
             Debug.LogWarning($"[ObjectPooler] {tag} 태그의 오브젝트 풀이 존재하지 않습니다.");

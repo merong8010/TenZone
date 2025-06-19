@@ -69,6 +69,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     [SerializeField]
     private SafeArea blockSafeArea;
+    private IDisposable pointDispose;
+    private IDisposable timeDispose;
     public void Initialize()
     {
         if (isInit) return;
@@ -82,8 +84,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
         //bonusMaxPoint = DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "bonusMaxPoint").val
         bonusMaxPoint = DataManager.Instance.GetConfig("bonusMaxPoint");
 
-        pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
-        GameManager.Instance.reactiveTime.Subscribe(x =>
+        pointDispose = pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
+        timeDispose = GameManager.Instance.reactiveTime.Subscribe(x =>
         {
             if (x.Ticks <= finishTime.Ticks)
             {
@@ -274,7 +276,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     private IEnumerator CheckFinish()
     {
-        while (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0) && GameManager.Instance.dateTime.Value.Ticks <= finishTime.Ticks)
+        while (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0) && GameManager.Instance.dateTime != null && GameManager.Instance.dateTime.Value.Ticks <= finishTime.Ticks)
         {
             yield return Yielders.EndOfFrame;
         }
@@ -773,5 +775,22 @@ public class PuzzleManager : Singleton<PuzzleManager>
     public void Tutorial()
     {
 
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        timeDispose.Dispose();
+        pointDispose.Dispose();
+    }
+
+    public void ClickPause()
+    {
+        IsPause = true;
+        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback: (yes) =>
+        {
+            if (yes) GameManager.Instance.GoScene(GameManager.Scene.Main);
+            else Instance.IsPause = false;
+        });
     }
 }

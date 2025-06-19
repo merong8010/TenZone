@@ -123,6 +123,7 @@ public class Block : MonoBehaviour
     private Vector3 effectScale;
     public void Break()
     {
+        if (!numObj.activeSelf) return;
         numObj.SetActive(false);
         data.num = 0;
         ObjectPooler.Instance.Get<Effect>(effectTag, PuzzleManager.Instance.transform, scale : effectScale, position : transform.localPosition, autoReturnTime: effectDuration);
