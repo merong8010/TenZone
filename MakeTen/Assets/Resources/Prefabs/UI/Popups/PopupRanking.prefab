@@ -320,7 +320,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0.68235296, b: 0.9372549, a: 1}
+  m_Color: {r: 0.043137256, g: 0.08627451, b: 0.12941177, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -552,7 +552,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0.68235296, b: 0.9372549, a: 1}
+  m_Color: {r: 0.043137256, g: 0.08627451, b: 0.12941177, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -753,7 +753,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     m_FontSize: 60
     m_FontStyle: 0
     m_BestFit: 0
@@ -1533,6 +1533,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1878709653866505944}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -1680,6 +1684,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4606161168285978858}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -1827,6 +1835,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4606161168285978858}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -1974,6 +1986,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1878709653866505944}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -2117,6 +2133,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3653210647046518821}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -2264,6 +2284,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3653210647046518821}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -2411,6 +2435,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4606161168285978858}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 4573992649606906086, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -2578,6 +2606,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7461395273755245730}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -2721,9 +2753,37 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8066532830212719982}
     m_Modifications:
+    - target: {fileID: 4677208591880126559, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
+    - target: {fileID: 5366323992324868612, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 91b840b72531288489bff448c79edb95, type: 2}
+    - target: {fileID: 5366323992324868612, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5599708672696978235, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
       propertyPath: m_Name
       value: rankingListItem
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637137221529103179, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 91b840b72531288489bff448c79edb95, type: 2}
+    - target: {fileID: 5637137221529103179, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6406203700508448772, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 91b840b72531288489bff448c79edb95, type: 2}
+    - target: {fileID: 6406203700508448772, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7304958206378927537, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
       propertyPath: m_Pivot.x
@@ -2834,14 +2894,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2336132652665509758}
     m_Modifications:
-    - target: {fileID: 1395673331720687708, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -3.8457031
-      objectReference: {fileID: 0}
-    - target: {fileID: 2365482112243410895, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -0.2861328
-      objectReference: {fileID: 0}
     - target: {fileID: 5599708672696978235, guid: 7297e58c34531f147b8e5c54e2ee1cd8, type: 3}
       propertyPath: m_Name
       value: rankingListItem
@@ -2955,6 +3007,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3653210647046518821}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -3102,6 +3158,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4606161168285978858}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 7104553214361458063, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: m_Name
       value: TabButton
@@ -3193,46 +3253,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 4156186770670382510, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8760377248642582197}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
 --- !u!224 &289287090658530882 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7426205710622395039, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
   m_PrefabInstance: {fileID: 7137343031596735709}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &5346161039259901891 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
-  m_PrefabInstance: {fileID: 7137343031596735709}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6530591596920090995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!1 &6530591596920090995 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4156186770670382510, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
-  m_PrefabInstance: {fileID: 7137343031596735709}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &8760377248642582197
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6530591596920090995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb714039850f5346b2a5ca51579140f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  text: {fileID: 5346161039259901891}
-  key: Easy
 --- !u!1001 &7420563908022000212
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3241,6 +3268,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7461395273755245730}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 6707858356519968740, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: tabGroup
       value: 
@@ -3388,6 +3419,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3653210647046518821}
     m_Modifications:
+    - target: {fileID: 2971688077714539294, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
+      propertyPath: m_FontData.m_Font
+      value: 
+      objectReference: {fileID: 12800000, guid: 722847b8eef12044381004854bef413d, type: 3}
     - target: {fileID: 7104553214361458063, guid: dccc7f6f44f081d4b8cc8e728421f8b0, type: 3}
       propertyPath: m_Name
       value: TabButton

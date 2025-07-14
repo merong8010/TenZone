@@ -59,6 +59,7 @@ public class GameManager : Singleton<GameManager>
     public DateTime? dateTime => _currentTime != null ? _currentTime.Value : null;
     public ReactiveProperty<DateTime> reactiveTime = new ReactiveProperty<DateTime>();
     public GameData.GameLevel currentLevel;
+    private Scene currentScene;
     public bool isUse10Seconds;
     // ✅ 구글 서버에서 UTC 시간 가져오기
     public void FetchOnlineTime()
@@ -203,16 +204,28 @@ public class GameManager : Singleton<GameManager>
         //    }
 
         //});
-        currentLevel = level;
+        
         isUse10Seconds = use10Seconds;
-
+        currentLevel = level;
         //StartCoroutine(GoScene(scene));
         UIManager.Instance.Loading(callback: () =>
         {
             SceneManager.LoadScene((int)scene);
+            switch(currentScene)
+            {
+                case Scene.Title:
+                    
+                    break;
+                case Scene.Main:
+                    MainManager.Instance.ReturnBlockObj();
+                    break;
+                case Scene.Puzzle:
+                    PuzzleManager.Instance.ReturnBlockObj();
+                    break;
+            }
         }, completeCallback: () =>
         {
-
+            currentScene = scene;
         });
     }
 

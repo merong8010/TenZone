@@ -58,6 +58,14 @@ public class MainManager : Singleton<MainManager>
         }
     }
 
+    public void ReturnBlockObj()
+    {
+        Block[] blocks = blockParent.GetComponentsInChildren<Block>();
+        for (int i = 0; i < blocks.Length; i++) {
+            ObjectPooler.Instance.ReturnObject("block_title", blocks[i].gameObject);
+        }
+    }
+
     public void Refresh()
     {
         //loginStatusText.text = DataManager.Instance.userData.authType.ToString();
@@ -162,5 +170,10 @@ public class MainManager : Singleton<MainManager>
     {
         UIManager.Instance.Open<PopupCheat>();
         //DataManager.Instance.userData.ChargeHeart();
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
     }
 }

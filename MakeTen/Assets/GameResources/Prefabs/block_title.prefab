@@ -321,6 +321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55cd9938d99a34e738466404449b43dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  row: 0
   column: 0
   numObj: {fileID: 7549911023422449444}
   rectTransform: {fileID: 2745574488801258288}
@@ -330,7 +331,11 @@ MonoBehaviour:
   focusObj: {fileID: 1810473298854088592}
   focusNumText: {fileID: 1203741103456723574}
   focusBonusText: {fileID: 827525464947840892}
-  shuffleBonusObj: {fileID: 8262535425177257541}
+  data:
+    column: 0
+    row: 0
+    num: 0
+    bonus: 0
   effectTag: 
   effectDuration: 3
   effectScale: {x: 0, y: 0, z: 0}
@@ -420,8 +425,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278197675
-  m_fontColor: {r: 0.67058825, g: 0.11328214, b: 0, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -542,7 +547,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.7901757, b: 0.3915094, a: 1}
+  m_Color: {r: 0.23028658, g: 0.440615, b: 0.6509434, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -755,7 +760,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.754717, g: 0, b: 0.12087696, a: 1}
+  m_Color: {r: 0.09211465, g: 0.26303846, b: 0.4339623, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1432,7 +1437,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.7432931, g: 0.39215684, b: 1, a: 1}
+  m_Color: {r: 0.46747062, g: 0.49316928, b: 0.5188679, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

@@ -559,7 +559,7 @@ MonoBehaviour:
     optimizeInterval: 0
   - tag: textPointBonus
     prefabPath: 
-    prefab: {fileID: 3206801584903309582, guid: bc154ffedd042d342a9415fd87406c80, type: 3}
+    prefab: {fileID: 3206801584903309582, guid: 87f71c4a8c803e545a6f5a25eaf4a2d6, type: 3}
     size: 170
     maxPoolSize: 500
     cleanupDelay: 0

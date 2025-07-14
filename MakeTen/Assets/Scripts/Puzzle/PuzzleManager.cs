@@ -71,6 +71,8 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private SafeArea blockSafeArea;
     private IDisposable pointDispose;
     private IDisposable timeDispose;
+
+    private bool isGoScene = false;
     public void Initialize()
     {
         if (isInit) return;
@@ -293,6 +295,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     private void GameResult()
     {
+        if (isGoScene) return;
         if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, true))
         {
             FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value);
@@ -774,6 +777,17 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     public void Tutorial()
     {
+
+    }
+
+    public void ReturnBlockObj()
+    {
+        isGoScene = true;
+        Block[] blocks = blockParent.GetComponentsInChildren<Block>();
+        for (int i = 0; i < blocks.Length; i++)
+        {
+            ObjectPooler.Instance.ReturnObject("block_title", blocks[i].gameObject);
+        }
 
     }
 

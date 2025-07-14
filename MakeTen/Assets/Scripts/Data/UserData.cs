@@ -264,22 +264,18 @@ public class UserData
     {
         for(int i = 0; i < datas.Length; i++)
         {
-            if (!goods.TryAdd(datas[i].type, datas[i].amount))
-            {
-                goods[datas[i].type] += datas[i].amount;
-            }
+            Charge(datas[i]);
         }
-        
-        FirebaseManager.Instance.SaveUserData(this);
     }
 
     public void Charge(GoodsList.Data data)
     {
-        if (!goods.TryAdd(data.type, data.amount))
-        {
-            goods[data.type] += data.amount;
-        }
-        FirebaseManager.Instance.SaveUserData(this);
+        Charge(data.type, data.amount);
+        //if (!goods.TryAdd(data.type, data.amount))
+        //{
+        //    goods[data.type] += data.amount;
+        //}
+        //FirebaseManager.Instance.SaveUserData(this);
     }
 
     public void Charge(GameData.GoodsType type, int amount)
