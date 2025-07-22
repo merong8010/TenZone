@@ -89,7 +89,8 @@ public class Block : MonoBehaviour
         row = data.row;
 
         defaultNumText.text = focusNumText.text = data.num.ToString();
-        defaultBonusText.text = focusBonusText.text = data.bonus > 0 ? $"+{data.bonus}s" : string.Empty;
+        //defaultBonusText.text = focusBonusText.text = data.bonus > 0 ? $"+{data.bonus}s" : string.Empty;
+        defaultBonusText.text = focusBonusText.text = string.Empty;
         numObj.SetActive(data.num > 0);
         Focus(false);
     }
@@ -127,11 +128,11 @@ public class Block : MonoBehaviour
         numObj.SetActive(false);
         data.num = 0;
         ObjectPooler.Instance.Get<Effect>(effectTag, PuzzleManager.Instance.transform, scale : effectScale, position : transform.localPosition, autoReturnTime: effectDuration);
-        ObjectPooler.Instance.Get<Effect>("textPoint", PuzzleManager.Instance.transform, position : transform.localPosition, autoReturnTime : 1f).SetText($"+1");
+        ObjectPooler.Instance.Get<Effect>("textPoint", PuzzleManager.Instance.transform, position : transform.localPosition, autoReturnTime : 2f).SetText($"+1");
         if (data.bonus > 0)
         {
             PuzzleManager.Instance.AddSeconds(data.bonus);
-            ObjectPooler.Instance.Get<Effect>("block_bonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 1f)?.SetText($"+{data.bonus}sec");
+            //ObjectPooler.Instance.Get<Effect>("textPointBonus", PuzzleManager.Instance.transform, transform.localPosition, autoReturnTime: 2f)?.SetText($"+{data.bonus}sec");
         }
     }
     public void InitRandom()

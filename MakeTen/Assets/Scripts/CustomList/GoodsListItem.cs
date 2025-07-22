@@ -18,6 +18,6 @@ public class GoodsListItem : ListItem<GoodsList.Data>
         image.sprite = Resources.Load<SpriteAtlas>("Graphics/Goods").GetSprite(data.type.ToString());
         image.SetNativeSize();
         //type.text = data.type.ToString();
-        amount.text = data.amount.ToString();
+        amount.text = data.amount.ToString("n0");
     }
 }

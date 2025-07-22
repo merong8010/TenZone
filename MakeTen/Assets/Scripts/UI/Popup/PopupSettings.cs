@@ -109,8 +109,8 @@ public class PopupSettings : Popup
     private GameObject loginedGoogle;
     [SerializeField]
     private GameObject loginedApple;
-    [SerializeField]
-    private GameObject loginedEmail;
+    //[SerializeField]
+    //private GameObject loginedEmail;
 
     public override void Refresh()
     {
@@ -122,7 +122,7 @@ public class PopupSettings : Popup
             logoutObj.SetActive(false);
             loginedGoogle.SetActive(false);
             loginedApple.SetActive(false);
-            loginedEmail.SetActive(false);
+            //loginedEmail.SetActive(false);
         }
         else
         {
@@ -130,7 +130,7 @@ public class PopupSettings : Popup
             logoutObj.SetActive(true);
             loginedGoogle.SetActive(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.Google);
             loginedApple.SetActive(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.Apple);
-            loginedEmail.SetActive(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.Email);
+            //loginedEmail.SetActive(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.Email);
         }
         //loginStatus.text = DataManager.Instance.userData.authType.ToString();
         //loginObjs.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
@@ -203,6 +203,11 @@ public class PopupSettings : Popup
         for(int i = 0; i < ts.Length; i++)
         {
             ts[i].Refresh();
+        }
+        TextSetter[] mainTs = MainManager.Instance.GetComponentsInChildren<TextSetter>();
+        for (int i = 0; i < mainTs.Length; i++)
+        {
+            mainTs[i].Refresh();
         }
     }
 

@@ -89,6 +89,6 @@ public class PopupRankingLevel : Popup
                 //rankingList.UpdateList(result.topRanks.Select(x => (RankingList.Data)x).ToList());
                 //myRankItem.SetData(result.myRank);
             }
-        }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));
+        }, date, 50, (GameData.PuzzleLevel)(currentLevelIdx + 1));
     }
 }

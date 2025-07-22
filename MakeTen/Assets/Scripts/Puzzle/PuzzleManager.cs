@@ -1,810 +1,282 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Linq;
-using UniRx;
-using System.Text;
-using System.Collections;
-using System.Collections.Generic;
 using System;
-using UnityEngine.InputSystem;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
+using UniRx; // UniRx를 사용하고 있으므로 using 구문 추가
 
 public class PuzzleManager : Singleton<PuzzleManager>
 {
-    public enum Level
-    {
-        None,
-        Easy,
-        Normal,
-        Hard,
-        Expert,
-    }
-    [SerializeField]
-    private Image dragTransform;
-    /// <summary>
-    /// 터치 입력 값
-    /// </summary>
-    private Vector2 startPos;
-    private bool isDrag;
+    // --- 필드 및 프로퍼티 ---
+    [Header("Component References")]
+    [SerializeField] private BlockGridManager blockGridManager;
+    [SerializeField] private PuzzleInputHandler inputHandler;
+    [SerializeField] private PuzzleUIManager uiManager;
+    [SerializeField] private PuzzleLogicManager logicManager;
 
-    [SerializeField]
-    private Transform blockParent;
-    [SerializeField]
-    private GameObject blockObj;
-    //[SerializeField]
-    private Block[] blocks;
+    public GameData.GameLevel CurrentLevel { get; private set; }
+    public DateTime FinishTime { get; private set; }
+    //public bool IsPaused { get; set; } = false;
 
-    private const int TargetSumNum = 10;
-    //private const int GameTime = 100;
+    private ReactiveProperty<int> currentPoint = new ReactiveProperty<int>();
+    private long lastPointTicks;
+    private int bonusMaxPoint;
+    private bool isGameFinished = false;
 
-    private ReactiveProperty<int> currentPoint;
-    public DateTime finishTime;
-
-    private GameData.GameLevel currentLevel;
-    public int CurrentGameTime => currentLevel != null ? currentLevel.time : 0;
-
-    private Vector2 blockStartPos;
-    [SerializeField]
-    private Vector2 blockSize;
-    [SerializeField]
-    private Vector2 blockGap;
-
-    [SerializeField]
-    private TMPro.TextMeshProUGUI pointText;
-    [SerializeField]
-    private TMPro.TextMeshProUGUI timeText;
-    [SerializeField]
-    private Image timeBar;
-    private ReactiveProperty<int> pointProperty = new ReactiveProperty<int>();
-
+    // --- Unity 생명주기 메서드 ---
     protected override void Awake()
     {
         base.Awake();
         Initialize();
+    }
+
+    private void Start()
+    {
         GameStart(GameManager.Instance.currentLevel, GameManager.Instance.isUse10Seconds);
+        SoundManager.Instance.PlayBGM("puzzle");
     }
 
-    private Coroutine finishCoroutine;
-
-    private bool isInit = false;
-
-    [SerializeField]
-    private SafeArea blockSafeArea;
-    private IDisposable pointDispose;
-    private IDisposable timeDispose;
-
-    private bool isGoScene = false;
-    public void Initialize()
+    private void Update()
     {
-        if (isInit) return;
-        isInit = true;
-        if (blocks == null) blocks = new Block[] { };
-
-        currentPoint = new ReactiveProperty<int>();
-        
-        //HUD.Instance.Initialize(currentPoint);
-        blockSafeArea.refreshAction = RefreshPosition;
-        //bonusMaxPoint = DataManager.Instance.Get<GameData.Config>().SingleOrDefault(x => x.key == "bonusMaxPoint").val
-        bonusMaxPoint = DataManager.Instance.GetConfig("bonusMaxPoint");
-
-        pointDispose = pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
-        timeDispose = GameManager.Instance.reactiveTime.Subscribe(x =>
-        {
-            if (x.Ticks <= finishTime.Ticks)
-            {
-                TimeSpan timeSpan = (finishTime - x);
-                timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
-                timeBar.fillAmount = (float)timeSpan.TotalSeconds / CurrentGameTime;
-            }
-        });
-    }
-
-    private int bonusMaxPoint;
-
-    //[SerializeField]
-    //private ObjectPooler pooler;
-
-    [SerializeField]
-    private RectTransform blocksRT;
-
-    public void GameStart(GameData.GameLevel level, bool use10Seconds)
-    {
-        currentLevel = level;
-
-        InitBlocks(use10Seconds);
-    }
-
-    public void ClearBlocks()
-    {
-        if (blocks.Length > 0)
-        {
-            for (int i = 0; i < blocks.Length; i++)
-            {
-                ObjectPooler.Instance.ReturnObject("block", blocks[i].gameObject);
-            }
-        }
-        blocks = new Block[] { };
-    }
-
-    public void InitBlocks(bool bonus10Seconds)
-    {
-        blockSize = new Vector2((blocksRT.rect.width - (blockGap.x * currentLevel.column)) / currentLevel.column, (blocksRT.rect.height - (blockGap.y * currentLevel.row)) / currentLevel.row);
-        blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
-
-        for (int row = 0; row < currentLevel.row; row++)
-        {
-            for (int column = 0; column < currentLevel.column; column++)
-            {
-                Block blockObj = ObjectPooler.Instance.Get<Block>("block", blockParent, blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row), Vector3.one);
-                blockObj.name = $"block_{column}_{row}";
-                blockObj.SetSize(blockSize);
-                blockObj.SetData(new Block.Data(column, row, currentLevel));
-                blocks = blocks.Append(blockObj).ToArray();
-            }
-        }
-
-        currentPoint.Value = 0;
-        lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
-        
-        int remain = blocks.Sum(x => x.num) % TargetSumNum;
-        if (remain > 0)
-        {
-            while(remain > 0)
-            {
-                for (int i = 0; i < blocks.Length; i++)
-                {
-                    if (blocks[i].num > 1)
-                    {
-                        //blocks[i].Init(blocks[i].num - 1);
-                        blocks[i].SetNum(blocks[i].num - 1);
-                        remain -= 1;
-                    }
-
-                    if (remain == 0) break;
-                }
-            }
-        }
-
-        finishTime = GameManager.Instance.dateTime.Value.AddSeconds(currentLevel.time);
-        if(bonus10Seconds)
-        {
-            if(DataManager.Instance.userData.Use(GameData.GoodsType.Time_10s, 1))
-            {
-                finishTime = finishTime.AddSeconds(10);
-            }
-        }
-        if (finishCoroutine != null) StopCoroutine(finishCoroutine);
-        finishCoroutine = StartCoroutine(CheckFinish());
-
-        searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
-        explodeTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
-        StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
-        StartExplodeCool(searchTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
-        CheckHint();
-        IsPause = false;
-    }
-
-    [SerializeField]
-    private Image searchCoolImage;
-    public void ClickSearch()
-    {
-        Search();
-    }
-
-    public void StartSearchCool(DateTime coolFinish, float max)
-    {
-        StartCoroutine(CheckSearchCool(coolFinish, max));
-    }
-
-    private IEnumerator CheckSearchCool(DateTime coolFinish, float max)
-    {
-        while (coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
-        {
-            searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
-            yield return Yielders.EndOfFrame;
-        }
-    }
-
-    [SerializeField]
-    private Image explodeCoolImage;
-    public void ClickExplode()
-    {
-        Explode();
-    }
-
-    public void StartExplodeCool(DateTime coolFinish, float max)
-    {
-        StartCoroutine(CheckExplodeCool(coolFinish, max));
-    }
-
-    private IEnumerator CheckExplodeCool(DateTime coolFinish, float max)
-    {
-        while (coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
-        {
-            explodeCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
-            yield return Yielders.EndOfFrame;
-        }
-    }
-
-    public void RefreshPosition()
-    {
-        if (currentLevel == null) return;
-        if (!gameObject.activeInHierarchy) return;
-        StartCoroutine(RefreshDelay(0f));
-    }
-
-    private IEnumerator RefreshDelay(float delay)
-    {
-        yield return Yielders.EndOfFrame;
-        yield return Yielders.Get(delay);
-        float width = blocksRT.rect.xMax - blocksRT.rect.xMin;
-        float height = blocksRT.rect.yMax - blocksRT.rect.yMin;
-
-        Debug.Log($"PuzzleManager.RefreshPosition {blocksRT.rect.width},{blocksRT.rect.height} | {width} , {height} | {((RectTransform)blocksRT.parent).rect.width},{((RectTransform)blocksRT.parent).rect.height}");
-        blockSize = new Vector2((width - (blockGap.x * currentLevel.column)) / currentLevel.column, (height - (blockGap.y * currentLevel.row)) / currentLevel.row);
-        blockStartPos = new Vector2(-(blockSize.x + blockGap.x) * (currentLevel.column - 1) * 0.5f, -(blockSize.y + blockGap.y) * (currentLevel.row - 1) * 0.5f);
-
-        for (int row = 0; row < currentLevel.row; row++)
-        {
-            for (int column = 0; column < currentLevel.column; column++)
-            {
-                Block blockObj = blocks.SingleOrDefault(x => x.name == $"block_{column}_{row}");
-                blockObj.transform.localPosition = blockStartPos + new Vector2((blockSize.x + blockGap.x) * column, (blockSize.y + blockGap.y) * row);
-                blockObj.SetSize(blockSize);
-            }
-        }
-    }
-
-    //private DeviceOrientation lastOrientation = DeviceOrientation.Unknown;
-    
-    public void Shuffle()
-    {
-        Block.Data[] datas  = blocks.Select(x => x.GetData()).ToArray().Shuffle();
-        
-        for(int i = 0; i < blocks.Length; i++)
-        {
-            datas[i].column = blocks[i].column;
-            datas[i].row = blocks[i].row;
-            blocks[i].SetData(datas[i]);
-        }
-        CheckHint();
-        while (State() != GameState.Continue)
-        {
-            Shuffle();
-            CheckHint();
-        }
-    }
-
-    public bool IsPause;
-
-    private IEnumerator CheckFinish()
-    {
-        while (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0) && GameManager.Instance.dateTime != null && GameManager.Instance.dateTime.Value.Ticks <= finishTime.Ticks)
-        {
-            yield return Yielders.EndOfFrame;
-        }
-        if(blocks != null && !blocks.ToList().Exists(x => x != null && x.num > 0))
-        {
-            IsPause = true;
-        }
-        GameResult();
-
-        finishCoroutine = null;
-    }
-
-    //private bool isFinish
-
-    private void GameResult()
-    {
-        if (isGoScene) return;
-        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, true))
-        {
-            FirebaseManager.Instance.SubmitScore(currentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value);
-        }
-        if (DataManager.Instance.userData.IsNewRecord(currentLevel.level, currentPoint.Value, false))
-        {
-            FirebaseManager.Instance.SubmitScore(currentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value);
-        }
-        int total = currentLevel.row * currentLevel.column;
-        int maxPoint = total + (total / 2) * bonusMaxPoint;
-        //float pointRate = (float)currentPoint.Value / (currentLevel.row * currentLevel.column);
-        float pointRate = (float)currentPoint.Value / maxPoint;
-
-        int exp = Mathf.FloorToInt(currentLevel.exp * pointRate);
-        int gold = Mathf.FloorToInt(currentLevel.gold * pointRate);
-        if(DataManager.Instance.userData.isVIP)
-        {
-            exp *= 2;
-            gold *= 2;
-        }
-        UIManager.Instance.Open<PopupResult>().SetData(currentPoint.Value, exp, gold);
-
-        DataManager.Instance.userData.ChargeExp(exp);
-        DataManager.Instance.userData.Charge(GameData.GoodsType.Gold, gold);
-    }
-
-
-    [SerializeField]
-    private Camera cam;
-    [SerializeField]
-    private RectTransform canvasRect;
-    public void OnClick()
-    {
-        isDrag = true;
-        if (hintCoroutine != null)
-        {
-            StopCoroutine(hintCoroutine);
-            hintCoroutine = null;
-
-            for (int i = 0; i < blocks.Length; i++)
-            {
-                blocks[i].Focus(false);
-            }
-        }
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
-        dragTransform.gameObject.SetActive(true);
-        dragTransform.rectTransform.anchoredPosition = startPos;
-        dragTransform.rectTransform.sizeDelta = Vector2.zero;
-    }
-
-    private long lastPointTicks;
-
-    public void OnRelease()
-    {
-        if (focus != null && focus.Length > 0)
-        {
-            if (focus.Sum(x => x.num) == TargetSumNum)
-            {
-                for (int i = 0; i < focus.Length; i++)
-                {
-                    focus[i].Break();
-                }
-                
-                //lastPointTicks = (int)(finishTime.Ticks - GameManager.Instance.dateTime.Value.Ticks);
-
-                int bonus = bonusMaxPoint - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks)/10000000f);
-                if(bonus > 0)
-                {
-                    //ObjectPooler.Instance.GetObject<Effect>("textPointBonus").SetText($"+{bonus}");
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
-                    ObjectPooler.Instance.Get<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
-                }
-
-                currentPoint.Value += focus.Length+bonus;
-
-                lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
-
-                if (blocks.ToList().Exists(x => x.num > 0))
-                {
-                    CheckHint();
-                    CheckGameState();
-                }
-//#if !UNITY_EDITOR
-//                if (OptionManager.Instance.Get(OptionManager.Type.HAPTIC))
-//                    Haptic.Execute();
-//#endif
-                if(tutorialRT.gameObject.activeSelf)
-                {
-                    tutorialRT.gameObject.SetActive(false);
-                }
-            }
-            focus = null;
-        }
-
-        isDrag = false;
-        dragTransform.gameObject.SetActive(false);
-
-        for (int i = 0; i < blocks.Length; i++)
-        {
-            blocks[i].Focus(false);
-        }
-    }
-
-    private Block[] focus = new Block[] { };
-    void Update()
-    {
-        if (isDrag)
-        {
-            // 현재 터치 위치까지 크기 조정
-            //Vector2 currentPos = Input.mousePosition;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out Vector2 currentPos);
-            Vector2 size = currentPos - startPos;
-            dragTransform.rectTransform.sizeDelta = new Vector2(Mathf.Abs(size.x), Mathf.Abs(size.y));
-            // 위치 조정 (좌상단 기준)
-            dragTransform.rectTransform.anchoredPosition = startPos + size / 2;
-
-            focus = blocks.Where(x => dragTransform.rectTransform.IsInside(x.rectTransform) && x.num > 0).ToArray();
-            for (int i = 0; i < blocks.Length; i++)
-            {
-                blocks[i].Focus(focus.Contains(blocks[i]));
-            }
-        }
-
-        if(IsPause)
-        {
-            finishTime = finishTime.AddSeconds(Time.deltaTime);
-        }
-    }
-
-    private void CheckHint()
-    {
-        if (blocks != null && !blocks.ToList().Exists(x => x != null && x.num > 0))
-        {
-            return;
-        }
-        hint.Clear();
-        for(int i = 0; i < blocks.Length-1; i++)
-        {
-            Vector2Int resultColumn = CheckBlockColumn(blocks[i].column, blocks[i].row, blocks[i].num);
-            if(resultColumn != default(Vector2Int))
-            {
-                hint.Add(new Vector2Int(blocks[i].column, blocks[i].row), resultColumn);
-                continue;
-            }
-            else
-            {
-                Vector2Int resultRow = CheckBlockRow(blocks[i].column, blocks[i].row, blocks[i].num);
-                if (resultRow != default(Vector2Int))
-                {
-                    hint.Add(new Vector2Int(blocks[i].column, blocks[i].row), resultRow);
-                }
-            }
-        }
-
-        if(DataManager.Instance.userData.IsTutorial)
-        {
-            if(hint.Count > 0)
-                StartCoroutine(ShowHint());
-        }
-    }
-
-    private void CheckGameState()
-    {
-        GameState state = State();
-        if (state > GameState.Continue)
-        {
-            if (state == GameState.NeedShuffle && !DataManager.Instance.userData.Has(GameData.GoodsType.Shuffle, 1) || state == GameState.NoMoreMatch)
-            {
-                UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("NoMoreMatch"), callback: confirm =>
-                {
-                    GameResult();
-                });
-            }
-            else
-            {
-                if(DataManager.Instance.userData.IsTutorial)
-                {
-                    Shuffle();
-                    return;
-                }
-                UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("NeedShuffle"), callback: confirm =>
-                {
-                    if (confirm)
-                    {
-                        if (DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
-                        {
-                            Shuffle();
-                        }
-                        else
-                        {
-                            GameResult();
-                        }
-                    }
-                    else
-                    {
-                        GameResult();
-                    }
-                });
-            }
-        }
-    }
-
-    private enum GameState
-    {
-        Continue,
-        NeedShuffle,
-        NoMoreMatch,
-    }
-    /// <summary>
-    /// 게임이 진행 가능한지 체크 
-    /// </summary>
-    /// <returns>
-    /// 0 : 진행가능 ,
-    /// 1 : 블록섞기 필요
-    /// 2 : 진행 불가능,
-    /// </returns>
-    private GameState State()
-    {
-        if(hint.Count == 0)
-        {
-            Block[] aliveBlocks = blocks.Where(x => x.num > 0).ToArray();
-            if (HasCombinationSum(aliveBlocks.Select(x => x.num).ToArray()))
-                return GameState.NeedShuffle;
-            return GameState.NoMoreMatch;
-        }
-        return GameState.Continue;
-    }
-
-    private bool isTraining = false;
-
-    private const float hintWaitTime = 1f;
-    private const float hintShowTime = 2f;
-    private Coroutine hintCoroutine;
-
-    private DateTime searchTime;
-    private DateTime explodeTime;
-
-    public void Explode()
-    {
-        Debug.Log($"Explode  {hint.Count()} | {GameManager.Instance.dateTime.Value.Ticks} | {explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm).Ticks}  | {GameManager.Instance.dateTime.Value.Ticks < explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm).Ticks}");
-        if (hint.Count() == 0) return;
-        if (GameManager.Instance.dateTime.Value.Ticks < explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm).Ticks) return;
-        if (DataManager.Instance.userData.Use(GameData.GoodsType.Explode, 1))
-        {
-            var list = hint.ToList();
-            var show = list[UnityEngine.Random.Range(0, list.Count)];
-            Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
-            for (int i = 0; i < focusBlocks.Length; i++)
-            {
-                focusBlocks[i].Focus(true);
-            }
-
-            int bonus = bonusMaxPoint - Mathf.FloorToInt((GameManager.Instance.dateTime.Value.Ticks - lastPointTicks) / 10000000f);
-            if (bonus > 0)
-            {
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Util.GetMousePosition(), cam, out startPos);
-                ObjectPooler.Instance.Get<Effect>("textPointBonus", transform, position: startPos, autoReturnTime: 1f).SetText($"+{bonus}");
-            }
-            currentPoint.Value += focusBlocks.Length + bonus;
-            lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
-            for (int i = 0; i < focusBlocks.Length; i++)
-            {
-                focusBlocks[i].Break();
-            }
-            if (blocks != null && blocks.ToList().Exists(x => x != null && x.num > 0))
-            {
-                CheckHint();
-                CheckGameState();
-            }
-
-            explodeTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
-            StartExplodeCool(explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm), DataManager.Instance.ExplodeTerm);
-        }
-    }
-
-    public void Search()
-    {
-        Debug.Log($"Search  {hint.Count()} | {GameManager.Instance.dateTime.Value.Ticks} | {searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks}  | {GameManager.Instance.dateTime.Value.Ticks < searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks}" );
-        if (hint.Count() == 0) return;
-        if (GameManager.Instance.dateTime.Value.Ticks < searchTime.AddSeconds(DataManager.Instance.SearchTerm).Ticks) return;
-        if (DataManager.Instance.userData.Use(GameData.GoodsType.Search, 1))
-        {
-            var list = hint.ToList();
-            var show = list[UnityEngine.Random.Range(0, list.Count)];
-            Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
-            for (int i = 0; i < focusBlocks.Length; i++)
-            {
-                focusBlocks[i].Focus(true);
-            }
-
-            searchTime = GameManager.Instance.dateTime.Value.ToTick().LongToDateTime();
-            StartSearchCool(searchTime.AddSeconds(DataManager.Instance.SearchTerm), DataManager.Instance.SearchTerm);
-        }
-    }
-    [SerializeField]
-    private RectTransform tutorialRT;
-    private IEnumerator ShowHint()
-    {
-        yield return Yielders.Get(hintWaitTime);
-        var list = hint.ToList();
-        var show = list[UnityEngine.Random.Range(0, list.Count)];
-        Block[] focusBlocks = blocks.Where(x => x.column >= show.Key.x && x.column <= show.Value.x && x.row >= show.Key.y && x.row <= show.Value.y).ToArray();
-        for(int i = 0; i < focusBlocks.Length; i++)
-        {
-            focusBlocks[i].Focus(true);
-        }
-        if(DataManager.Instance.userData.IsTutorial && currentPoint.Value == 0)
-        {
-            Block startBlock = blocks.SingleOrDefault(x => x.column == show.Key.x && x.row == show.Key.y);
-            Block finishBlock = blocks.SingleOrDefault(x => x.column == show.Value.x && x.row == show.Value.y);
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, RectTransformUtility.WorldToScreenPoint(cam, startBlock.StartPos()), cam, out Vector2 tutoStartPos);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, RectTransformUtility.WorldToScreenPoint(cam, finishBlock.FinishPos()), cam, out Vector2 tutoFinishPos);
-
-            tutorialRT.gameObject.SetActive(true);
-            Vector2 size = tutoStartPos - tutoFinishPos;
-            tutorialRT.sizeDelta = new Vector2(Mathf.Abs(size.x), Mathf.Abs(size.y));
-            // 위치 조정 (좌상단 기준)
-            //tutorialRT.anchoredPosition = tutoStartPos + size / 2;
-            //tutorialRT.anchoredPosition = tutoStartPos + size;
-            tutorialRT.anchoredPosition = tutoStartPos - size/2;
-        }
-        
-        yield return Yielders.Get(hintShowTime);
-        for (int i = 0; i < focusBlocks.Length; i++)
-        {
-            focusBlocks[i].Focus(false);
-        }
-    }
-    [SerializeField]
-    Dictionary<Vector2Int, Vector2Int> hint = new Dictionary<Vector2Int, Vector2Int>();
-
-    private Vector2Int CheckBlockColumn(int column, int row, int num)
-    {
-        if (row == currentLevel.row - 1 && column == currentLevel.column - 1) return default(Vector2Int);
-        bool endColumn = column + 1 == currentLevel.column;
-        int searchColumn = endColumn ? 0 : 1;
-        int searchRow = endColumn ? 1 : 0;
-        int sum = num;
-        
-        while (true)
-        {
-            if (endColumn)
-            {
-                sum += blocks.Where(x => x.column >= column && x.column <= column + searchColumn && x.row == row + searchRow).Sum(x=>x.num);
-            }
-            else
-            {
-                sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
-            }
-            
-            if (sum == TargetSumNum) return new Vector2Int(column+searchColumn, row+searchRow);
-            if(sum < TargetSumNum)
-            {
-                if(column+searchColumn < currentLevel.column -1)
-                {
-                    searchColumn += 1;
-                }
-                else
-                {
-                    if(row + searchRow == currentLevel.row -1)
-                    {
-                        break;
-                    }
-                    searchRow += 1;
-                    endColumn = true;
-                }
-            }
-            else
-            {
-                if(!endColumn)
-                {
-                    if (row + searchRow == currentLevel.row - 1)
-                    {
-                        break;
-                    }
-                    searchColumn -= 1;
-                    searchRow += 1;
-                    endColumn = true;
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-        return default(Vector2Int);
-
-    }
-
-    private Vector2Int CheckBlockRow(int column, int row, int num)
-    {
-        if(row == currentLevel.row-1 && column == currentLevel.column-1) return default(Vector2Int);
-        bool endRow = row + 1 == currentLevel.row;
-        int searchColumn = endRow ? 1 : 0;
-        int searchRow = endRow ? 0 : 1;
-        int sum = num;
-        
-        while (true)
-        {
-            if (endRow)
-            {
-                sum += blocks.Where(x => x.row >= row && x.row <= row + searchRow && x.column == column + searchColumn).Sum(x => x.num);
-            }
-            else
-            {
-                sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
-            }
-
-            if (sum == TargetSumNum) return new Vector2Int(column+searchColumn, row+searchRow);
-            if (sum < TargetSumNum)
-            {
-                if (row + searchRow < currentLevel.row - 1)
-                {
-                    searchRow += 1;
-                }
-                else
-                {
-                    if (column + searchColumn == currentLevel.column - 1)
-                    {
-                        break;
-                    }
-                    searchColumn += 1;
-                    endRow = true;
-                }
-            }
-            else
-            {
-                if (!endRow)
-                {
-                    if (column + searchColumn == currentLevel.column - 1)
-                    {
-                        break;
-                    }
-                    searchRow -= 1;
-                    searchColumn += 1;
-                    endRow = true;
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-        return default(Vector2Int);
-    }
-
-    public void AddSeconds(float sec)
-    {
-        finishTime = finishTime.AddSeconds(sec);
-        //HUD.Instance.ShowAddSeconds(sec);
-    }
-
-    private bool HasCombinationSum(int[] nums)
-    {
-        return CheckSumRecursive(nums, 0, 0, 0);
-    }
-
-    // 재귀 함수로 모든 조합 탐색
-    private bool CheckSumRecursive(int[] nums, int index, int currentSum, int count)
-    {
-        if (count >= 2 && currentSum == TargetSumNum)
-            return true;
-        if (index >= nums.Length || currentSum > TargetSumNum)
-            return false;
-
-        // 현재 숫자를 포함하는 경우
-        if (CheckSumRecursive(nums, index + 1, currentSum + nums[index], count + 1))
-            return true;
-
-        // 현재 숫자를 포함하지 않는 경우
-        if (CheckSumRecursive(nums, index + 1, currentSum, count))
-            return true;
-
-        return false;
-    }
-
-    private RectTransform tutorialTransform;
-
-    public void Tutorial()
-    {
-
-    }
-
-    public void ReturnBlockObj()
-    {
-        isGoScene = true;
-        Block[] blocks = blockParent.GetComponentsInChildren<Block>();
-        for (int i = 0; i < blocks.Length; i++)
-        {
-            ObjectPooler.Instance.ReturnObject("block_title", blocks[i].gameObject);
-        }
-
+        //if (IsPaused)
+        //{
+        //    FinishTime = FinishTime.AddSeconds(Time.deltaTime);
+        //}
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        timeDispose.Dispose();
-        pointDispose.Dispose();
+        // 구독 해제는 UIManager에서 처리
     }
 
-    public void ClickPause()
+    // --- 초기화 ---
+    public void Initialize()
     {
-        IsPause = true;
-        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback: (yes) =>
+        // 다른 매니저 컴포넌트 가져오기
+        //blockGridManager = GetComponent<BlockGridManager>();
+        //inputHandler = GetComponent<PuzzleInputHandler>();
+        //uiManager = GetComponent<PuzzleUIManager>();
+        //logicManager = GetComponent<PuzzleLogicManager>();
+
+        bonusMaxPoint = DataManager.Instance.GetConfig("bonusMaxPoint");
+
+        // 이벤트 구독
+        inputHandler.OnValidBlocksSelected += HandleValidSelection;
+        logicManager.OnAbilityBlocksRemoved += HandleValidSelection;
+
+        // UI 매니저 초기화
+        uiManager.Initialize(this, currentPoint);
+    }
+
+    // --- 게임 흐름 제어 ---
+    public void GameStart(GameData.GameLevel level, bool use10Seconds)
+    {
+        isGameFinished = false;
+        CurrentLevel = level;
+        currentPoint.Value = 0;
+
+        // 시간 설정
+        int gameTime = CurrentLevel.time;
+        if (use10Seconds && DataManager.Instance.userData.Use(GameData.GoodsType.Time_10s, 1))
         {
-            if (yes) GameManager.Instance.GoScene(GameManager.Scene.Main);
-            else Instance.IsPause = false;
-        });
+            gameTime += 10;
+        }
+        // [수정됨] .Value 제거
+        FinishTime = GameManager.Instance.dateTime.Value.AddSeconds(gameTime);
+        // [수정됨] .Value 제거
+        lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
+
+        // 매니저들에게 게임 시작 알림
+        blockGridManager.InitializeGrid(CurrentLevel);
+        StartCoroutine(WaitBlockInit());
+    }
+    private IEnumerator WaitBlockInit()
+    {
+        yield return new WaitUntil(() => blockGridManager.IsInit);
+        logicManager.Initialize(blockGridManager);
+        inputHandler.EnableInput(true);
+        uiManager.StartTimers();
+
+        CheckGameState();
+        StartCoroutine(CheckFinish());
+
+        searchTime = GameManager.Instance.dateTime.Value;
+        explodeTime = GameManager.Instance.dateTime.Value;
+    }
+
+    private IEnumerator CheckFinish()
+    {
+        yield return new WaitUntil(() => blockGridManager.IsInit);
+        while (!isGameFinished)
+        {
+            // [수정됨] .Value 제거 및 Nullable 체크 방식 변경
+            bool timeUp = GameManager.Instance.dateTime.Value.Ticks > FinishTime.Ticks;
+            bool blocksLeft = blockGridManager.HasActiveBlocks();
+
+            if (timeUp || !blocksLeft)
+            {
+                // isGameFinished = true; // GameResult에서 처리하도록 변경
+                break;
+            }
+            yield return null;
+        }
+        GameResult();
+    }
+
+    public void Finish()
+    {
+        isGameFinished = true;
+    }
+
+    private void GameResult()
+    {
+        if (isGameFinished) return;
+        Finish();
+
+        inputHandler.EnableInput(false);
+        // 점수 기록
+        if (DataManager.Instance.userData.IsNewRecord(CurrentLevel.level, currentPoint.Value, true))
+        {
+            FirebaseManager.Instance.SubmitScore(CurrentLevel.level, GameManager.Instance.dateTime.Value.ToDateText(), currentPoint.Value);
+        }
+        if (DataManager.Instance.userData.IsNewRecord(CurrentLevel.level, currentPoint.Value, false))
+        {
+            FirebaseManager.Instance.SubmitScore(CurrentLevel.level, FirebaseManager.KEY.RANKING_ALL, currentPoint.Value);
+        }
+
+        // 보상 계산
+        int total = CurrentLevel.row * CurrentLevel.column;
+        int maxPoint = total + (total / 2) * bonusMaxPoint;
+        float pointRate = maxPoint > 0 ? (float)currentPoint.Value / maxPoint : 0;
+        int exp = Mathf.FloorToInt(CurrentLevel.exp * pointRate);
+        int gold = Mathf.FloorToInt(CurrentLevel.gold * pointRate);
+        if (DataManager.Instance.userData.isVIP)
+        {
+            exp *= 2;
+            gold *= 2;
+        }
+
+        // 결과 팝업 및 보상 지급
+        uiManager.ShowResultPopup(currentPoint.Value, exp, gold);
+        DataManager.Instance.userData.ChargeExp(exp);
+        DataManager.Instance.userData.Charge(GameData.GoodsType.Gold, gold);
+    }
+
+    //public void ClickPause()
+    //{
+    //    IsPaused = true;
+    //    uiManager.ShowPausePopup(
+    //        onConfirm: () => {
+    //            blockGridManager.ReturnAllBlocks();
+    //            GameManager.Instance.GoScene(GameManager.Scene.Main);
+    //        },
+    //        onCancel: () => IsPaused = false
+    //    );
+    //}
+
+    // --- 이벤트 핸들러 ---
+    private void HandleValidSelection(List<Block> selectedBlocks)
+    {
+        // [수정됨] .Value 제거
+        int bonus = Math.Max(0, bonusMaxPoint - Mathf.FloorToInt((float)(GameManager.Instance.dateTime.Value.Ticks - lastPointTicks) / TimeSpan.TicksPerSecond));
+        if (bonus > 0)
+        {
+            uiManager.ShowBonusText($"+{bonus}");
+        }
+
+        currentPoint.Value += selectedBlocks.Count + bonus;
+        // [수정됨] .Value 제거
+        lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
+
+        foreach (var block in selectedBlocks)
+        {
+            block.Break();
+        }
+
+        if (blockGridManager.HasActiveBlocks())
+        {
+            CheckGameState();
+        }
+
+        // 튜토리얼 비활성화
+        uiManager.HideTutorial();
+    }
+
+    public void CheckGameState()
+    {
+        if (!logicManager.IsInit) return;
+        logicManager.FindAllHints();
+        var gameState = logicManager.GetGameState();
+
+        if (gameState == PuzzleLogicManager.GameState.Continue) return;
+
+        if (gameState == PuzzleLogicManager.GameState.NoMoreMatch ||
+            (gameState == PuzzleLogicManager.GameState.NeedShuffle && !DataManager.Instance.userData.Has(GameData.GoodsType.Shuffle, 1)))
+        {
+            uiManager.ShowMessage(Message.Type.Confirm, "NoMoreMatch", _ => GameResult());
+        }
+        else // NeedShuffle
+        {
+            if (DataManager.Instance.userData.IsTutorial)
+            {
+                blockGridManager.ShuffleBlocks();
+                CheckGameState();
+                return;
+            }
+
+            uiManager.ShowMessage(Message.Type.Ask, "NeedShuffle", confirm => {
+                if (confirm && DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
+                {
+                    blockGridManager.ShuffleBlocks();
+                    CheckGameState();
+                }
+                else
+                {
+                    GameResult();
+                }
+            });
+        }
+    }
+
+    public void AddSeconds(float sec)
+    {
+        FinishTime = FinishTime.AddSeconds(sec);
+        uiManager.ShowTimeBonusText($"+{sec}sec");
+    }
+
+    public void ReturnBlockObj()
+    {
+        blockGridManager.ReturnAllBlocks();
+    }
+
+    private DateTime searchTime = DateTime.MinValue;
+    private DateTime explodeTime = DateTime.MinValue;
+    public void Shuffle()
+    {
+        if (DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
+        {
+            blockGridManager.ShuffleBlocks();
+            CheckGameState();
+        }
+    }
+
+    public void Search()
+    {
+        if (GameManager.Instance.dateTime.Value < searchTime.AddSeconds(DataManager.Instance.SearchTerm))
+            return;
+        searchTime = GameManager.Instance.dateTime.Value;
+        logicManager.UseSearchAbility();
+        uiManager.StartSearchCool();
+    }
+
+    public void Explode()
+    {
+        if (GameManager.Instance.dateTime.Value < explodeTime.AddSeconds(DataManager.Instance.ExplodeTerm))
+            return;
+        explodeTime = GameManager.Instance.dateTime.Value;
+
+        logicManager.UseExplodeAbility();
+        uiManager.StartExplodeCool();
     }
 }

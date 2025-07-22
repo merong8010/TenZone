@@ -5,8 +5,8 @@ using System.Collections;
 
 public class TitleManager : Singleton<TitleManager>
 {
-    [SerializeField]
-    private GameObject loginObj;
+    //[SerializeField]
+    //private GameObject loginObj;
     [SerializeField]
     private GameObject tabPlayObj;
 
@@ -25,7 +25,7 @@ public class TitleManager : Singleton<TitleManager>
     public void SetStatus(string text, bool showLogins = false, bool showTap = false)
     {
         statusText.text = text;
-        loginObj.SetActive(showLogins);
+        //loginObj.SetActive(showLogins);
         tabPlayObj.SetActive(showTap);
     }
 

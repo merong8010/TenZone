@@ -24,11 +24,11 @@ public class PopupNickname : Popup
         
         if (DataManager.Instance.userData.nicknameChangeCount == 0)
         {
-            cost.Set(GameData.ShopCostType.Free, GameData.GoodsType.None, 0);
+            cost.SetCost(GameData.ShopCostType.Free, GameData.GoodsType.None, 0);
         }
         else
         {
-            cost.Set(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
+            cost.SetStaticValue(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
         }
     }
 
@@ -47,12 +47,14 @@ public class PopupNickname : Popup
                     if (changeCallback.success)
                     {
                         DataManager.Instance.userData.nicknameChangeCount += 1;
-
+                        
                         if (DataManager.Instance.userData.nicknameChangeCount > 1)
                         {
                             DataManager.Instance.userData.Use(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
                         }
-                        //DataManager.Instance.userData.Save
+
+
+                        FirebaseManager.Instance.SaveUserData(DataManager.Instance.userData);
                     }
                     resultText.text = result.message;
                     resultText.color = result.success ? Color.green : Color.red;

@@ -29,8 +29,8 @@ public class PopupResult : Popup
     public void SetData(int point, int exp, int gold)
     {
         scoreText.text = point.ToString();
-        this.exp.Set(GameData.GoodsType.EXP, exp);
-        this.gold.Set(GameData.GoodsType.Gold, gold);
+        this.exp.SetStaticValue(GameData.GoodsType.EXP, exp);
+        this.gold.SetStaticValue(GameData.GoodsType.Gold, gold);
 
         if(DataManager.Instance.userData.isVIP)
         {
@@ -41,8 +41,8 @@ public class PopupResult : Popup
         {
             vipObj.SetActive(false);
             adObj.SetActive(true);
-            expAd.Set(GameData.GoodsType.EXP, exp);
-            goldAd.Set(GameData.GoodsType.Gold, gold);
+            expAd.SetStaticValue(GameData.GoodsType.EXP, exp);
+            goldAd.SetStaticValue(GameData.GoodsType.Gold, gold);
         }
         //expText.text = exp.ToString();
         //goldText.text = gold.ToString();

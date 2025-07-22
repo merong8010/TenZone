@@ -7,6 +7,11 @@ using UnityEngine.U2D;
 public class ShopListItem : ListItem<GameData.Shop>
 {
     [SerializeField]
+    private Color[] categoryColors;
+    [SerializeField]
+    private Image frameImage;
+
+    [SerializeField]
     private Text nameText;
     [SerializeField]
     private Text descText;
@@ -29,7 +34,7 @@ public class ShopListItem : ListItem<GameData.Shop>
     public override void SetData(Shop data)
     {
         base.SetData(data);
-
+        frameImage.color = categoryColors[(int)data.category];
         if(nameText != null)
         {
             nameText.text = TextManager.Get(data.name);
@@ -57,7 +62,7 @@ public class ShopListItem : ListItem<GameData.Shop>
         {
             rewardList.UpdateList(data.rewards);
         }
-        cost.Set(data.costType, data.goodsType, data.costAmount, data.id);
+        cost.SetCost(data.costType, data.goodsType, data.costAmount, data.id);
 
         if(data.unlockLevel > 0 && DataManager.Instance.userData.level < data.unlockLevel)
         {
@@ -68,6 +73,11 @@ public class ShopListItem : ListItem<GameData.Shop>
         {
             lockObj.SetActive(true);
             unlockConditionText.text = string.Format(TextManager.Get("UnlockConditionShop"), data.unlockShopId);
+        }
+        else if (!DataManager.Instance.userData.CanPurchase(data))
+        {
+            lockObj.SetActive(true);
+            unlockConditionText.text = string.Format(TextManager.Get("purchaseComplete"), data.unlockShopId);
         }
         else
         {

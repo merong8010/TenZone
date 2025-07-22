@@ -6,20 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Services.Core;
 using Unity.Services.Core.Environments;
+using System.Collections;
+using System.Transactions;
 
 public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 {
     private static IStoreController storeController;
     private static IExtensionProvider storeExtensionProvider;
-    // === 이벤트 콜백 ===
-    //public static event Action<string> OnPurchaseSuccess;
-    //public static event Action<string, PurchaseFailureReason> OnPurchaseFailed;
-    //public static event Action<string> OnRestoreSuccess;
-    //public static event Action<string> OnRestoreFailed;
-
-    // === 상품 ID ===
-    //public const string PRODUCT_COINS = "coins_100";
-    //public const string PRODUCT_REMOVE_ADS = "remove_ads";
+    
 
     protected override void Awake()
     {
@@ -34,7 +28,6 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
                 .SetEnvironmentName("product");
 
             await UnityServices.InitializeAsync(options);
-            InitializePurchasing();
         }
         catch (Exception exception)
         {
@@ -43,7 +36,12 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
         }
     }
 
-    public void InitializePurchasing()
+    public void TryInitialize()
+    {
+        InitializePurchasing();
+    }
+
+    private void InitializePurchasing()
     {
         Debug.Log($"InitializePurchasing : {IsInitialized()} || {UnityServices.State} || {DataManager.Instance.IsLoadComplete}");
         if (IsInitialized() || UnityServices.State != ServicesInitializationState.Initialized || !DataManager.Instance.IsLoadComplete) return;
@@ -75,7 +73,10 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 #if UNITY_EDITOR
         return $"$ {DataManager.Instance.Get<GameData.Shop>().SingleOrDefault(x => x.id == shopId).costAmount.ToString("n0")}";
 #else
-        return storeController.products.WithID(shopId)?.metadata.localizedPriceString;
+        if(IsInitialized())
+            return storeController.products.WithID(shopId)?.metadata.localizedPriceString;
+        else
+            return $"$ {DataManager.Instance.Get<GameData.Shop>().SingleOrDefault(x => x.id == shopId).costAmount.ToString("n0")}";
 #endif
     }
 
@@ -85,9 +86,10 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
 #if UNITY_EDITOR
         UIManager.Instance.Message.Show(Message.Type.Ask, $"Buy productId : {productId}", callback: confirm =>
         {
-            if(confirm) PurchaseSuccess(productId);
+            if (confirm) PurchaseSuccess(productId);
+            else PurchaseFail(productId, PurchaseFailureReason.Unknown);
         });
-        //PurchaseSuccess(productId);
+        
         return;
 #endif
         if (IsInitialized())
@@ -143,10 +145,12 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
     public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
     {
         string productId = args.purchasedProduct.definition.id;
-
+        string transactionId = args.purchasedProduct.transactionID;
+        StartCoroutine(PurchaseValidationTimeout(transactionId, productId));
         // 서버 검증 비동기 시작
         FirebaseManager.Instance.ValidatePurchase(args, (isValid) =>
         {
+            StopCoroutine("PurchaseValidationTimeout");
             if (isValid)
             {
                 Debug.Log($"서버 검증 성공: {productId}");
@@ -160,6 +164,15 @@ public class IAPManager : Singleton<IAPManager>, IDetailedStoreListener
         });
 
         return PurchaseProcessingResult.Pending; // 서버 응답 대기
+    }
+
+    private IEnumerator PurchaseValidationTimeout(string transactionId, string productId)
+    {
+        yield return new WaitForSeconds(30f); // 30초 대기
+
+        // 30초가 지났는데도 코루틴이 살아있다면 타임아웃으로 간주
+        Debug.LogError($"Purchase validation timed out for transaction: {transactionId}");
+        PurchaseFail(productId, PurchaseFailureReason.Unknown);
     }
 
     public void OnInitialized(IStoreController controller, IExtensionProvider extensions)

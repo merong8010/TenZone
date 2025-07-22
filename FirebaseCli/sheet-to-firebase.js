@@ -30,32 +30,37 @@ async function importAllSheets() {
   const sheetTitles = metadata.data.sheets.map(sheet => sheet.properties.title);
 
   for (const title of sheetTitles) {
-    console.log(`📄 Processing sheet: ${title}`);
-
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${title}!A1:Z`,
-    });
-
-    const rows = response.data.values;
-    if (!rows || rows.length === 0) {
-      console.log(`⚠️ No data found in sheet: ${title}`);
-      continue;
-    }
-
-    const headers = rows[0];
-    const data = rows.slice(1).map(row => {
-      const item = {};
-      headers.forEach((header, index) => {
-        item[header] = row[index] || null;
+    try { // try...catch 블록 추가
+      console.log(`📄 Processing sheet: ${title}`);
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: title, // 'A1:Z' 대신 시트 이름만 사용
       });
-      return item;
-    });
 
-    const ref = db.ref(`GameData/${title}`);
-    await ref.set(data);
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        console.log(`⚠️ No data found in sheet: ${title}`);
+        continue;
+      }
 
-    console.log(`✅ Sheet "${title}" data uploaded to Firebase.`);
+      const headers = rows[0];
+      const data = rows.slice(1).map(row => {
+        const item = {};
+        headers.forEach((header, index) => {
+          item[header] = row[index] || null;
+        });
+        return item;
+      });
+
+      const ref = db.ref(`GameData/${title}`);
+      await ref.set(data);
+
+      console.log(`✅ Sheet "${title}" data uploaded to Firebase.`);
+    } catch (error) {
+      console.error(`❌ Error processing sheet: ${title}`, error);
+      // 여기서 continue를 사용해 다음 시트로 넘어갈 수 있습니다.
+    }
+    
   }
 
   console.log('🚀 All sheets imported successfully!');

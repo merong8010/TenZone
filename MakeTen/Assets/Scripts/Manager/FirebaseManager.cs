@@ -460,6 +460,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             result.success = false;
             result.message = TextManager.Get("nicknameNull");
             callback.Invoke(result);
+            return;
         }
 
         if (nickname.Length < 2 || nickname.Length > 10)
@@ -467,6 +468,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             result.success = false;
             result.message = TextManager.Get("nicknameLengthError");
             callback.Invoke(result);
+            return;
         }
 
         string resultNick = Regex.Replace(nickname, @"[^a-zA-Z0-9가-힇ぁ-ゔァ-ヴー々〆〤一-龥]", "", RegexOptions.Singleline);
@@ -475,6 +477,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             result.success = false;
             result.message = TextManager.Get("nicknameException");
             callback.Invoke(result);
+            return;
         }
         GameData.ForbiddenWord[] forbiddenWordTable = DataManager.Instance.Get<GameData.ForbiddenWord>();
         foreach (var info in forbiddenWordTable)
@@ -484,6 +487,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 result.success = false;
                 result.message = TextManager.Get("nicknameForbiddenWord");
                 callback.Invoke(result);
+                return;
             }
         }
 
@@ -529,8 +533,10 @@ public class FirebaseManager : Singleton<FirebaseManager>
     /// <param name="callback"></param>
     public void UpdateNickName(string nickname, Action<ResultCheckNickname> callback)
     {
+        UIManager.Instance.Loading("Wait...", 0.5f);
         functions.GetHttpsCallable("changeNickname").CallAsync(new Dictionary<string, object> { { "nickname", nickname } }).ContinueWithOnMainThread(task =>
         {
+            UIManager.Instance.CloseLoading();
             ResultCheckNickname result = default;
             if (task.IsCompletedSuccessfully)
             {
@@ -558,7 +564,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     /// <param name="date">오늘날짜 또는 전체</param>
     /// <param name="point">점수</param>
     /// <param name="callback"></param>
-    public void SubmitScore(PuzzleManager.Level gameLevel, string date, int point, Action<int> callback = null)
+    public void SubmitScore(PuzzleLevel gameLevel, string date, int point, Action<int> callback = null)
     {
         SubmitScore(gameLevel, date, DataManager.Instance.userData.id, DataManager.Instance.userData.nickname, DataManager.Instance.userData.level, point, DataManager.Instance.userData.countryCode, callback);
     }
@@ -574,7 +580,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     /// <param name="point"></param>
     /// <param name="countryCode"></param>
     /// <param name="callback"></param>
-    public void SubmitScore(PuzzleManager.Level gameLevel, string date, string userId, string nickname, int level, int point, string countryCode, Action<int> callback = null)
+    public void SubmitScore(PuzzleLevel gameLevel, string date, string userId, string nickname, int level, int point, string countryCode, Action<int> callback = null)
     {
         var data = new Dictionary<string, object>
         {
@@ -600,7 +606,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
         });
     }
 
-    public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleManager.Level gameLevel = PuzzleManager.Level.Normal)
+    public void GetRankingFromServer(string userId, Action<PopupRanking.RankingListWithMyRank> callback = null, string date = "ALL", int limit = 10, PuzzleLevel gameLevel = PuzzleLevel.Normal)
     {
         var data = new Dictionary<string, object>
         {

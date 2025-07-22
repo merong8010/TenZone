@@ -5,6 +5,7 @@ using System.Linq;
 using System;
 using UniRx;
 using Newtonsoft.Json;
+using GameData;
 
 public class UserData
 {
@@ -36,6 +37,40 @@ public class UserData
     public bool IsRewardAttendanceAd;
     public string attendanceRewardDate;
 
+    public Dictionary<PuzzleLevel, Record> recordAll = new Dictionary<PuzzleLevel, Record>();
+    public Dictionary<PuzzleLevel, Record> recordToday = new Dictionary<PuzzleLevel, Record>();
+    public Dictionary<string, MailList.Data> mailDatas = new Dictionary<string, MailList.Data>();
+    public List<PurchaseData> purchaseDatas = new List<PurchaseData>();
+
+    public void Copy(UserData from)
+    {
+        authType = from.authType;
+        id = from.id;
+        nickname = from.nickname;
+        heart = from.heart;
+        lastHeartTime = from.lastHeartTime;
+        countryCode = from.countryCode;
+        foreach(KeyValuePair<GoodsType, int> pair in from.goods)
+        {
+            if(goods.ContainsKey(pair.Key))
+                goods[pair.Key] = pair.Value;
+            else
+                goods.Add(pair.Key, pair.Value);
+        }
+        exp = from.exp;
+        level = from.level;
+        nicknameChangeCount = from.nicknameChangeCount;
+        banMessage = from.banMessage;
+        lastPlayDate = from.lastPlayDate;
+        attendanceCount = from.attendanceCount;
+        IsRewardAttendanceAd = from.IsRewardAttendanceAd;
+        attendanceRewardDate = from.attendanceRewardDate;
+        recordAll = from.recordAll;
+        recordToday = from.recordToday;
+        mailDatas = from.mailDatas;
+        purchaseDatas = from.purchaseDatas;
+    }
+
     public class Record : IComparable<Record>
     {
         public int point;
@@ -63,10 +98,7 @@ public class UserData
         
     }
 
-    public Dictionary<PuzzleManager.Level, Record> recordAll = new Dictionary<PuzzleManager.Level, Record>();
-    public Dictionary<PuzzleManager.Level, Record> recordToday = new Dictionary<PuzzleManager.Level, Record>();
-
-    public bool IsNewRecord(PuzzleManager.Level level, int point, bool today)
+    public bool IsNewRecord(PuzzleLevel level, int point, bool today)
     {
         Record newRecord = new Record(point);
         if (today)
@@ -118,8 +150,7 @@ public class UserData
     }
 
     //public MailList.Data[] mailDatas;
-    public Dictionary<string, MailList.Data> mailDatas = new Dictionary<string, MailList.Data>();
-
+    
     public int Heart
     {
         get
@@ -202,6 +233,7 @@ public class UserData
     public bool UseHeart()
     {
         if (GameManager.Instance.dateTime == null) return false;
+
         if(Heart > 0)
         {
             heart -= 1;
@@ -211,6 +243,10 @@ public class UserData
             }
             FirebaseManager.Instance.SaveUserData(this);
             return true;
+        }
+        else
+        {
+            UIManager.Instance.Message.Show(Message.Type.Simple, string.Format(TextManager.Get("NotEnougnGoods"), TextManager.Get(GoodsType.Heart.ToString())));
         }
         return false;
     }
@@ -256,7 +292,7 @@ public class UserData
 
         //FirebaseManager.Instance.SubmitScoreLevel(DataManager.Instance.Get<GameData.UserLevel>().Where(x => x.level < level).Sum(x => x.exp) + exp);
         int totalExp = DataManager.Instance.Get<GameData.UserLevel>().Where(x => x.level < level).Sum(x => x.exp) + exp;
-        FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.None, "ALL", id, nickname, level, totalExp, countryCode);
+        FirebaseManager.Instance.SubmitScore(PuzzleLevel.None, "ALL", id, nickname, level, totalExp, countryCode);
         FirebaseManager.Instance.SaveUserData(this);
     }
 
@@ -302,8 +338,6 @@ public class UserData
     {
         if (!goods.ContainsKey(type) || goods[type] < amount)
         {
-
-            //
             if (showMessage) UIManager.Instance.Message.Show(Message.Type.Simple, string.Format(TextManager.Get("NotEnoughGoods"), TextManager.Get(type.ToString())));
             return false;
         }
@@ -325,8 +359,6 @@ public class UserData
         public int count;
         public string id;
     }
-
-    public PurchaseData[] purchaseDatas;
 
     public int GetPurchaseCount(string shopId)
     {
@@ -374,7 +406,25 @@ public class UserData
 
     public void AddMailData(string title, string desc, GoodsList.Data[] rewards)
     {
-        FirebaseManager.Instance.SendMail(title, desc, rewards);
+        if (mailDatas == null) mailDatas = new Dictionary<string, MailList.Data>();
+        MailList.Data mailData = new MailList.Data();
+        mailData.id = UniqueId(mailDatas.Keys.ToList());
+        mailData.title = title;
+        mailData.desc = desc;
+        mailData.rewards = rewards;
+        mailDatas.Add(mailData.id, mailData);
+        FirebaseManager.Instance.SaveUserData(this);
+        UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("SendMailShopReward"));
+        //FirebaseManager.Instance.SendMail(title, desc, rewards);
+    }
+    private const string PURCHASEKEY = "purchase_";
+    private string UniqueId(List<string> keys)
+    {
+        if(keys == null || keys.Count == 0 || !keys.Exists(x => x.Contains(PURCHASEKEY)))
+        {
+            return PURCHASEKEY + "0";
+        }
+        return PURCHASEKEY+(keys.Where(x => x.Contains(PURCHASEKEY)).Select(x => int.Parse(x.Remove(0, PURCHASEKEY.Length))).Max() + 1).ToString();
     }
     public void AddPurchase(GameData.Shop data, int count = 1)
     {
@@ -383,15 +433,15 @@ public class UserData
 
         if(data.isRewardMail)
         {
-            UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("SendMailShopReward"));
-            FirebaseManager.Instance.SendMail(data.name, data.desc, data.rewards);
+            //UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("SendMailShopReward"));
+            AddMailData(data.name, data.desc, data.rewards);
+            //FirebaseManager.Instance.SendMail(data.name, data.desc, data.rewards);
         }
         else
         {
             Charge(data.rewards);
             UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
         }
-        if (purchaseDatas == null) purchaseDatas = new PurchaseData[] { };
         PurchaseData myData = purchaseDatas.SingleOrDefault(x => x.id == data.id);
         if (myData != null)
         {
@@ -404,7 +454,7 @@ public class UserData
             myData.id = data.id;
             myData.count = count;
             myData.lastPurchaseTick = GameManager.Instance.dateTime.Value.ToTick();
-            purchaseDatas = purchaseDatas.Append(myData).ToArray();
+            purchaseDatas.Add(myData);
         }
 
         if(data.id == VIP_ID)
@@ -413,7 +463,7 @@ public class UserData
             UIManager.Instance.Refresh();
             //SafeArea
         }
-
-        UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format(TextManager.Get("PurchaseSuccess"), TextManager.Get(data.name)));
+        FirebaseManager.Instance.SaveUserData(this);
+        //UIManager.Instance.Message.Show(Message.Type.Confirm, string.Format(TextManager.Get("PurchaseSuccess"), TextManager.Get(data.name)));
     }
 }

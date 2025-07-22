@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Collections.Generic;
 
 public class Message : MonoBehaviour
 {
@@ -26,8 +27,27 @@ public class Message : MonoBehaviour
     private GameObject noButton;
 
     private Action<bool> callback;
+
+    private class Data
+    {
+        public Type type;
+        public string message;
+        public Action<bool> callback;
+    }
+
+    private Stack<Data> stack = new Stack<Data>();
+    private Data data = null;
+    private void Show(Data data)
+    {
+        Show(data.type, data.message, callback: data.callback);
+    }
     public void Show(Type type, string message, string yes = "yes", string no = "no", Action<bool> callback = null)
     {
+        Debug.Log($"Show {gameObject.activeSelf} | {data}");
+        if(gameObject.activeSelf && data != null)
+        {
+            stack.Push(data);
+        }
         gameObject.SetActive(true);
 
         messageText.text = message;
@@ -37,25 +57,37 @@ public class Message : MonoBehaviour
 
         yesText.text = TextManager.Get(yes);
         noText.text = TextManager.Get(no);
-
+        data = new Data();
+        data.type = type;
+        data.message = message;
+        data.callback = callback;
         this.callback = callback;
     }
 
     public void ClickConfirm()
     {
-        if (callback != null) callback.Invoke(true);
         gameObject.SetActive(false);
+        data = null;
+        if (stack.Count > 0) Show(stack.Pop());
+
+        if (callback != null) callback.Invoke(true);
     }
 
     public void ClickYes()
     {
-        if (callback != null) callback.Invoke(true);
         gameObject.SetActive(false);
+        data = null;
+        if (stack.Count > 0) Show(stack.Pop());
+
+        if (callback != null) callback.Invoke(true);
     }
 
     public void ClickNo()
     {
-        if (callback != null) callback.Invoke(false);
         gameObject.SetActive(false);
+        data = null;
+        if (stack.Count > 0) Show(stack.Pop());
+
+        if (callback != null) callback.Invoke(false);
     }
 }

@@ -69,9 +69,9 @@ Animation:
   m_GameObject: {fileID: 3206801584903309582}
   m_Enabled: 1
   serializedVersion: 4
-  m_Animation: {fileID: 7400000, guid: 22459b01317695842b735ef2f3e9815e, type: 2}
+  m_Animation: {fileID: 7400000, guid: 10bffc1985e03d94f85697f458484d8f, type: 2}
   m_Animations:
-  - {fileID: 7400000, guid: 22459b01317695842b735ef2f3e9815e, type: 2}
+  - {fileID: 7400000, guid: 10bffc1985e03d94f85697f458484d8f, type: 2}
   m_WrapMode: 0
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0
@@ -111,7 +111,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -70}
   m_SizeDelta: {x: 190, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6290472967333014765

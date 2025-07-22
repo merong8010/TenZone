@@ -49,8 +49,19 @@ export const validatePurchase = functions.https.onRequest(async (req, res) => {
     });
 
     const purchaseState = result.data.purchaseState;
+    const acknowledgementState = result.data.acknowledgementState;
 
-    if (purchaseState === 0) {
+    if (purchaseState === 0) { // 0: PURCHASED (구매 완료)
+      // 👇 --- 추가된 부분 시작 --- 👇
+      // 아직 구매 '확인'(Acknowledge)이 되지 않은 경우에만 실행
+      if (acknowledgementState === 0) { // 0: YET_TO_BE_ACKNOWLEDGED
+        await playDeveloperApi.purchases.products.acknowledge({
+          packageName,
+          productId,
+          token: purchaseToken,
+        });
+      }
+      // 👆 --- 추가된 부분 끝 --- 👆
       return res.status(200).send({success: true});
     } else {
       return res.status(200).send({success: false, message: "Purchase not completed."});

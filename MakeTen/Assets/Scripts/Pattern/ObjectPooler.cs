@@ -60,10 +60,12 @@ public class ObjectPooler : Singleton<ObjectPooler>
             poolSettings.Add(pool.tag, pool);
             activeObjects.Add(pool.tag, activeList);
 
-            StartCoroutine(CleanupPool(pool.tag, pool.cleanupDelay));
             StartCoroutine(OptimizeMemory(pool.tag, pool.optimizeInterval));
         }
         isReady = true;
+
+        StartCoroutine(OptimizeAllPools());
+
     }
 
     /// <summary>
@@ -92,8 +94,6 @@ public class ObjectPooler : Singleton<ObjectPooler>
             poolDictionary[path].Enqueue(obj);
         }
 
-        StartCoroutine(CleanupPool(path, newPool.cleanupDelay));
-
         return Get<T>(path, parent, position, scale, rotation, autoReturnTime);
     }
 
@@ -102,15 +102,28 @@ public class ObjectPooler : Singleton<ObjectPooler>
     /// </summary>
     public T Get<T>(string tagOrPath, Transform parent = null, Vector3 position = default(Vector3), Vector3 scale = default(Vector3), Quaternion rotation = default(Quaternion), float autoReturnTime = 0f) where T : MonoBehaviour
     {
-        if (!pools.Exists(x => x.tag == tagOrPath)) return null;
         string tag = tagOrPath;
+
+        // 풀이 존재하는지 여부를 여기서 올바르게 확인합니다.
+        // 풀이 없다면 동적으로 생성합니다.
         if (!poolDictionary.ContainsKey(tag))
         {
-            return CreateDynamicPool<T>(tagOrPath, parent, position, scale,  rotation, autoReturnTime);
+            // 인스펙터 목록에도 정의되어 있지 않다면 새로운 풀을 동적으로 생성합니다.
+            if (!pools.Exists(x => x.tag == tag))
+            {
+                Debug.Log($"'{tag}' 태그에 대한 풀을 동적으로 생성합니다.");
+                return CreateDynamicPool<T>(tagOrPath, parent, position, scale, rotation, autoReturnTime);
+            }
+            // 목록에는 있지만 초기화되지 않았다면 에러입니다.
+            else
+            {
+                Debug.LogError($"'{tag}' 태그의 풀이 정의되었지만 초기화되지 않았습니다.");
+                return null;
+            }
         }
 
-        
-        if(poolDictionary[tag].Count == 0)
+
+        if (poolDictionary[tag].Count == 0)
         {
             if(!ExpandPool(tag))
             {
@@ -118,7 +131,29 @@ public class ObjectPooler : Singleton<ObjectPooler>
             }
         }
 
-        GameObject obj = poolDictionary[tag].Dequeue();
+        //GameObject obj = poolDictionary[tag].Dequeue();
+
+        GameObject obj = null;
+        while (poolDictionary[tag].Count > 0)
+        {
+            obj = poolDictionary[tag].Dequeue();
+            if (obj != null) // 오브젝트가 파괴되지 않고 유효한지 확인
+            {
+                break; // 유효한 오브젝트를 찾았으므로 루프 탈출
+            }
+            // obj가 null이면 파괴된 것이므로, 루프를 계속해 다음 것을 확인
+        }
+
+        // 루프가 끝났는데도 obj가 null이라면, 유효한 오브젝트가 풀에 없는 것
+        if (obj == null)
+        {
+            if (!ExpandPool(tag)) // 풀 확장
+            {
+                return null;
+            }
+            obj = poolDictionary[tag].Dequeue();
+        }
+
         obj.SetActive(true);
         obj.transform.SetParent(parent);
         obj.transform.localPosition = position;
@@ -197,35 +232,7 @@ public class ObjectPooler : Singleton<ObjectPooler>
         ReturnObject(tag, obj);
     }
 
-    /// <summary>
-    /// 일정 시간 동안 사용되지 않은 오브젝트 삭제
-    /// </summary>
-    private IEnumerator CleanupPool(string tag, float delay)
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(delay);
-
-            if (!poolDictionary.ContainsKey(tag)) continue;
-
-            Queue<GameObject> newQueue = new Queue<GameObject>();
-            foreach (var obj in poolDictionary[tag])
-            {
-                if (!obj.activeSelf)
-                {
-                    Destroy(obj);
-                }
-                else
-                {
-                    newQueue.Enqueue(obj);
-                }
-            }
-
-            poolDictionary[tag] = newQueue;
-            UpdatePoolStatusUI();
-        }
-    }
-
+    
     /// <summary>
     /// 메모리 자동 최적화: 오래된 오브젝트 정리
     /// </summary>
@@ -270,4 +277,35 @@ public class ObjectPooler : Singleton<ObjectPooler>
 
         poolStatusText.text = status;
     }
+
+    private IEnumerator OptimizeAllPools()
+    {
+        // 전역 관리 주기에 맞춰 대기
+        var delay = new WaitForSeconds(10f); // 예: 10초마다 모든 풀을 체크
+
+        while (true)
+        {
+            yield return delay;
+
+            // 순회 중 딕셔너리 변경에 따른 오류를 피하기 위해 키 목록을 복사해서 사용
+            var tags = new List<string>(poolSettings.Keys);
+
+            foreach (var tag in tags)
+            {
+                Pool pool = poolSettings[tag];
+                if (poolDictionary.ContainsKey(tag) && poolDictionary[tag].Count > pool.size)
+                {
+                    int excess = poolDictionary[tag].Count - pool.size;
+                    for (int i = 0; i < excess; i++)
+                    {
+                        GameObject objToDestroy = poolDictionary[tag].Dequeue();
+                        Destroy(objToDestroy);
+                    }
+                }
+            }
+            // UI 업데이트도 여기서 한 번에 처리
+            UpdatePoolStatusUI();
+        }
+    }
+
 }

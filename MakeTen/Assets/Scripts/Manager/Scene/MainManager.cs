@@ -41,6 +41,7 @@ public class MainManager : Singleton<MainManager>
         StartCoroutine(InitBG());
         UpdateUserData(DataManager.Instance.userData);
         UpdateHeart();
+        SoundManager.Instance.PlayBGM("main");
     }
 
     private IEnumerator InitBG()

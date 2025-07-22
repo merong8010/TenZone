@@ -108,9 +108,17 @@ namespace GameData
         public string TW;
     }
 
+    public enum PuzzleLevel
+    {
+        None,
+        Easy,
+        Normal,
+        Hard,
+        Expert,
+    }
     public class GameLevel : Data
     {
-        public PuzzleManager.Level level;
+        public PuzzleLevel level;
         public int row;
         public int column;
         public float mean;
@@ -155,6 +163,34 @@ namespace GameData
     {
         public int id;
         public int date;
+    }
+
+    public enum QuestCategory
+    {
+        None,
+        daily,
+        weekly,
+        achievement,
+    }
+
+    public enum QuestType
+    {
+        None,
+        attendance,
+        useGoods,
+        finish,
+        allClear,
+    }
+    public class Quest : RewardData
+    {
+        public int id;
+        public QuestCategory category;
+        public QuestType type;
+        public int questId;
+        public int questCount;
+        public string name;
+        public string desc;
+        public bool repeat;
     }
 }
  

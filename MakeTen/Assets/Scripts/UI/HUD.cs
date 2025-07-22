@@ -96,19 +96,19 @@ public class HUD : Singleton<HUD>
         //heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
     }
 
-    public void Initialize(ReactiveProperty<int> pointProperty)
-    {
-        pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
-        GameManager.Instance.reactiveTime.Subscribe(x =>
-        {
-            if(x.Ticks <= PuzzleManager.Instance.finishTime.Ticks)
-            {
-                TimeSpan timeSpan = (PuzzleManager.Instance.finishTime - x);
-                timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
-                timeBar.fillAmount = (float)timeSpan.TotalSeconds / PuzzleManager.Instance.CurrentGameTime;
-            }
-        });
-    }
+    //public void Initialize(ReactiveProperty<int> pointProperty)
+    //{
+    //    pointProperty.Subscribe(x => { pointText.text = new StringBuilder().Append("point : ").Append(x).ToString(); });
+    //    GameManager.Instance.reactiveTime.Subscribe(x =>
+    //    {
+    //        if(x.Ticks <= PuzzleManager.Instance.finishTime.Ticks)
+    //        {
+    //            TimeSpan timeSpan = (PuzzleManager.Instance.finishTime - x);
+    //            timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
+    //            timeBar.fillAmount = (float)timeSpan.TotalSeconds / PuzzleManager.Instance.CurrentGameTime;
+    //        }
+    //    });
+    //}
 
     public void ClickGameStart()
     {
@@ -150,68 +150,68 @@ public class HUD : Singleton<HUD>
         //DataManager.Instance.userData.ChargeHeart();
     }
 
-    public void ClickPause()
-    {
-        PuzzleManager.Instance.IsPause = true;
-        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback : (yes) =>
-        {
-            if (yes) GameManager.Instance.GoScene(GameManager.Scene.Main);
-            else PuzzleManager.Instance.IsPause = false;
-        });
-    }
+    //public void ClickPause()
+    //{
+    //    //PuzzleManager.Instance.IsPaused = true;
+    //    UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback : (yes) =>
+    //    {
+    //        if (yes) GameManager.Instance.GoScene(GameManager.Scene.Main);
+    //        //else PuzzleManager.Instance.IsPaused = false;
+    //    });
+    //}
 
-    public void ClickShuffle()
-    {
-        //PuzzleManager.Instance.IsPause = true;
-        UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback: (yes) =>
-        {
-            if (yes) PuzzleManager.Instance.Shuffle();
-            //PuzzleManager.Instance.IsPause = false;
-        });
+    //public void ClickShuffle()
+    //{
+    //    //PuzzleManager.Instance.IsPause = true;
+    //    UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("PuzzleQuit"), callback: (yes) =>
+    //    {
+    //        if (yes) PuzzleManager.Instance.Shuffle();
+    //        //PuzzleManager.Instance.IsPause = false;
+    //    });
         
-    }
+    //}
 
-    [SerializeField]
-    private Image searchCoolImage;
-    public void ClickSearch()
-    {
-        PuzzleManager.Instance.Search();
-    }
+    //[SerializeField]
+    //private Image searchCoolImage;
+    //public void ClickSearch()
+    //{
+    //    PuzzleManager.Instance.Search();
+    //}
 
-    public void StartSearchCool(DateTime coolFinish, float max)
-    {
-        StartCoroutine(CheckSearchCool(coolFinish, max));
-    }
+    //public void StartSearchCool(DateTime coolFinish, float max)
+    //{
+    //    StartCoroutine(CheckSearchCool(coolFinish, max));
+    //}
 
-    private IEnumerator CheckSearchCool(DateTime coolFinish, float max)
-    {
-        while(coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
-        {
-            searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
-            yield return Yielders.EndOfFrame;
-        }
-    }
+    //private IEnumerator CheckSearchCool(DateTime coolFinish, float max)
+    //{
+    //    while(coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
+    //    {
+    //        searchCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
+    //        yield return Yielders.EndOfFrame;
+    //    }
+    //}
 
-    [SerializeField]
-    private Image explodeCoolImage;
-    public void ClickExplode()
-    {
-        PuzzleManager.Instance.Explode();
-    }
+    //[SerializeField]
+    //private Image explodeCoolImage;
+    //public void ClickExplode()
+    //{
+    //    PuzzleManager.Instance.Explode();
+    //}
 
-    public void StartExplodeCool(DateTime coolFinish, float max)
-    {
-        StartCoroutine(CheckExplodeCool(coolFinish, max));
-    }
+    //public void StartExplodeCool(DateTime coolFinish, float max)
+    //{
+    //    StartCoroutine(CheckExplodeCool(coolFinish, max));
+    //}
 
-    private IEnumerator CheckExplodeCool(DateTime coolFinish, float max)
-    {
-        while (coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
-        {
-            explodeCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
-            yield return Yielders.EndOfFrame;
-        }
-    }
+    //private IEnumerator CheckExplodeCool(DateTime coolFinish, float max)
+    //{
+    //    while (coolFinish.Ticks > GameManager.Instance.dateTime.Value.Ticks)
+    //    {
+    //        explodeCoolImage.fillAmount = ((coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / 10000000f) / max;
+    //        yield return Yielders.EndOfFrame;
+    //    }
+    //}
 
     public void UpdateScene(GameManager.Scene scene)
     {
@@ -256,14 +256,14 @@ public class HUD : Singleton<HUD>
             string countryCode = countryCodes[UnityEngine.Random.Range(0, countryCodes.Length)];
             string date = GameManager.Instance.dateTime.Value.ToDateText();
             int level = UnityEngine.Random.Range(10, 90);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointEasy, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Easy, date, id, nickname, level, pointEasy, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointNormal, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Normal, date, id, nickname, level, pointNormal, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointHard, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Hard, date, id, nickname, level, pointHard, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointExpert, countryCode);
-            FirebaseManager.Instance.SubmitScore(PuzzleManager.Level.Expert, date, id, nickname, level, pointExpert, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Easy, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointEasy, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Easy, date, id, nickname, level, pointEasy, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Normal, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointNormal, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Normal, date, id, nickname, level, pointNormal, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Hard, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointHard, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Hard, date, id, nickname, level, pointHard, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Expert, FirebaseManager.KEY.RANKING_ALL, id, nickname, level, pointExpert, countryCode);
+            FirebaseManager.Instance.SubmitScore(GameData.PuzzleLevel.Expert, date, id, nickname, level, pointExpert, countryCode);
         }
 
     }

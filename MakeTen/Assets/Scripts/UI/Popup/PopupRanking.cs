@@ -111,6 +111,6 @@ public class PopupRanking : Popup
                 myRankItemLandscape.gameObject.SetActive(true);
                 myRankItemLandscape.SetData(result.myRank);
             }
-        }, date, 50, (PuzzleManager.Level)(currentLevelIdx + 1));
+        }, date, 50, (GameData.PuzzleLevel)(currentLevelIdx + 1));
     }
 }

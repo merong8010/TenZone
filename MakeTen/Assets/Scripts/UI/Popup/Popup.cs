@@ -20,6 +20,7 @@ public class Popup : MonoBehaviour
 
     public virtual void Open()
     {
+        safeArea?.Refresh();
         gameObject.SetActive(true);
         if(rt != null)
         {

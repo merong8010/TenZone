@@ -18,7 +18,7 @@ public class GameManager : Singleton<GameManager>
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
         System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-        StartCoroutine(Initialize());
+        //StartCoroutine(Initialize());
     }
 
     private void OnApplicationFocus(bool focus)
@@ -64,8 +64,8 @@ public class GameManager : Singleton<GameManager>
     // ✅ 구글 서버에서 UTC 시간 가져오기
     public void FetchOnlineTime()
     {
-        _currentTime = null;
-        UIManager.Instance.Loading(fadeDelay: 0f);
+        //_currentTime = null;
+        UIManager.Instance.Loading(delay: 0f);
         StartCoroutine(GetOnlineTime());
     }
 
@@ -134,8 +134,11 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    private bool isInit = false;
     public void Init()
     {
+        if (isInit) return;
+        isInit = true;
         StartCoroutine(Initialize());
     }
 
@@ -151,7 +154,7 @@ public class GameManager : Singleton<GameManager>
         DataManager.Instance.LoadGameDatas();
         yield return new WaitUntil(() => DataManager.Instance.IsLoadComplete);
         TitleManager.Instance.SetStatus("", showTap: true);
-        IAPManager.Instance.InitializePurchasing();
+        IAPManager.Instance.TryInitialize();
         ADManager.Instance.Initialize();
     }
 
@@ -208,7 +211,7 @@ public class GameManager : Singleton<GameManager>
         isUse10Seconds = use10Seconds;
         currentLevel = level;
         //StartCoroutine(GoScene(scene));
-        UIManager.Instance.Loading(callback: () =>
+        UIManager.Instance.Loading(onFadeInComplete: () =>
         {
             SceneManager.LoadScene((int)scene);
             switch(currentScene)
@@ -223,9 +226,39 @@ public class GameManager : Singleton<GameManager>
                     PuzzleManager.Instance.ReturnBlockObj();
                     break;
             }
-        }, completeCallback: () =>
+
+            if(currentScene == Scene.Title && scene == Scene.Main)
+            {
+                UIManager.Instance.InitializePopups(
+                    typeof(PopupAttendance),
+                    typeof(PopupCheat),
+                    typeof(PopupLevelSelect),
+                    typeof(PopupMail),
+                    typeof(PopupNickname),
+                    typeof(PopupRanking),
+                    typeof(PopupResult),
+                    typeof(PopupReward),
+                    typeof(PopupSettings),
+                    typeof(PopupShop)
+                );
+            }
+        }, onFadeOutComplete: () =>
         {
             currentScene = scene;
+            switch (currentScene)
+            {
+                case Scene.Title:
+
+                    break;
+                case Scene.Main:
+                    if (DataManager.Instance.userData.IsAttendanceRewardable)
+                    {
+                        UIManager.Instance.Open<PopupAttendance>();
+                    }
+                    break;
+                case Scene.Puzzle:
+                    break;
+            }
         });
     }
 

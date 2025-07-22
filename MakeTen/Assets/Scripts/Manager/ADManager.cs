@@ -225,6 +225,7 @@ public class ADManager : Singleton<ADManager>, IUnityAdsInitializationListener, 
 
     public void OnUnityAdsShowComplete(string placementId, UnityAdsShowCompletionState showCompletionState)
     {
+        Debug.Log("OnUnityAdsShowComplete  placementId : " + placementId+" | "+ showCompletionState);
         MainThreadDispatcher.Instance.Enqueue(() =>
         {
             if (placementId == rewardedId)

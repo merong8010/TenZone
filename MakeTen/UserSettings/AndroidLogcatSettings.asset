@@ -1,9 +1,9 @@
 {
-    "m_SelectedDeviceId": "RF9N300TDKD",
+    "m_SelectedDeviceId": "R5CT51F03LT",
     "m_SelectedProcess": {
-        "deviceId": "RF9N300TDKD",
+        "deviceId": "R5CT51F03LT",
         "name": "studio.jjm.maketen",
-        "processId": 30866,
+        "processId": 12871,
         "exited": false
     },
     "m_SelectedPriority": 0,
@@ -52,32 +52,56 @@
         },
         {
             "deviceId": "R5CT51F03LT",
+            "name": "com.sec.android.app.launcher",
+            "processId": 2172,
+            "exited": false
+        },
+        {
+            "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 18453,
+            "processId": 8638,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 19171,
+            "processId": 10176,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 20335,
+            "processId": 10800,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 1881,
+            "processId": 12869,
             "exited": true
         },
         {
             "deviceId": "R5CT51F03LT",
             "name": "studio.jjm.maketen",
-            "processId": 3124,
+            "processId": 3290,
+            "exited": false
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 16221,
+            "exited": false
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 1918,
+            "exited": false
+        },
+        {
+            "deviceId": "R5CT51F03LT",
+            "name": "studio.jjm.maketen",
+            "processId": 12871,
             "exited": false
         }
     ],
