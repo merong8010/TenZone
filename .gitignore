@@ -35,3 +35,5 @@ ExportedObj/
 ehthumbs.db
 Thumbs.db
 GraphicsSettings.asset
+FirebaseCli/google-service-account.json
+FirebaseCli/cloud-function-account.json
