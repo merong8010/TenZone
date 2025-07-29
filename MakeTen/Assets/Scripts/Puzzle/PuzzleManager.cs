@@ -3,7 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
-using UniRx; // UniRx를 사용하고 있으므로 using 구문 추가
+using UniRx;
+using GameData; // UniRx를 사용하고 있으므로 using 구문 추가
 
 public class PuzzleManager : Singleton<PuzzleManager>
 {
@@ -32,16 +33,17 @@ public class PuzzleManager : Singleton<PuzzleManager>
 
     private void Start()
     {
-        GameStart(GameManager.Instance.currentLevel, GameManager.Instance.isUse10Seconds);
+        GameStart(GameManager.Instance.currentLevel, GameManager.Instance.isUse10Seconds, GameManager.Instance.isUseTimeFreeze);
         SoundManager.Instance.PlayBGM("puzzle");
     }
 
+    private bool IsPaused = false;
     private void Update()
     {
-        //if (IsPaused)
-        //{
-        //    FinishTime = FinishTime.AddSeconds(Time.deltaTime);
-        //}
+        if (IsPaused)
+        {
+            FinishTime = FinishTime.AddSeconds(Time.deltaTime);
+        }
     }
 
     protected override void OnDestroy()
@@ -69,20 +71,27 @@ public class PuzzleManager : Singleton<PuzzleManager>
         uiManager.Initialize(this, currentPoint);
     }
 
+    public bool isTimeFreeze;
     // --- 게임 흐름 제어 ---
-    public void GameStart(GameData.GameLevel level, bool use10Seconds)
+    public void GameStart(GameData.GameLevel level, bool use10Seconds, bool useTimeFreeze)
     {
         isGameFinished = false;
         CurrentLevel = level;
         currentPoint.Value = 0;
-
+        continueCount = 1;
         // 시간 설정
         int gameTime = CurrentLevel.time;
         if (use10Seconds && DataManager.Instance.userData.Use(GameData.GoodsType.Time_10s, 1))
         {
             gameTime += 10;
         }
-        // [수정됨] .Value 제거
+        if (useTimeFreeze && DataManager.Instance.userData.Use(GameData.GoodsType.TimeFreeze, 1))
+        {
+            isTimeFreeze = true;
+        }
+        else isTimeFreeze = false;
+
+            // [수정됨] .Value 제거
         FinishTime = GameManager.Instance.dateTime.Value.AddSeconds(gameTime);
         // [수정됨] .Value 제거
         lastPointTicks = GameManager.Instance.dateTime.Value.Ticks;
@@ -94,9 +103,11 @@ public class PuzzleManager : Singleton<PuzzleManager>
     private IEnumerator WaitBlockInit()
     {
         yield return new WaitUntil(() => blockGridManager.IsInit);
-        logicManager.Initialize(blockGridManager);
+        logicManager.Initialize(blockGridManager, uiManager);
         inputHandler.EnableInput(true);
-        uiManager.StartTimers();
+        uiManager.StartTimers(isTimeFreeze);
+        uiManager.StartSearchCool();
+        uiManager.StartExplodeCool();
 
         CheckGameState();
         StartCoroutine(CheckFinish());
@@ -105,13 +116,33 @@ public class PuzzleManager : Singleton<PuzzleManager>
         explodeTime = GameManager.Instance.dateTime.Value;
     }
 
+    private int continueCount;
+    public const int MaxContinueCount = 3;
+    public void ContinueGame()
+    {
+        Continue cd = DataManager.Instance.Get<Continue>().SingleOrDefault(x => x.idx == continueCount);
+        if (!DataManager.Instance.userData.Use(cd.goodsType, cd.goodsAmount))
+        {
+            GameResult();
+            return;
+        }
+        isGameFinished = false;
+        FinishTime = GameManager.Instance.dateTime.Value.AddSeconds(cd.addSeconds);
+        inputHandler.EnableInput(true);
+        uiManager.StartTimers();
+
+        StartCoroutine(CheckFinish());
+
+        continueCount++;
+    }
+
     private IEnumerator CheckFinish()
     {
         yield return new WaitUntil(() => blockGridManager.IsInit);
         while (!isGameFinished)
         {
             // [수정됨] .Value 제거 및 Nullable 체크 방식 변경
-            bool timeUp = GameManager.Instance.dateTime.Value.Ticks > FinishTime.Ticks;
+            bool timeUp = !isTimeFreeze && GameManager.Instance.dateTime.Value.Ticks > FinishTime.Ticks;
             bool blocksLeft = blockGridManager.HasActiveBlocks();
 
             if (timeUp || !blocksLeft)
@@ -121,7 +152,15 @@ public class PuzzleManager : Singleton<PuzzleManager>
             }
             yield return null;
         }
-        GameResult();
+        inputHandler.EnableInput(false);
+        if(!isTimeFreeze && !isGameFinished && DataManager.Instance.CanContinue(continueCount) && blockGridManager.HasActiveBlocks())
+        {
+            UIManager.Instance.Open<PopupContinue>().SetData(DataManager.Instance.Get<GameData.Continue>().SingleOrDefault(x => x.idx == continueCount));
+        }
+        else
+        {
+            GameResult();
+        }
     }
 
     public void Finish()
@@ -129,7 +168,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
         isGameFinished = true;
     }
 
-    private void GameResult()
+    public void GameResult()
     {
         if (isGameFinished) return;
         Finish();
@@ -161,6 +200,9 @@ public class PuzzleManager : Singleton<PuzzleManager>
         uiManager.ShowResultPopup(currentPoint.Value, exp, gold);
         DataManager.Instance.userData.ChargeExp(exp);
         DataManager.Instance.userData.Charge(GameData.GoodsType.Gold, gold);
+
+        DataManager.Instance.userData.DoQuest(QuestType.finish);
+        if (!blockGridManager.HasActiveBlocks()) DataManager.Instance.userData.DoQuest(QuestType.allClear);
     }
 
     //public void ClickPause()
@@ -194,27 +236,29 @@ public class PuzzleManager : Singleton<PuzzleManager>
             block.Break();
         }
 
+        // 튜토리얼 비활성화
+        uiManager.HideTutorial();
+
         if (blockGridManager.HasActiveBlocks())
         {
             CheckGameState();
         }
-
-        // 튜토리얼 비활성화
-        uiManager.HideTutorial();
     }
-
+    
     public void CheckGameState()
     {
         if (!logicManager.IsInit) return;
         logicManager.FindAllHints();
         var gameState = logicManager.GetGameState();
-
+        
         if (gameState == PuzzleLogicManager.GameState.Continue) return;
 
         if (gameState == PuzzleLogicManager.GameState.NoMoreMatch ||
             (gameState == PuzzleLogicManager.GameState.NeedShuffle && !DataManager.Instance.userData.Has(GameData.GoodsType.Shuffle, 1)))
         {
-            uiManager.ShowMessage(Message.Type.Confirm, "NoMoreMatch", _ => GameResult());
+            IsPaused = true;
+            inputHandler.EnableInput(false);
+            UIManager.Instance.Message.Show(Message.Type.Confirm, TextManager.Get("NoMoreMatch"), callback : (bool confirm) => { GameResult(); });
         }
         else // NeedShuffle
         {
@@ -225,7 +269,7 @@ public class PuzzleManager : Singleton<PuzzleManager>
                 return;
             }
 
-            uiManager.ShowMessage(Message.Type.Ask, "NeedShuffle", confirm => {
+            UIManager.Instance.Message.Show(Message.Type.Ask, TextManager.Get("NeedShuffle"), callback : confirm => {
                 if (confirm && DataManager.Instance.userData.Use(GameData.GoodsType.Shuffle, 1))
                 {
                     blockGridManager.ShuffleBlocks();

@@ -26,13 +26,13 @@ public class PopupMail : Popup
     {
         base.Refresh();
 
-        if (DataManager.Instance.userData.mailDatas != null && DataManager.Instance.userData.mailDatas.Count > 0)
+        if (DataManager.Instance.userData.Mail.datas != null && DataManager.Instance.userData.Mail.datas.Count > 0)
         {
             mailList.gameObject.SetActive(true);
             noMailObj.SetActive(false);
-            MailList.Data[] datas = new MailList.Data[DataManager.Instance.userData.mailDatas.Count];
+            MailList.Data[] datas = new MailList.Data[DataManager.Instance.userData.Mail.datas.Count];
             int idx = 0;
-            foreach(KeyValuePair<string,MailList.Data> pair in DataManager.Instance.userData.mailDatas)
+            foreach(KeyValuePair<string,MailList.Data> pair in DataManager.Instance.userData.Mail.datas)
             {
                 datas[idx] = pair.Value;
                 datas[idx].id = pair.Key;
@@ -49,9 +49,10 @@ public class PopupMail : Popup
 
     public void ClickMailItem(MailList.Data data)
     {
-        if(DataManager.Instance.userData.mailDatas.ContainsKey(data.id))
+        if(DataManager.Instance.userData.Mail.datas.ContainsKey(data.id))
         {
-            DataManager.Instance.userData.mailDatas.Remove(data.id);
+            DataManager.Instance.userData.Mail.datas.Remove(data.id);
+            DataManager.Instance.userData.Mail.MarkAsDirty();
             if(data.rewards != null)
             {
                 for (int i = 0; i < data.rewards.Length; i++)

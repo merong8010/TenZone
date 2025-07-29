@@ -9,6 +9,7 @@ public class PuzzleLogicManager : MonoBehaviour
     public event Action<List<Block>> OnAbilityBlocksRemoved;
 
     private BlockGridManager blockGridManager;
+    private PuzzleUIManager uiManager;
     private const int TargetSumNum = 10;
 
     private Dictionary<Vector2Int, Vector2Int> hints = new Dictionary<Vector2Int, Vector2Int>();
@@ -18,9 +19,10 @@ public class PuzzleLogicManager : MonoBehaviour
     private Dictionary<Vector2Int, Block> blockMap;
 
     public bool IsInit = false;
-    public void Initialize(BlockGridManager gridManager)
+    public void Initialize(BlockGridManager gridManager, PuzzleUIManager uiManager)
     {
         blockGridManager = gridManager;
+        this.uiManager = uiManager;
         var now = GameManager.Instance.dateTime.Value;
         searchCooldownTime = now;
         explodeCooldownTime = now;
@@ -47,7 +49,7 @@ public class PuzzleLogicManager : MonoBehaviour
 
         foreach (var block in blocks)
         {
-            if (block.num == 0) continue;
+            //if (block.num == 0) continue;
 
             // CheckCombinations를 한 번만 호출합니다.
             Vector2Int result = CheckCombinations(block, currentLevel);
@@ -63,8 +65,10 @@ public class PuzzleLogicManager : MonoBehaviour
     /// </summary>
     public GameState GetGameState()
     {
-        if (hints.Count > 0 || !blockGridManager.IsInit)
+        if (!blockGridManager.IsInit) return GameState.Continue;
+        if (hints.Count > 0)
         {
+            ShowTutorial();
             return GameState.Continue;
         }
 
@@ -73,6 +77,17 @@ public class PuzzleLogicManager : MonoBehaviour
     }
 
     // [TODO] 힌트 보여주기 기능 구현 (예: 일정 시간 후 랜덤 힌트 표시)
+    public int tutorialCount = 3;
+    private void ShowTutorial()
+    {
+        if (DataManager.Instance.userData.IsTutorial && tutorialCount > 0)
+        {
+            var list = hints.ToList();
+            var show = list[UnityEngine.Random.Range(0, list.Count)];
+            uiManager.ShowTutorial(blockGridManager.GetAllBlocks().SingleOrDefault(block => block.column == show.Key.x && block.row == show.Key.y), blockGridManager.GetAllBlocks().SingleOrDefault(block => block.column == show.Value.x && block.row == show.Value.y));
+            tutorialCount--;
+        }
+    }
 
     #region Special Abilities
     public void UseSearchAbility()
@@ -125,280 +140,133 @@ public class PuzzleLogicManager : MonoBehaviour
     /// <param name="startBlock">검사를 시작할 블록</param>
     /// <param name="level">현재 게임 레벨 정보</param>
     /// <returns>조합을 찾은 경우 사각형의 우하단 좌표, 못 찾은 경우 default</returns>
+    /// /// <summary>
+    /// 화면 방향에 따라 적절한 조합 탐색 메서드를 호출하는 분기 메서드입니다.
+    /// </summary>
     private Vector2Int CheckCombinations(Block startBlock, GameData.GameLevel level)
     {
-        const int TargetSum = 10;
+        if (Util.GetDeviceOrientation() == DeviceOrientation.Portrait)
+        {
+            return CheckCombinationsPortrait(startBlock, level);
+        }
+        else
+        {
+            return CheckCombinationsLandscape(startBlock, level);
+        }
+    }
+
+    /// <summary>
+    /// Portrait(세로) 모드 조합 탐색: startBlock을 좌상단으로 하여 우하단으로 확장하며 탐색합니다. (논리좌표: c++, r++)
+    /// </summary>
+    private Vector2Int CheckCombinationsPortrait(Block startBlock, GameData.GameLevel level)
+    {
         int startC = startBlock.column;
         int startR = startBlock.row;
 
-        // (startC, startR)을 좌상단으로, (endC, endR)을 우하단으로 하는 모든 사각형을 검사합니다.
         for (int endR = startR; endR < level.row; endR++)
         {
-            int rowSum = 0; // 최적화: 이전 열들의 합을 저장
-
+            int rectangleSum = 0;
             for (int endC = startC; endC < level.column; endC++)
             {
-                // 1x1 크기의 사각형(자기 자신)은 조합으로 치지 않음
-                if (endC == startC && endR == startR) continue;
-
-                int currentSum = 0;
-                // 사각형 내부의 모든 블록 번호를 더합니다.
+                int newColumnSum = 0;
                 for (int r = startR; r <= endR; r++)
                 {
-                    for (int c = startC; c <= endC; c++)
+                    if (blockMap.TryGetValue(new Vector2Int(endC, r), out Block block) && block.num > 0)
                     {
-                        if (blockMap.TryGetValue(new Vector2Int(c, r), out Block block) && block.num > 0)
-                        {
-                            currentSum += block.num;
-                        }
+                        newColumnSum += block.num;
                     }
                 }
+                rectangleSum += newColumnSum;
 
-                // 합이 10이면 성공
-                if (currentSum == TargetSum)
-                {
-                    return new Vector2Int(endC, endR);
-                }
-
-                // 합이 10을 초과하면 더 이상 오른쪽으로 확장하는 것은 무의미하므로 다음 행으로 넘어갑니다. (최적화)
-                if (currentSum > TargetSum)
-                {
-                    break;
-                }
+                if (endC == startC && endR == startR) continue;
+                if (rectangleSum == TargetSumNum) return new Vector2Int(endC, endR);
+                if (rectangleSum > TargetSumNum) break;
             }
         }
-
-        // 모든 사각형을 검사했지만 조합을 찾지 못했습니다.
         return default;
     }
 
-    //private Vector2Int CheckBlockColumn(int column, int row, int num)
+    /// <summary>
+    /// Landscape(가로) 모드 조합 탐색: startBlock을 시각적 좌상단으로 하여 시각적 우하단으로 확장하며 탐색합니다. (논리좌표: c++, r--)
+    /// </summary>
+    private Vector2Int CheckCombinationsLandscape(Block startBlock, GameData.GameLevel level)
+    {
+        int startC = startBlock.column;
+        int startR = startBlock.row;
 
+        // 시각적 '아래'로 확장 (논리적 column 증가)
+        for (int endC = startC; endC < level.column; endC++)
+        {
+            int rectangleSum = 0;
+            // 시각적 '오른쪽'으로 확장 (논리적 row 감소)
+            for (int endR = startR; endR >= 0; endR--)
+            {
+                int newRowSum = 0;
+                for (int c = startC; c <= endC; c++)
+                {
+                    if (blockMap.TryGetValue(new Vector2Int(c, endR), out Block block) && block.num > 0)
+                    {
+                        newRowSum += block.num;
+                    }
+                }
+                rectangleSum += newRowSum;
+
+                if (endC == startC && endR == startR) continue;
+                if (rectangleSum == TargetSumNum) return new Vector2Int(endC, endR);
+                if (rectangleSum > TargetSumNum) break;
+            }
+        }
+        return default;
+    }
+    //private Vector2Int CheckCombinations(Block startBlock, GameData.GameLevel level)
     //{
+    //    const int TargetSum = 10;
+    //    int startC = startBlock.column;
+    //    int startR = startBlock.row;
 
-    //    if (row == currentLevel.row - 1 && column == currentLevel.column - 1) return default(Vector2Int);
-
-    //    bool endColumn = column + 1 == currentLevel.column;
-
-    //    int searchColumn = endColumn ? 0 : 1;
-
-    //    int searchRow = endColumn ? 1 : 0;
-
-    //    int sum = num;
-
-
-
-    //    while (true)
-
+    //    // (startC, startR)을 좌상단으로, (endR, endC)를 우하단으로 하는 모든 사각형을 검사합니다.
+    //    for (int endR = startR; endR < level.row; endR++)
     //    {
+    //        // 현재 높이(endR)에서, 사각형의 너비가 변할 때의 합계를 저장할 변수
+    //        int rectangleSum = 0;
 
-    //        if (endColumn)
-
+    //        for (int endC = startC; endC < level.column; endC++)
     //        {
-
-    //            sum += blocks.Where(x => x.column >= column && x.column <= column + searchColumn && x.row == row + searchRow).Sum(x => x.num);
-
-    //        }
-
-    //        else
-
-    //        {
-
-    //            sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
-
-    //        }
-
-
-
-    //        if (sum == TargetSumNum) return new Vector2Int(column + searchColumn, row + searchRow);
-
-    //        if (sum < TargetSumNum)
-
-    //        {
-
-    //            if (column + searchColumn < currentLevel.column - 1)
-
+    //            // --- 수정된 부분 시작 ---
+    //            // 새로 추가된 '열'의 합계만 계산합니다.
+    //            int newColumnSum = 0;
+    //            for (int r = startR; r <= endR; r++)
     //            {
-
-    //                searchColumn += 1;
-
-    //            }
-
-    //            else
-
-    //            {
-
-    //                if (row + searchRow == currentLevel.row - 1)
-
+    //                if (blockMap.TryGetValue(new Vector2Int(endC, r), out Block block) && block.num > 0)
     //                {
-
-    //                    break;
-
+    //                    newColumnSum += block.num;
     //                }
+    //            }
+    //            // 이전 사각형의 합계에 새 열의 합계만 더해줍니다.
+    //            rectangleSum += newColumnSum;
+    //            // --- 수정된 부분 끝 ---
 
-    //                searchRow += 1;
+    //            // 1x1 크기의 사각형(자기 자신)은 조합으로 치지 않음
+    //            if (endC == startC && endR == startR) continue;
 
-    //                endColumn = true;
-
+    //            // 합이 10이면 성공
+    //            if (rectangleSum == TargetSum)
+    //            {
+    //                return new Vector2Int(endC, endR);
     //            }
 
-    //        }
-
-    //        else
-
-    //        {
-
-    //            if (!endColumn)
-
+    //            // 합이 10을 초과하면 더 이상 오른쪽으로 확장하는 것은 무의미하므로 다음 행으로 넘어갑니다. (최적화)
+    //            if (rectangleSum > TargetSum)
     //            {
-
-    //                if (row + searchRow == currentLevel.row - 1)
-
-    //                {
-
-    //                    break;
-
-    //                }
-
-    //                searchColumn -= 1;
-
-    //                searchRow += 1;
-
-    //                endColumn = true;
-
-    //            }
-
-    //            else
-
-    //            {
-
     //                break;
-
     //            }
-
     //        }
-
     //    }
 
-    //    return default(Vector2Int);
-
-
-
+    //    // 모든 사각형을 검사했지만 조합을 찾지 못했습니다.
+    //    return default;
     //}
 
-
-
-    //private Vector2Int CheckBlockRow(int column, int row, int num)
-
-    //{
-
-    //    if (row == currentLevel.row - 1 && column == currentLevel.column - 1) return default(Vector2Int);
-
-    //    bool endRow = row + 1 == currentLevel.row;
-
-    //    int searchColumn = endRow ? 1 : 0;
-
-    //    int searchRow = endRow ? 0 : 1;
-
-    //    int sum = num;
-
-
-
-    //    while (true)
-
-    //    {
-
-    //        if (endRow)
-
-    //        {
-
-    //            sum += blocks.Where(x => x.row >= row && x.row <= row + searchRow && x.column == column + searchColumn).Sum(x => x.num);
-
-    //        }
-
-    //        else
-
-    //        {
-
-    //            sum += blocks.SingleOrDefault(x => x.column == column + searchColumn && x.row == row + searchRow).num;
-
-    //        }
-
-
-
-    //        if (sum == TargetSumNum) return new Vector2Int(column + searchColumn, row + searchRow);
-
-    //        if (sum < TargetSumNum)
-
-    //        {
-
-    //            if (row + searchRow < currentLevel.row - 1)
-
-    //            {
-
-    //                searchRow += 1;
-
-    //            }
-
-    //            else
-
-    //            {
-
-    //                if (column + searchColumn == currentLevel.column - 1)
-
-    //                {
-
-    //                    break;
-
-    //                }
-
-    //                searchColumn += 1;
-
-    //                endRow = true;
-
-    //            }
-
-    //        }
-
-    //        else
-
-    //        {
-
-    //            if (!endRow)
-
-    //            {
-
-    //                if (column + searchColumn == currentLevel.column - 1)
-
-    //                {
-
-    //                    break;
-
-    //                }
-
-    //                searchRow -= 1;
-
-    //                searchColumn += 1;
-
-    //                endRow = true;
-
-    //            }
-
-    //            else
-
-    //            {
-
-    //                break;
-
-    //            }
-
-    //        }
-
-    //    }
-
-    //    return default(Vector2Int);
-
-    //}
 
     private bool HasAnyCombinationSum(int[] nums)
     {

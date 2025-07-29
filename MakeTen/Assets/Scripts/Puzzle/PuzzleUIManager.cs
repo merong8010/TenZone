@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using UniRx;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using GameData;
 
 public class PuzzleUIManager : MonoBehaviour
 {
@@ -10,6 +12,10 @@ public class PuzzleUIManager : MonoBehaviour
     [SerializeField] private TMPro.TextMeshProUGUI pointText;
     [SerializeField] private TMPro.TextMeshProUGUI timeText;
     [SerializeField] private Image timeBar;
+    
+    [SerializeField] private TMPro.TextMeshProUGUI timeTextFreeze;
+    [SerializeField] private Image timeBarFreeze;
+
     [SerializeField] private Image searchCoolImage;
     [SerializeField] private Image explodeCoolImage;
     [SerializeField] private RectTransform tutorialRT;
@@ -25,23 +31,36 @@ public class PuzzleUIManager : MonoBehaviour
         pointDispose = currentPoint.Subscribe(x => pointText.text = x.ToString("n0"));
     }
 
-    public void StartTimers()
+    public void StartTimers(bool isFreeze = false)
     {
-        timeDispose?.Dispose();
-        timeDispose = GameManager.Instance.reactiveTime.Subscribe(x =>
+        if(isFreeze)
         {
-            if (x.Ticks <= puzzleManager.FinishTime.Ticks)
+            timeBar.gameObject.SetActive(false);
+            timeText.gameObject.SetActive(false);
+            timeBarFreeze.gameObject.SetActive(true);
+            timeTextFreeze.gameObject.SetActive(true);
+        }
+        else
+        {
+            timeBar.gameObject.SetActive(true);
+            timeText.gameObject.SetActive(true);
+            timeBarFreeze.gameObject.SetActive(false);
+            timeTextFreeze.gameObject.SetActive(false);
+
+            timeDispose?.Dispose();
+            timeDispose = GameManager.Instance.reactiveTime.Subscribe(x =>
             {
-                TimeSpan timeSpan = (puzzleManager.FinishTime - x);
-                timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
+                if (x.Ticks <= puzzleManager.FinishTime.Ticks)
+                {
+                    TimeSpan timeSpan = (puzzleManager.FinishTime - x);
+                    timeText.text = string.Format("{0}:{1:00}.{2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds / 100);
 
-                int totalTime = puzzleManager.CurrentLevel != null ? puzzleManager.CurrentLevel.time : 1;
-                timeBar.fillAmount = (float)timeSpan.TotalSeconds / totalTime;
-            }
-        });
-
-        StartSearchCool();
-        StartExplodeCool();
+                    int totalTime = puzzleManager.CurrentLevel != null ? puzzleManager.CurrentLevel.time : 1;
+                    timeBar.fillAmount = (float)timeSpan.TotalSeconds / totalTime;
+                }
+            });
+        }
+            
     }
 
     public void ClickPause()
@@ -70,7 +89,6 @@ public class PuzzleUIManager : MonoBehaviour
             if (GameManager.Instance.dateTime != null)
                 searchCoolImage.fillAmount = (coolFinish.Ticks - GameManager.Instance.dateTime.Value.Ticks) / (max * TimeSpan.TicksPerSecond);
             yield return Yielders.EndOfFrame;
-            Debug.Log($"{GameManager.Instance.dateTime.Value.Ticks} | {searchCoolImage.fillAmount}");
         }
     }
 
@@ -104,7 +122,7 @@ public class PuzzleUIManager : MonoBehaviour
 
     public void ShowMessage(Message.Type type, string textKey, Action<bool> callback)
     {
-        UIManager.Instance.Message.Show(type, TextManager.Get(textKey));
+        UIManager.Instance.Message.Show(type, TextManager.Get(textKey), callback : callback);
     }
 
     public void ShowPausePopup(Action onConfirm, Action onCancel)
@@ -127,11 +145,19 @@ public class PuzzleUIManager : MonoBehaviour
         ObjectPooler.Instance.Get<Effect>("textPointBonus", transform, timeTextPos, autoReturnTime: 2f).SetText(text);
     }
 
-    public void ShowTutorial()
+    [SerializeField]
+    private RectTransform canvasRect;
+    public void ShowTutorial(Block startBlock, Block finishBlock)
     {
-        // 튜토리얼 UI 표시 로직 (필요시 PuzzleLogicManager와 연동)
-        if (DataManager.Instance.userData.IsTutorial)
-            tutorialRT.gameObject.SetActive(true);
+        
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, RectTransformUtility.WorldToScreenPoint(cam, startBlock.StartPos()), cam, out Vector2 tutoStartPos);
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, RectTransformUtility.WorldToScreenPoint(cam, finishBlock.FinishPos()), cam, out Vector2 tutoFinishPos);
+
+        Vector2 size = tutoStartPos - tutoFinishPos;
+        tutorialRT.sizeDelta = new Vector2(Mathf.Abs(size.x), Mathf.Abs(size.y));
+        tutorialRT.anchoredPosition = tutoStartPos - size / 2;
+        tutorialRT.gameObject.SetActive(true);
     }
 
     public void HideTutorial()

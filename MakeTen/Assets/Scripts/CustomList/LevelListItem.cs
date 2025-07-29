@@ -43,7 +43,7 @@ public class LevelListItem : ListItem<GameLevel>
         sizeText.text = $"{data.column} x {data.row}";
         timeText.text = data.time.ToTimeText();
 
-        if(DataManager.Instance.userData.level < data.unlockLevel)
+        if(DataManager.Instance.userData.Info.level < data.unlockLevel)
         {
             lockObj.SetActive(true);
             unlockCondition.text = string.Format(TextManager.Get("UnlockConditionLevel"), data.unlockLevel);

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 00bd276eaa2950343995184bdd7b1e7a
+guid: 2bff44913cb37604f9ab2c54c63b4971
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5100228620627841258
-    second: shop_sample_0
+      213: 8442285338308490720
+    second: Icon_128_Mail_03_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: shop_sample_0
+      name: Icon_128_Mail_03_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 1080
-        height: 1920
+        y: 5
+        width: 128
+        height: 119
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ae09dc588e6a7c640800000000000000
-      internalID: 5100228620627841258
+      spriteID: 0e5bd5a39c5092570800000000000000
+      internalID: 8442285338308490720
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      shop_sample_0: 5100228620627841258
+      Icon_128_Mail_03_0: 8442285338308490720
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

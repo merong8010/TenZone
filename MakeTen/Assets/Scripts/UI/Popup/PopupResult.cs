@@ -3,13 +3,9 @@ using UnityEngine.UI;
 
 public class PopupResult : Popup
 {
+    [Header("Result")]
     [SerializeField]
     private TMPro.TextMeshProUGUI scoreText;
-
-    //[SerializeField]
-    //private TMPro.TextMeshProUGUI expText;
-    //[SerializeField]
-    //private TMPro.TextMeshProUGUI goldText;
 
     [SerializeField]
     private GoodsDisplay exp;
@@ -19,6 +15,7 @@ public class PopupResult : Popup
     [SerializeField]
     private GameObject vipObj;
 
+    [Header("Bonus")]
     [SerializeField]
     private GameObject adObj;
     [SerializeField]

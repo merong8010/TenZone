@@ -4,7 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 using Newtonsoft.Json;
-using System.Globalization;
+using GameData;
 
 public class DataManager : Singleton<DataManager>
 {
@@ -37,7 +37,7 @@ public class DataManager : Singleton<DataManager>
     public const string ConfigKey_SearchTerm = "searchTerm";
     public const string ConfigKey_ExplodeTerm = "explodeTerm";
 
-    public UserData userData;
+    public UserDataManager userData;
 
     public void LoadGameDatas()
     {
@@ -113,17 +113,33 @@ public class DataManager : Singleton<DataManager>
 
         yield return new WaitUntil(() => userData != null);
     }
-
-    public void UpdateUserData(UserData data)
+    
+    public void UpdateUserData(string data)
     {
-        if (userData == null) userData = data;
-        else userData.Copy(data);
-
+        try
+        {
+            userData = new UserDataManager(data);
+        }
+        catch(System.Exception exception)
+        {
+            Debug.LogError(exception.ToString());
+        }
+        
         if(MainManager.HasInstance)
         {
-            MainManager.Instance.UpdateUserData(userData);
+            MainManager.Instance.UpdateUserData(userData.Info, userData.Heart);
         }
         //HUD.Instance.UpdateUserData(userData);
+    }
+
+    public void UpdateUserInfo(UserData.Info info)
+    {
+        if (userData == null) return;
+        userData.Info = info;
+        if (MainManager.HasInstance)
+        {
+            MainManager.Instance.UpdateUserData(userData.Info, userData.Heart);
+        }
     }
 
     public void RefreshUserData()
@@ -135,13 +151,13 @@ public class DataManager : Singleton<DataManager>
             if (string.IsNullOrEmpty(userDataJson))
             {
                 // 저장된 데이터가 없으면 새로운 기본 유저 데이터 생성
-                UpdateUserData(new UserData());
+                UpdateUserData(string.Empty);
             }
             else
             {
                 // 저장된 데이터가 있으면 불러오기
-                UserData offlineData = JsonConvert.DeserializeObject<UserData>(userDataJson);
-                UpdateUserData(offlineData);
+                //UserData offlineData = JsonConvert.DeserializeObject<UserData>(userDataJson);
+                //UpdateUserData(offlineData);
             }
         }
         else
@@ -151,5 +167,18 @@ public class DataManager : Singleton<DataManager>
                 UpdateUserData(userData);
             });
         }
+    }
+
+    public bool CanContinue(int count)
+    {
+        Continue[] datas = Get<Continue>();
+        if (datas.Max(x => x.idx) < count) return false;
+        Continue data = datas.SingleOrDefault(x => x.idx == count);
+        return data != null && userData.Has(data.goodsType, data.goodsAmount);
+    }
+
+    public Continue GetContinueData(int count)
+    {
+        return Get<Continue>().SingleOrDefault(x => x.idx == count);
     }
 }

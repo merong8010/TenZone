@@ -52,7 +52,7 @@ public class PopupSettings : Popup
         hapticToggle.onValueChanged.AddListener(isOn => Haptic(isOn));
         portraitToggle.onValueChanged.AddListener(isOn => Portrait(isOn));
         rotateToggle.onValueChanged.AddListener(isOn => Rotate(isOn));
-        idText.text = DataManager.Instance.userData.id.ToString();
+        idText.text = FirebaseManager.Instance.UserId;
     }
 
     private void BGM(bool isOn)
@@ -115,7 +115,7 @@ public class PopupSettings : Popup
     public override void Refresh()
     {
         base.Refresh();
-        idText.text = DataManager.Instance.userData.id.ToString();
+        idText.text = FirebaseManager.Instance.UserId;
         if(FirebaseManager.Instance.authType == FirebaseManager.AuthenticatedType.None)
         {
             loginObjs.SetActive(true);

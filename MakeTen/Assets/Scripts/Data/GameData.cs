@@ -5,13 +5,14 @@ namespace GameData
     public enum GoodsType
     {
         None,
-        Gold,
-        Shuffle,
-        Search,
-        Explode,
-        Time_10s,
-        Heart,
-        EXP,
+        Gold = 1,
+        Shuffle = 2,
+        Search = 3,
+        Explode = 4,
+        Time_10s = 5,
+        Heart = 6,
+        EXP = 7,
+        TimeFreeze,
     }
 
     public enum ShopCategory
@@ -170,7 +171,7 @@ namespace GameData
         None,
         daily,
         weekly,
-        achievement,
+        repeat,
     }
 
     public enum QuestType
@@ -180,6 +181,8 @@ namespace GameData
         useGoods,
         finish,
         allClear,
+        useHeart,
+        clearQuest,
     }
     public class Quest : RewardData
     {
@@ -191,6 +194,14 @@ namespace GameData
         public string name;
         public string desc;
         public bool repeat;
+    }
+
+    public class Continue : Data
+    {
+        public int idx;
+        public GoodsType goodsType;
+        public int goodsAmount;
+        public int addSeconds;
     }
 }
  

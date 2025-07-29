@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 2610336528446401691}
   - component: {fileID: 3555999453525306687}
   - component: {fileID: 3100426741931532283}
+  - component: {fileID: 6111256473349345835}
   m_Layer: 5
   m_Name: ShopRewardItem
   m_TagString: Untagged
@@ -153,8 +154,26 @@ MonoBehaviour:
   fontUpdateTexts: []
   focusObj: {fileID: 0}
   checkObj: {fileID: 0}
-  image: {fileID: 1984903679854919225}
-  amount: {fileID: 5246759429347430609}
+  goods: {fileID: 6111256473349345835}
+--- !u!114 &6111256473349345835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7077460256011311775}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3af361316e94944dd82fa665bb0dee69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  goodsAtlas: {fileID: 11400000, guid: c2c4717e750ac1a479ae1f4affaf8d0e, type: 2}
+  type: 0
+  isSubscribe: 0
+  icon: {fileID: 1984903679854919225}
+  text: {fileID: 5246759429347430609}
+  adsObj: {fileID: 0}
+  priceText: {fileID: 0}
 --- !u!1 &8527063681916225470
 GameObject:
   m_ObjectHideFlags: 0

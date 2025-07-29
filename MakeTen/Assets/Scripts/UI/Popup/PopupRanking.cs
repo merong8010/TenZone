@@ -85,7 +85,7 @@ public class PopupRanking : Popup
 
         string date = currentTypeIdx == 0 ? GameManager.Instance.dateTime.Value.ToDateText() : "ALL";
 
-        FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
+        FirebaseManager.Instance.GetRankingFromServer(FirebaseManager.Instance.UserId, result =>
         {
             loadingObj.SetActive(false);
             if (result == null)

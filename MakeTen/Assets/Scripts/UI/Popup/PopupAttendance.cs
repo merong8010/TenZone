@@ -17,8 +17,8 @@ public class PopupAttendance : Popup
     public void ClickAttendanceListItem(GameData.Attendance data)
     {
         int dateMax = DataManager.Instance.Get<GameData.Attendance>().Max(x => x.date);
-        int currentIdx = DataManager.Instance.userData.attendanceCount % dateMax;
-        if (DataManager.Instance.userData.attendanceRewardDate == GameManager.Instance.dateTime.Value.ToDateText())
+        int currentIdx = DataManager.Instance.userData.Attendance.count % dateMax;
+        if (DataManager.Instance.userData.Attendance.rewardDate == GameManager.Instance.dateTime.Value.ToDateText())
         {
             currentIdx -= 1;
         }
@@ -35,7 +35,7 @@ public class PopupAttendance : Popup
                 UIManager.Instance.Open<PopupReward>().SetData(data.rewards);
                 Refresh();
             }
-            else if(!DataManager.Instance.userData.IsRewardAttendanceAd)
+            else if(!DataManager.Instance.userData.Attendance.isRewardAd)
             {
                 ADManager.Instance.ShowReward(result =>
                 {

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 00bd276eaa2950343995184bdd7b1e7a
+guid: 126bef7591b06f849bea530f5bab997c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5100228620627841258
-    second: shop_sample_0
+      213: 6024083101906372964
+    second: TimeFreeze 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: shop_sample_0
+      name: TimeFreeze 1_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1080
-        height: 1920
+        x: 51
+        y: 45
+        width: 933
+        height: 941
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ae09dc588e6a7c640800000000000000
-      internalID: 5100228620627841258
+      spriteID: 469009a0aa7d99350800000000000000
+      internalID: 6024083101906372964
       vertices: []
       indices: 
       edges: []
@@ -160,8 +160,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      shop_sample_0: 5100228620627841258
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

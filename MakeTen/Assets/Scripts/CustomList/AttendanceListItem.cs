@@ -23,8 +23,8 @@ public class AttendanceListItem : ListItem<GameData.Attendance>
     {
         base.SetData(data);
         int dateMax = DataManager.Instance.Get<Attendance>().Max(x => x.date);
-        int currentIdx = DataManager.Instance.userData.attendanceCount % dateMax;
-        if(DataManager.Instance.userData.attendanceRewardDate == GameManager.Instance.dateTime.Value.ToDateText())
+        int currentIdx = DataManager.Instance.userData.Attendance.count % dateMax;
+        if(DataManager.Instance.userData.Attendance.rewardDate == GameManager.Instance.dateTime.Value.ToDateText())
         {
             currentIdx -= 1;
         }
@@ -38,7 +38,7 @@ public class AttendanceListItem : ListItem<GameData.Attendance>
                 rewardButtonObj.SetActive(true);
                 adButtonObj.SetActive(false);
             }
-            else if(!DataManager.Instance.userData.IsRewardAttendanceAd)
+            else if(!DataManager.Instance.userData.Attendance.isRewardAd)
             {
                 rewardedObj.SetActive(false);
                 rewardButtonObj.SetActive(false);

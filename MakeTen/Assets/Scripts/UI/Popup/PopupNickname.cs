@@ -19,10 +19,10 @@ public class PopupNickname : Popup
     public override void Refresh()
     {
         base.Refresh();
-        Debug.Log($"PopupNickname.Refresh | {DataManager.Instance.userData.nickname} | {DataManager.Instance.userData.nicknameChangeCount}");
-        nicknameInput.text = DataManager.Instance.userData.nickname;
+        Debug.Log($"PopupNickname.Refresh | {DataManager.Instance.userData.Info.nickname} | {DataManager.Instance.userData.Info.nicknameChangeCount}");
+        nicknameInput.text = DataManager.Instance.userData.Info.nickname;
         
-        if (DataManager.Instance.userData.nicknameChangeCount == 0)
+        if (DataManager.Instance.userData.Info.nicknameChangeCount == 0)
         {
             cost.SetCost(GameData.ShopCostType.Free, GameData.GoodsType.None, 0);
         }
@@ -34,7 +34,7 @@ public class PopupNickname : Popup
 
     public void ClickChange()
     {
-        if (DataManager.Instance.userData.nicknameChangeCount > 0 && !DataManager.Instance.userData.Has(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount")))
+        if (DataManager.Instance.userData.Info.nicknameChangeCount > 0 && !DataManager.Instance.userData.Has(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount")))
         {
             return;
         }
@@ -46,15 +46,12 @@ public class PopupNickname : Popup
                 {
                     if (changeCallback.success)
                     {
-                        DataManager.Instance.userData.nicknameChangeCount += 1;
+                        DataManager.Instance.userData.CountNicknameChange();
                         
-                        if (DataManager.Instance.userData.nicknameChangeCount > 1)
+                        if (DataManager.Instance.userData.Info.nicknameChangeCount > 1)
                         {
                             DataManager.Instance.userData.Use(DataManager.Instance.GetConfigGoodsType("nicknameChangeCostType"), DataManager.Instance.GetConfig("nicknameChangeCostAmount"));
                         }
-
-
-                        FirebaseManager.Instance.SaveUserData(DataManager.Instance.userData);
                     }
                     resultText.text = result.message;
                     resultText.color = result.success ? Color.green : Color.red;

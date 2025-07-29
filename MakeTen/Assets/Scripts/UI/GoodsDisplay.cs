@@ -120,17 +120,17 @@ public class GoodsDisplay : MonoBehaviour
         }
 
         long initialValue = 0;
-        if (DataManager.Instance.userData.goods.ContainsKey(type))
+        if (DataManager.Instance.userData.Goods.datas.ContainsKey(type))
         {
-            initialValue = DataManager.Instance.userData.goods[type];
+            initialValue = DataManager.Instance.userData.Goods.datas[type];
         }
 
         UpdateVisuals(initialValue.ToString("n0"));
 
-        var addStream = DataManager.Instance.userData.goods.ObserveAdd().Select(e => new { e.Key, Value = e.Value });
+        var addStream = DataManager.Instance.userData.Goods.datas.ObserveAdd().Select(e => new { e.Key, Value = e.Value });
 
         // 변경(Replace) 이벤트를 { Key, Value = NewValue } 형태로 변환
-        var replaceStream = DataManager.Instance.userData.goods.ObserveReplace().Select(e => new { e.Key, Value = e.NewValue });
+        var replaceStream = DataManager.Instance.userData.Goods.datas.ObserveReplace().Select(e => new { e.Key, Value = e.NewValue });
 
         // 두 스트림을 Merge로 합쳐서 구독
         disposable = addStream.Merge(replaceStream)

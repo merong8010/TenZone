@@ -64,7 +64,7 @@ public class ShopListItem : ListItem<GameData.Shop>
         }
         cost.SetCost(data.costType, data.goodsType, data.costAmount, data.id);
 
-        if(data.unlockLevel > 0 && DataManager.Instance.userData.level < data.unlockLevel)
+        if(data.unlockLevel > 0 && DataManager.Instance.userData.Info.level < data.unlockLevel)
         {
             lockObj.SetActive(true);
             unlockConditionText.text = string.Format(TextManager.Get("UnlockConditionLevel"), data.unlockLevel);

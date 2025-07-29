@@ -43,7 +43,6 @@ public class Message : MonoBehaviour
     }
     public void Show(Type type, string message, string yes = "yes", string no = "no", Action<bool> callback = null)
     {
-        Debug.Log($"Show {gameObject.activeSelf} | {data}");
         if(gameObject.activeSelf && data != null)
         {
             stack.Push(data);

@@ -8,6 +8,8 @@ public class PopupLevelSelect : Popup
     private LevelList[] levelList;
     [SerializeField]
     private Toggle[] bonus10Seconds;
+    [SerializeField]
+    private Toggle[] timeFreezes;
 
     public override void Open()
     {
@@ -29,16 +31,55 @@ public class PopupLevelSelect : Popup
                 bonus10Seconds[i].isOn = false;
             }
         }
-        
+        for (int i = 0; i < timeFreezes.Length; i++)
+        {
+            if (timeFreezes[i].isOn && !DataManager.Instance.userData.Has(GameData.GoodsType.TimeFreeze, 1))
+            {
+                timeFreezes[i].isOn = false;
+            }
+        }
+
     }
 
     private void Bonus10SecondsValueChanged(bool on)
     {
-        if(on && !DataManager.Instance.userData.Has(GameData.GoodsType.Time_10s, 1))
+        if(on)
         {
-            for (int i = 0; i < bonus10Seconds.Length; i++)
+            if (!DataManager.Instance.userData.Has(GameData.GoodsType.Time_10s, 1))
             {
-                bonus10Seconds[i].isOn = false;
+                for (int i = 0; i < bonus10Seconds.Length; i++)
+                {
+                    bonus10Seconds[i].isOn = false;
+                }
+                
+            }
+            else
+            {
+                for (int i = 0; i < timeFreezes.Length; i++)
+                {
+                    timeFreezes[i].isOn = false;
+                }
+            }
+        }
+    }
+
+    private void TimeFreezeValueChanged(bool on)
+    {
+        if (on)
+        {
+            if(!DataManager.Instance.userData.Has(GameData.GoodsType.TimeFreeze, 1))
+            {
+                for (int i = 0; i < timeFreezes.Length; i++)
+                {
+                    timeFreezes[i].isOn = false;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < bonus10Seconds.Length; i++)
+                {
+                    bonus10Seconds[i].isOn = false;
+                }
             }
         }
     }
@@ -56,6 +97,10 @@ public class PopupLevelSelect : Popup
         for (int i = 0; i < bonus10Seconds.Length; i++)
         {
             bonus10Seconds[i].onValueChanged.AddListener(Bonus10SecondsValueChanged);
+        }
+        for (int i = 0; i < timeFreezes.Length; i++)
+        {
+            timeFreezes[i].onValueChanged.AddListener(TimeFreezeValueChanged);
         }
     }
 
@@ -79,7 +124,7 @@ public class PopupLevelSelect : Popup
         PlayerPrefs.SetInt("LastLevel", levelList.FirstOrDefault().GetDatas().IndexOf(currentLevel));
         if (DataManager.Instance.userData.UseHeart())
         {
-            GameManager.Instance.GoScene(GameManager.Scene.Puzzle, currentLevel, bonus10Seconds.First().isOn);
+            GameManager.Instance.GoScene(GameManager.Scene.Puzzle, currentLevel, bonus10Seconds.First().isOn, timeFreezes.FirstOrDefault().isOn);
             Close();
         }
         

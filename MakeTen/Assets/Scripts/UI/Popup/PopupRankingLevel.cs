@@ -80,7 +80,7 @@ public class PopupRankingLevel : Popup
         string date = currentTypeIdx == 0 ? GameManager.Instance.dateTime.Value.ToDateText() : "ALL";
 
         UIManager.Instance.Loading("Loading Rank");
-        FirebaseManager.Instance.GetRankingFromServer(DataManager.Instance.userData.id, result =>
+        FirebaseManager.Instance.GetRankingFromServer(FirebaseManager.Instance.UserId, result =>
         {
             UIManager.Instance.CloseLoading();
             if (result == null) return;

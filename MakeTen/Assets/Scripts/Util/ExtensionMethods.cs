@@ -98,6 +98,32 @@ public static class ExtensionMethods
         return TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
     }
 
+    public static string ToHourTimeText(this int time)
+    {
+        return TimeSpan.FromSeconds(time).ToString(@"hh\:mm\:ss");
+    }
+
+    public static string ToDateTimeText(this int time)
+    {
+        TimeSpan timeSpan = TimeSpan.FromSeconds(time);
+
+        // 총 시간이 24시간 이상인 경우 (즉, 하루 이상인 경우)
+        if (timeSpan.TotalHours >= 24)
+        {
+            // "날짜.시간:분:초" 형식으로 포맷합니다.
+            // d: 날짜
+            // \.: '.'을 문자 그대로 사용하기 위한 이스케이프
+            return timeSpan.ToString(@"d\.\ hh\:mm\:ss");
+        }
+        else // 하루 미만인 경우
+        {
+            // 기존과 같이 "시간:분:초" 형식으로 포맷합니다.
+            return timeSpan.ToString(@"hh\:mm\:ss");
+        }
+
+        //return TimeSpan.FromSeconds(time).ToString(@"dd - hh\:mm\:ss");
+    }
+
     public static string MilliSecondsToTimeText(this int ticks)
     {
         TimeSpan time = TimeSpan.FromMilliseconds(ticks/10000);

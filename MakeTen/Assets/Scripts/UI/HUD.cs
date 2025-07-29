@@ -43,58 +43,58 @@ public class HUD : Singleton<HUD>
 
     private IDisposable disposable;
 
-    public void UpdateUserData(UserData data)
-    {
-        levelText.text = $"Lv.{data.level}";
-        if(DataManager.Instance.Get<GameData.UserLevel>().ToList().Exists(x => x.level == data.level + 1))
-        {
-            int max = DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp;
-            expText.text = data.exp.ToProgressText(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp);
-            expBar.fillAmount = (float)data.exp / max;
-        }
-        else
-        {
-            expText.text = "MAX";
-            expBar.fillAmount = 1f;
-        }
+    //public void UpdateUserData(UserData data)
+    //{
+    //    levelText.text = $"Lv.{data.level}";
+    //    if(DataManager.Instance.Get<GameData.UserLevel>().ToList().Exists(x => x.level == data.level + 1))
+    //    {
+    //        int max = DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp;
+    //        expText.text = data.exp.ToProgressText(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp);
+    //        expBar.fillAmount = (float)data.exp / max;
+    //    }
+    //    else
+    //    {
+    //        expText.text = "MAX";
+    //        expBar.fillAmount = 1f;
+    //    }
 
-        nameText.text = data.nickname;
-        heartCount.text = data.Heart.ToString();
+    //    nameText.text = data.nickname;
+    //    heartCount.text = data.Heart.ToString();
 
-        if(disposable == null)
-        {
-            disposable = GameManager.Instance.reactiveTime.Subscribe(x =>
-            {
-                //Debug.Log(data.Heart);
-                //if(data.Heart >= DataManager.Instance.MaxHeart)
-                //{
-                //    heartChargeRemainTime.text = "MAX";
-                //}
-                //else
-                //{
-                //    int passedSec = (int)(x.ToTick() - DataManager.Instance.userData.lastHeartTime);
-                //    heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
-                //}
-                UpdateHeart();
-            });
-        }
-    }
+    //    if(disposable == null)
+    //    {
+    //        disposable = GameManager.Instance.reactiveTime.Subscribe(x =>
+    //        {
+    //            //Debug.Log(data.Heart);
+    //            //if(data.Heart >= DataManager.Instance.MaxHeart)
+    //            //{
+    //            //    heartChargeRemainTime.text = "MAX";
+    //            //}
+    //            //else
+    //            //{
+    //            //    int passedSec = (int)(x.ToTick() - DataManager.Instance.userData.lastHeartTime);
+    //            //    heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+    //            //}
+    //            UpdateHeart();
+    //        });
+    //    }
+    //}
 
-    public void UpdateHeart()
-    {
-        heartCount.text = DataManager.Instance.userData.Heart.ToString();
-        if (DataManager.Instance.userData.Heart >= DataManager.Instance.MaxHeart)
-        {
-            heartChargeRemainTime.text = "MAX";
-        }
-        else
-        {
-            int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
-            heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
-        }
-        //int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
-        //heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
-    }
+    //public void UpdateHeart()
+    //{
+    //    heartCount.text = DataManager.Instance.userData.Heart.ToString();
+    //    if (DataManager.Instance.userData.Heart >= DataManager.Instance.MaxHeart)
+    //    {
+    //        heartChargeRemainTime.text = "MAX";
+    //    }
+    //    else
+    //    {
+    //        int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
+    //        heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+    //    }
+    //    //int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
+    //    //heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
+    //}
 
     //public void Initialize(ReactiveProperty<int> pointProperty)
     //{

@@ -12,10 +12,10 @@ public class Main : MonoBehaviour
 
     public void Refresh()
     {
-        loginStatusText.text = DataManager.Instance.userData.authType.ToString();
+        loginStatusText.text = DataManager.Instance.userData.Info.authType.ToString();
 
-        googleLoginButton.SetActive(DataManager.Instance.userData.authType == FirebaseManager.AuthenticatedType.None);
-        logoutButton.SetActive(DataManager.Instance.userData.authType != FirebaseManager.AuthenticatedType.None);
+        googleLoginButton.SetActive(DataManager.Instance.userData.Info.authType == FirebaseManager.AuthenticatedType.None);
+        logoutButton.SetActive(DataManager.Instance.userData.Info.authType != FirebaseManager.AuthenticatedType.None);
     }
 
     public void GameStart()

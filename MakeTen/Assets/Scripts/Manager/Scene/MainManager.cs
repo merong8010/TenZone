@@ -39,7 +39,7 @@ public class MainManager : Singleton<MainManager>
     {
         base.Awake();
         StartCoroutine(InitBG());
-        UpdateUserData(DataManager.Instance.userData);
+        UpdateUserData(DataManager.Instance.userData.Info, DataManager.Instance.userData.Heart);
         UpdateHeart();
         SoundManager.Instance.PlayBGM("main");
     }
@@ -92,14 +92,14 @@ public class MainManager : Singleton<MainManager>
 
     private IDisposable disposable;
 
-    public void UpdateUserData(UserData data)
+    public void UpdateUserData(UserData.Info info, int heart)
     {
-        levelText.text = $"Lv.{data.level}";
-        if (DataManager.Instance.Get<GameData.UserLevel>().ToList().Exists(x => x.level == data.level + 1))
+        levelText.text = $"Lv.{info.level}";
+        if (DataManager.Instance.Get<GameData.UserLevel>().ToList().Exists(x => x.level == info.level + 1))
         {
-            int max = DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp;
-            expText.text = data.exp.ToProgressText(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == data.level + 1).exp);
-            expBar.fillAmount = (float)data.exp / max;
+            int max = DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == info.level + 1).exp;
+            expText.text = info.exp.ToProgressText(DataManager.Instance.Get<GameData.UserLevel>().SingleOrDefault(x => x.level == info.level + 1).exp);
+            expBar.fillAmount = (float)info.exp / max;
         }
         else
         {
@@ -107,8 +107,8 @@ public class MainManager : Singleton<MainManager>
             expBar.fillAmount = 1f;
         }
 
-        nameText.text = data.nickname;
-        heartCount.text = data.Heart.ToString();
+        nameText.text = info.nickname;
+        heartCount.text = heart.ToString();
 
         if (disposable == null)
         {
@@ -128,7 +128,7 @@ public class MainManager : Singleton<MainManager>
         }
         else
         {
-            int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.lastHeartTime);
+            int passedSec = (int)(GameManager.Instance.dateTime.Value.ToTick() - DataManager.Instance.userData.Goods.lastHeartTime);
             heartChargeRemainTime.text = (DataManager.Instance.HeartChargeTime - passedSec).ToTimeText();
         }
     }
@@ -171,6 +171,11 @@ public class MainManager : Singleton<MainManager>
     {
         UIManager.Instance.Open<PopupCheat>();
         //DataManager.Instance.userData.ChargeHeart();
+    }
+
+    public void ClickQuest()
+    {
+        UIManager.Instance.Open<PopupQuest>();
     }
 
     protected override void OnDestroy()

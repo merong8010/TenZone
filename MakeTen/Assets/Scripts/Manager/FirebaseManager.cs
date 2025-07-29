@@ -81,6 +81,8 @@ public class FirebaseManager : Singleton<FirebaseManager>
     private FirebaseFunctions functions;
     private DatabaseReference myDB;
 
+    public string UserId => user.UserId;
+
     /// </summary>
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -168,24 +170,24 @@ public class FirebaseManager : Singleton<FirebaseManager>
     /// 유저데이터 저장
     /// </summary>
     /// <param name="data"></param>
-    public void SaveUserData(UserData data)
+    public void SaveUserData(List<UserData.DataObject> datas)
     {
         if (myDB == null)
         {
-            myDB = db.Child(KEY.USER).Child(data.id);
+            myDB = db.Child(KEY.USER).Child(UserId);
             myDB.ValueChanged += HandleMyDBChanged;
         }
-        string json = JsonConvert.SerializeObject(data);
-        myDB.SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
-            if (task.IsCompleted)
-            {
-                Debug.Log("User data saved successfully.");
-            }
-            else
-            {
-                Debug.LogError($"Failed to save user data: {task.Exception}");
-            }
-        });
+        for(int i = 0; i < datas.Count; i++)
+        {
+            string json = JsonConvert.SerializeObject(datas[i]);
+            myDB.Child(datas[i].GetType().Name).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task => {
+                if (!task.IsCompleted)
+                {
+                    Debug.LogError($"Failed to save user data type : {datas[i].GetType().Name} | {task.Exception}");
+                }
+            });
+        }
+        
     }
 
     /// <summary>
@@ -193,37 +195,38 @@ public class FirebaseManager : Singleton<FirebaseManager>
     /// 데이터매니저에서 호출
     /// </summary>
     /// <param name="callback"></param>
-    public void GetUserData(Action<UserData> callback)
+    public void GetUserData(Action<string> callback)
     {
         if (myDB == null)
         {
             myDB = db.Child(KEY.USER).Child(user.UserId);
-            myDB.ValueChanged += HandleMyDBChanged;
+            myDB.Child("Info").ValueChanged += HandleMyDBChanged;
         }
 
         myDB.GetValueAsync().ContinueWithOnMainThread(task => {
             if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
+                Debug.Log($"snapshot.Exists : {snapshot.Exists} | {snapshot.GetRawJsonValue()}");
                 if (snapshot.Exists)
                 {
-                    UserData myData = JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue());
-                    if (!string.IsNullOrEmpty(myData.banMessage))
-                    {
-                        UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
-                        {
-                            Application.Quit();
-                        });
-                        return;
-                    }
-                    callback.Invoke(myData);
+                    //UserData myData = JsonConvert.DeserializeObject<UserData>(snapshot.GetRawJsonValue());
+                    //if (!string.IsNullOrEmpty(myData.banMessage))
+                    //{
+                    //    UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
+                    //    {
+                    //        Application.Quit();
+                    //    });
+                    //    return;
+                    //}
+                    callback.Invoke(snapshot.GetRawJsonValue());
                 }
                 else
                 {
                     Debug.Log("No user found.");
                     try
                     {
-                        callback.Invoke(new UserData(user.UserId));
+                        callback.Invoke(string.Empty);
                     }
                     catch(System.Exception exception)
                     {
@@ -256,19 +259,20 @@ public class FirebaseManager : Singleton<FirebaseManager>
         if (args.Snapshot.Exists)
         {
             string json = args.Snapshot.GetRawJsonValue();
-            UserData myData = JsonConvert.DeserializeObject<UserData>(json);
+            UserData.Info myInfo = JsonConvert.DeserializeObject<UserData.Info>(json);
 
             ///밴 처리
-            if (!string.IsNullOrEmpty(myData.banMessage))
+            if (!string.IsNullOrEmpty(myInfo.banMessage))
             {
-                UIManager.Instance.Message.Show(Message.Type.Simple, myData.banMessage, callback: confirm =>
+                UIManager.Instance.Message.Show(Message.Type.Simple, myInfo.banMessage, callback: confirm =>
                 {
                     Application.Quit();
                 });
                 return;
             }
 
-            DataManager.Instance.UpdateUserData(myData);
+            //DataManager.Instance.UpdateUserData(args.Snapshot.GetRawJsonValue());
+            DataManager.Instance.UpdateUserInfo(myInfo);
         }
     }
 
@@ -543,7 +547,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
                 Debug.Log("닉네임 변경 성공!");
                 result.success = true;
                 result.message = TextManager.Get("nickname_ok");
-                DataManager.Instance.userData.nickname = nickname;
+                DataManager.Instance.userData.Info.nickname = nickname;
                 callback?.Invoke(result);
             }
             else
@@ -566,7 +570,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     /// <param name="callback"></param>
     public void SubmitScore(PuzzleLevel gameLevel, string date, int point, Action<int> callback = null)
     {
-        SubmitScore(gameLevel, date, DataManager.Instance.userData.id, DataManager.Instance.userData.nickname, DataManager.Instance.userData.level, point, DataManager.Instance.userData.countryCode, callback);
+        SubmitScore(gameLevel, date, UserId, DataManager.Instance.userData.Info.nickname, DataManager.Instance.userData.Info.level, point, DataManager.Instance.userData.Info.countryCode, callback);
     }
 
     /// <summary>

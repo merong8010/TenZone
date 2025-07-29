@@ -52,6 +52,7 @@ public class GameManager : Singleton<GameManager>
 
     private void Pause()
     {
+        DataManager.Instance.userData?.SaveData();
         //_currentTime = null;
     }
 
@@ -61,6 +62,7 @@ public class GameManager : Singleton<GameManager>
     public GameData.GameLevel currentLevel;
     private Scene currentScene;
     public bool isUse10Seconds;
+    public bool isUseTimeFreeze;
     // ✅ 구글 서버에서 UTC 시간 가져오기
     public void FetchOnlineTime()
     {
@@ -123,7 +125,7 @@ public class GameManager : Singleton<GameManager>
     }
 
     private double lastCheckTime;
-
+    private DateTime preTime;
     private void Update()
     {
         if (_currentTime != null)
@@ -131,6 +133,12 @@ public class GameManager : Singleton<GameManager>
             _currentTime = _currentTime.Value.AddSeconds(Time.realtimeSinceStartupAsDouble - lastCheckTime);
             lastCheckTime = Time.realtimeSinceStartupAsDouble;
             reactiveTime.Value = _currentTime.Value;
+
+            if(DataManager.Instance.userData != null && !preTime.IsSameDate(_currentTime.Value))
+            {
+                DataManager.Instance.userData.CheckDate();
+            }
+            preTime = _currentTime.Value;
         }
     }
 
@@ -164,7 +172,7 @@ public class GameManager : Singleton<GameManager>
         Main,
         Puzzle,
     }
-    public void GoScene(Scene scene, GameData.GameLevel level = null, bool use10Seconds = false)
+    public void GoScene(Scene scene, GameData.GameLevel level = null, bool use10Seconds = false, bool timeFreeze = false)
     {
         //UIManager.Instance.Loading(callback: () =>
         //{
@@ -209,6 +217,7 @@ public class GameManager : Singleton<GameManager>
         //});
         
         isUse10Seconds = use10Seconds;
+        isUseTimeFreeze = timeFreeze;
         currentLevel = level;
         //StartCoroutine(GoScene(scene));
         UIManager.Instance.Loading(onFadeInComplete: () =>
@@ -239,7 +248,9 @@ public class GameManager : Singleton<GameManager>
                     typeof(PopupResult),
                     typeof(PopupReward),
                     typeof(PopupSettings),
-                    typeof(PopupShop)
+                    typeof(PopupShop),
+                    typeof(PopupContinue),
+                    typeof(PopupQuest)
                 );
             }
         }, onFadeOutComplete: () =>
